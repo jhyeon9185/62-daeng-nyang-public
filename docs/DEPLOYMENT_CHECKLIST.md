@@ -149,7 +149,7 @@ GitHub Actions가 자동으로:
 
 1. **GitHub Actions**: Repository → Actions 탭에서 워크플로 실행 결과 확인
 2. **프론트엔드**: http://3.39.187.182 접속
-3. **API**: http://3.39.187.182/api/ 로 요청 (예: Swagger http://3.39.187.182/api/swagger-ui.html)
+3. **API**: http://3.39.187.182/api/ 로 요청. **API 구조(Swagger)**: http://3.39.187.182/swagger-ui.html
 4. **로그 확인** (EC2):
    ```bash
    ssh -i ~/.ssh/nas_deploy_key ec2-user@3.39.187.182
