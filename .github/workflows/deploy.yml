@@ -32,6 +32,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Build Frontend
+        env:
+          VITE_API_BASE_URL: /api
         run: |
           cd frontend
           npm ci
@@ -60,6 +62,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 3m
           envs: RDS_ENDPOINT,RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL,DATA_API_KEY,FRONTEND_URL
           script: |
             cd /home/ec2-user

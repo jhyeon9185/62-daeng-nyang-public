@@ -43,6 +43,10 @@ credentials*.csv
 accessKeys*.csv
 *credentials*.csv
 
+# ===== DB 백업 =====
+backup_*.sql
+*.sql.backup
+
 # ===== Terraform =====
 terraform/.terraform/
 terraform/*.tfstate
