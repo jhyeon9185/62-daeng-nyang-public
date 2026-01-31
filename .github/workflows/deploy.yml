@@ -62,7 +62,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          command_timeout: 3m
+          command_timeout: 5m
           envs: RDS_ENDPOINT,RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL,DATA_API_KEY,FRONTEND_URL
           script: |
             cd /home/ec2-user
@@ -73,11 +73,15 @@ jobs:
             sudo cp -r deploy/frontend-dist/* /var/www/dn-platform/
             pkill -f platform-0.0.1-SNAPSHOT.jar || true
             sleep 2
-            cd app
             export DB_URL="jdbc:mysql://${RDS_ENDPOINT}/dn_platform?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
             export DB_USERNAME="${RDS_USERNAME}"
             export DB_PASSWORD="${RDS_PASSWORD}"
-            nohup java -jar -Dspring.profiles.active=prod platform-0.0.1-SNAPSHOT.jar \
+            if [ -n "${FRONTEND_URL}" ]; then
+              CORS_ORIGINS="http://localhost:5173,http://localhost:3000,${FRONTEND_URL}"
+            else
+              CORS_ORIGINS="http://localhost:5173,http://localhost:3000"
+            fi
+            ( cd app && nohup java -jar -Dspring.profiles.active=prod platform-0.0.1-SNAPSHOT.jar \
               --spring.datasource.url="${DB_URL}" \
               --spring.datasource.username="${DB_USERNAME}" \
               --spring.datasource.password="${DB_PASSWORD}" \
@@ -86,7 +90,8 @@ jobs:
               --resend.from-email="${RESEND_FROM_EMAIL}" \
               --public-api.service-key="${DATA_API_KEY}" \
               --app.frontend-url="${FRONTEND_URL}" \
-              1>/home/ec2-user/log.out 2>/home/ec2-user/err.out &
+              --cors.allowed-origins="${CORS_ORIGINS}" \
+              </dev/null >>/home/ec2-user/log.out 2>>/home/ec2-user/err.out & )
             rm -f /home/ec2-user/deploy.tar.gz
         env:
           RDS_ENDPOINT: ${{ secrets.RDS_ENDPOINT }}
