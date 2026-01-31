@@ -60,6 +60,7 @@
 .landing-stack-stage {
   min-height: calc(100vh - var(--landing-stack-top, 56px));
   padding-bottom: clamp(1.25rem, 3vw, 2rem);
+  touch-action: pan-y;
 }
 
 /* 마지막 스택(푸터 포함): 아래 빈 공간 제거 */
@@ -208,6 +209,8 @@
   padding-left: 0;
   padding-right: 0;
   overflow: hidden;
+  /* 모바일: 터치 시 문서 세로 스크롤로 전달 */
+  touch-action: pan-y;
 }
 
 .landing-hero-media {

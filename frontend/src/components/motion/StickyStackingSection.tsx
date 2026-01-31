@@ -41,8 +41,8 @@ export default function StickyStackingSection({
 
   return (
     <motion.div
-      className={`sticky w-full max-w-full overflow-x-hidden ${className}`}
-      style={style}
+      className={`sticky w-full max-w-full overflow-x-hidden touch-pan-y ${className}`}
+      style={{ ...style, touchAction: 'pan-y' }}
       initial={{ y: isMobile ? 28 : 72, opacity: 0.92 }}
       whileInView={{ y: 0, opacity: 1 }}
       viewport={{ once: true, amount: 0.08 }}

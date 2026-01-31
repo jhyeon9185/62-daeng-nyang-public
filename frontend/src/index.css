@@ -13,6 +13,9 @@
 
 html {
   scroll-behavior: smooth;
+  /* 모바일: 세로 스크롤만 허용, 터치가 특정 요소에 잡히지 않도록 */
+  touch-action: pan-y;
+  overflow-x: hidden;
 }
 
 body {
@@ -22,6 +25,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   color: var(--toss-black);
   background-color: var(--toss-white);
+  touch-action: pan-y;
+  overflow-x: hidden;
 }
 
 #root {
