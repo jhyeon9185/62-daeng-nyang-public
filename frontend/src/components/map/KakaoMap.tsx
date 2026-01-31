@@ -124,11 +124,12 @@ export default function KakaoMap({
           showMap(latitude!, longitude!);
           return;
         }
-        geocoder.addressSearch(address!.trim(), (result, status) => {
+        geocoder.addressSearch(address!.trim(), (result: unknown, status: unknown) => {
           if (cancelled) return;
-          if (status === kakao.maps.services.Status.OK && result && result[0]) {
-            const lat = parseFloat(result[0].y);
-            const lng = parseFloat(result[0].x);
+          const arr = Array.isArray(result) ? result : [];
+          if (status === kakao.maps.services.Status.OK && arr[0]) {
+            const lat = parseFloat(arr[0].y);
+            const lng = parseFloat(arr[0].x);
             showMap(lat, lng);
           } else {
             setError('주소를 찾을 수 없습니다.');

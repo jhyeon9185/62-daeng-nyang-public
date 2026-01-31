@@ -84,7 +84,7 @@ export interface Adoption {
   processedAt?: string;
 }
 
-export type RecruitmentStatus = 'OPEN' | 'CLOSED' | 'COMPLETED';
+export type RecruitmentStatus = 'RECRUITING' | 'CLOSED' | 'OPEN' | 'COMPLETED';
 
 export interface VolunteerRecruitment {
   id: number;
@@ -138,7 +138,7 @@ export interface DonationRequest {
   createdAt: string;
 }
 
-export type DonationStatus = 'PENDING' | 'APPROVED' | 'SHIPPED' | 'RECEIVED';
+export type DonationStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
 
 export interface Donation {
   id: number;

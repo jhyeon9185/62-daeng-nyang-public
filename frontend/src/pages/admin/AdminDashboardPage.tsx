@@ -259,9 +259,9 @@ export default function AdminDashboardPage() {
         adminApi.getAllVolunteers(0, 100),
         adminApi.getAllDonations(0, 100),
       ]);
-      const adoptions = adoptionsRes?.data?.data?.content ?? adoptionsRes?.data?.content ?? [];
-      const volunteers = volunteersRes?.data?.data?.content ?? volunteersRes?.data?.content ?? [];
-      const donations = donationsRes?.data?.data?.content ?? donationsRes?.data?.content ?? [];
+      const adoptions = adoptionsRes?.data?.data?.content ?? [];
+      const volunteers = volunteersRes?.data?.data?.content ?? [];
+      const donations = donationsRes?.data?.data?.content ?? [];
       setAllAdoptions(adoptions);
       setAllVolunteers(volunteers);
       setAllDonations(donations);

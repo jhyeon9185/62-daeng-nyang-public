@@ -57,11 +57,15 @@ export const adminApi = {
 
   /** 공공데이터 유기동물 동기화 (장시간 소요 → 타임아웃 3분) */
   syncFromPublicApi: (params?: { days?: number; maxPages?: number; species?: string }) =>
-    axiosInstance.post<ApiResponse<{ syncedCount: number; days: number; species: string }>>(
-      '/admin/animals/sync-from-public-api',
-      null,
-      { params, timeout: 180_000 }
-    ),
+    axiosInstance.post<
+      ApiResponse<{
+        syncedCount: number;
+        days: number;
+        species: string;
+        statusCorrectedCount?: number;
+        apiKeyConfigured?: boolean;
+      }>
+    >('/admin/animals/sync-from-public-api', null, { params, timeout: 180_000 }),
 
   /** [시스템 관리자] 전체 입양/임보 신청 내역 */
   getAllAdoptions: (page = 0, size = 50) =>
