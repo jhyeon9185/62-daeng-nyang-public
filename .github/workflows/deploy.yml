@@ -71,6 +71,23 @@ jobs:
             cp deploy/platform-0.0.1-SNAPSHOT.jar app/
             sudo mkdir -p /var/www/dn-platform
             sudo cp -r deploy/frontend-dist/* /var/www/dn-platform/
+            sudo tee /etc/nginx/conf.d/dn-platform.conf > /dev/null << 'NGINX'
+            server {
+                listen 80;
+                server_name _;
+                root /var/www/dn-platform;
+                index index.html;
+                try_files $uri $uri/ /index.html;
+                location /api/ {
+                    proxy_pass http://127.0.0.1:8080;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                }
+            }
+            NGINX
+            sudo sed -i 's/^[[:space:]]*//' /etc/nginx/conf.d/dn-platform.conf
+            sudo nginx -t && sudo systemctl reload nginx
             DB_URL="jdbc:mysql://${RDS_ENDPOINT}/dn_platform?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
             if [ -n "${FRONTEND_URL}" ]; then
               CORS_ORIGINS="http://localhost:5173,http://localhost:3000,${FRONTEND_URL}"
