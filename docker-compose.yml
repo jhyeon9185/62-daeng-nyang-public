@@ -1,0 +1,27 @@
+# DN Platform - 로컬 개발용 MySQL 8.0
+# 사용법: DN_project01 루트에서 docker compose up -d
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: dn-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-dn_platform}
+      MYSQL_USER: ${MYSQL_USER:-dn}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-dn}
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - dn_mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  dn_mysql_data:

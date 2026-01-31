@@ -1,0 +1,77 @@
+spring:
+  profiles:
+    active: dev
+
+  application:
+    name: dn-platform
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+    show-sql: true
+    open-in-view: false
+
+  # File Upload
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# 업로드 파일 저장 경로 (상대 경로 = 서버 실행 시 작업 디렉터리 기준)
+# 예: backend/에서 mvn 실행 시 → backend/uploads. 다른 경로에서 실행하면 파일을 찾지 못할 수 있으므로,
+# 재시작 시 같은 디렉터리에서 실행하거나 file.upload-dir을 절대 경로로 설정하세요.
+file:
+  upload-dir: uploads
+
+# Server Configuration
+server:
+  port: 8080
+
+# CORS (comma-separated origins)
+cors:
+  allowed-origins: http://localhost:5173,http://localhost:3000
+
+# 프론트엔드 URL (이메일 내 관리자 로그인 바로가기 링크 등)
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-base64-encoded-secret-key-here-minimum-32-bytes}
+  access-token-validity: 3600      # 1 hour in seconds
+  refresh-token-validity: 604800   # 7 days in seconds
+
+# Resend Email Configuration
+# 신청(입양/봉사/기부) 접수 시: 신청자·관리자(보호소)에게 메일 발송.
+# 기본 발신: onboarding@resend.dev (Resend 샌드박스, 도메인 인증 없이 API 키만으로 테스트 가능)
+# 실제 서비스 시: Resend 대시보드에서 도메인 인증 후 RESEND_FROM_EMAIL=noreply@your-domain.com 설정
+resend:
+  api-key: ${RESEND_API_KEY:your-resend-api-key}
+  from-email: ${RESEND_FROM_EMAIL:onboarding@resend.dev}
+  from-name: 62댕냥이
+  # 로고 URL (선택). 설정 시 이메일 헤더에 이미지로 표시
+  logo-url: ${RESEND_LOGO_URL:}
+
+# Public API Configuration (공공데이터포털 인증키 - Encoding 키 사용)
+# 환경 변수: DATA_API_KEY 또는 PUBLIC_API_SERVICE_KEY
+# base-url: 1543061 (TeamApple 등 실제 사용). 500 시 활용신청 후 본인 Encoding 키 사용
+public-api:
+  service-key: ${DATA_API_KEY:${PUBLIC_API_SERVICE_KEY:your-public-api-service-key}}
+  base-url: ${PUBLIC_API_BASE_URL:https://apis.data.go.kr/1543061}
+  # 스케줄 동기화: true 시 매일 지정 시간에 공공데이터 자동 수집 (일 1회 권장)
+  sync-enabled: ${PUBLIC_API_SYNC_ENABLED:false}
+  sync-cron: ${PUBLIC_API_SYNC_CRON:0 0 2 * * *}   # 기본: 매일 새벽 2시 (초 분 시 일 월 요일)
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha

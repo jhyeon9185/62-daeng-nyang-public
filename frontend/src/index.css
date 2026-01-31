@@ -1,0 +1,29 @@
+/* 지마켓산스 웹폰트 */
+@import './styles/fonts.css';
+/* 토스 스타일 디자인 시스템 (CSS 변수 + 컴포넌트 클래스) */
+@import './styles/toss.css';
+/* 랜딩 페이지 스토리텔링 (감정 연결 → 문제 인식 → 해결 → 행동 유도) */
+@import './styles/landing.css';
+/* 리스트/게시판 공통 (검색, 필터, 페이지네이션) */
+@import './styles/list.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: 'GmarketSans', var(--toss-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--toss-black);
+  background-color: var(--toss-white);
+}
+
+#root {
+  min-height: 100vh;
+}

@@ -1,0 +1,25 @@
+spring:
+  # Database Configuration (Production)
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+
+  # JPA - Production mode
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Never auto-modify in production
+    show-sql: false
+
+# Logging
+logging:
+  level:
+    root: WARN
+    com.dnproject: INFO

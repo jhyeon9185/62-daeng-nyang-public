@@ -1,0 +1,44 @@
+# ===== Node / Frontend =====
+node_modules/
+frontend/node_modules/
+frontend/dist/
+*.local
+.env
+.env.local
+.env.*.local
+
+# ===== Java / Maven / Backend =====
+target/
+backend/target/
+*.class
+*.jar
+*.war
+*.ear
+.gradle/
+build/
+
+# ===== 로컬 비밀/키 =====
+.env
+backend/.env
+frontend/.env
+
+# ===== 업로드 파일 =====
+uploads/
+backend/uploads/
+
+# ===== IDE / Editor =====
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# ===== 로그 =====
+*.log
+logs/
+
+# ===== 기타 =====
+*.pid
+*.seed
+*.pid.lock

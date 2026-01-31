@@ -1,0 +1,866 @@
+/**
+ * 랜딩 페이지 스토리텔링 스타일 (Toss.im 감성 + 감정 연결)
+ * 흐름: 감정적 연결 → 문제 인식 → 해결 방법 → 행동 유도
+ */
+
+:root {
+  /* 버튼 컬러: Naver Green + Kakao Yellow */
+  --landing-cta: #03C75A; /* Naver */
+  --landing-cta-hover: #02B152;
+  --landing-kakao: #FEE500;
+  --landing-kakao-hover: #F6DC00;
+  --landing-black: var(--toss-black, #191f28);
+  --landing-gray-800: var(--toss-gray-900, #333d4b);
+  --landing-gray-600: var(--toss-gray-700, #4e5968);
+  --landing-gray-400: var(--toss-gray-500, #8b95a1);
+  --landing-gray-100: var(--toss-gray-100, #f2f4f6);
+  --landing-white: var(--toss-white, #ffffff);
+
+  --landing-navy: var(--landing-black);
+  --landing-navy-light: var(--landing-gray-600);
+
+  /* 타이포 - 지마켓산스 */
+  --landing-font: 'GmarketSans', 'Noto Sans KR', -apple-system, sans-serif;
+  --landing-display: clamp(2.25rem, 5vw, 3.5rem);
+  --landing-title: clamp(1.5rem, 3vw, 2rem);
+  --landing-body: 1.125rem;
+  --landing-caption: 0.9375rem;
+  --landing-line-tight: 1.2;
+  --landing-line-body: 1.7;
+
+  --landing-container: 72rem;
+  --landing-section-pad: clamp(4rem, 10vw, 6rem);
+  --landing-radius: 1rem;
+  --landing-radius-lg: 1.25rem;
+
+  /* 숫자 강조용 폰트(통계/퍼센트/핵심 숫자) */
+  --landing-number-font: 'Space Grotesk', 'GmarketSans', -apple-system, sans-serif;
+}
+
+/* ========== 섹션 공통 - 색구분 없이 통일 배경 ========== */
+.landing-section {
+  padding-top: var(--landing-section-pad);
+  padding-bottom: var(--landing-section-pad);
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  background-color: transparent;
+}
+
+.landing-inner {
+  max-width: var(--landing-container);
+  margin: 0 auto;
+}
+
+/* playw_project 스타일의 “스티키 스택” 공통 배경 */
+.landing-stack-bg {
+  background-color: var(--landing-gray-100);
+}
+
+/* 스티키 스택에서 “빽빽함”만 살짝 풀어주는 최소 여유 */
+.landing-stack-stage {
+  min-height: calc(100vh - var(--landing-stack-top, 56px));
+  padding-bottom: clamp(1.25rem, 3vw, 2rem);
+}
+
+/* 마지막 스택(푸터 포함): 아래 빈 공간 제거 */
+.landing-stack-bg--last .landing-stack-stage {
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+/* 스티키 스택에서 섹션들이 헤더 아래에 붙도록(앵커 이동 포함) */
+.landing-section,
+.landing-stats,
+.landing-final-cta {
+  scroll-margin-top: 5.25rem;
+}
+
+/* 좌우 반복 2컬럼: 내용(left/right) + 비주얼(right/left) */
+.landing-section-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: center;
+  max-width: var(--landing-container);
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .landing-section-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+  }
+
+  .landing-section--left .landing-section-content { order: 1; }
+  .landing-section--left .landing-section-visual { order: 2; }
+
+  .landing-section--right .landing-section-content { order: 2; }
+  .landing-section--right .landing-section-visual { order: 1; }
+}
+
+.landing-section-content {
+  min-width: 0;
+}
+
+.landing-section-visual {
+  min-width: 0;
+}
+
+/* 2컬럼 섹션에서 쓰는 "이미지 자리" (실제 이미지는 추후 삽입) */
+.landing-visual-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--landing-radius-lg);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0.04) 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.landing-visual-placeholder--image {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+.landing-visual-placeholder--image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: var(--landing-radius-lg);
+}
+
+.landing-visual-placeholder--hero {
+  aspect-ratio: 16 / 10;
+}
+
+.landing-section-title {
+  font-family: var(--landing-font);
+  font-size: var(--landing-title);
+  font-weight: 700;
+  color: var(--landing-black);
+  letter-spacing: -0.02em;
+  line-height: var(--landing-line-tight);
+  margin-bottom: 1rem;
+}
+
+/* 좌/우 섹션은 '정렬'이 아니라 '배치(컬럼 순서)'만 교체합니다. */
+.landing-section-title { text-align: left; }
+.landing-section-desc {
+  font-size: var(--landing-body);
+  color: var(--landing-gray-600);
+  line-height: var(--landing-line-body);
+  max-width: 36rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+.landing-section-desc { margin-left: 0; margin-right: auto; }
+/* 중앙 정렬용 (단일 컬럼 섹션) */
+.landing-section-title--center { text-align: center; }
+.landing-section-desc--center {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* CTA 버튼 - 코랄 강조 */
+.landing-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--landing-font);
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: var(--landing-radius);
+  padding: 0.875rem 1.75rem;
+  text-decoration: none;
+  transition: background-color 0.2s, transform 0.1s;
+  border: none;
+  cursor: pointer;
+}
+
+.landing-btn-primary {
+  background-color: var(--landing-cta);
+  color: var(--landing-white);
+}
+
+.landing-btn-primary:hover {
+  background-color: var(--landing-cta-hover);
+}
+
+.landing-btn-secondary {
+  background-color: var(--landing-kakao);
+  color: var(--landing-black);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.landing-btn-secondary:hover {
+  background-color: var(--landing-kakao-hover);
+}
+
+/* 히어로 - 최상단 색상 제거(화이트 톤) */
+.landing-hero {
+  position: relative;
+  min-height: 100vh;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+  padding-right: 0;
+  overflow: hidden;
+}
+
+.landing-hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.landing-hero-title {
+  font-family: var(--landing-font);
+  font-size: var(--landing-display);
+  font-weight: 700;
+  color: var(--landing-white);
+  letter-spacing: -0.03em;
+  line-height: var(--landing-line-tight);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.landing-num {
+  font-family: var(--landing-number-font);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  letter-spacing: -0.04em;
+}
+
+/* 히어로 내 숫자 오브젝트 (애플 느낌: 선명/강조/광택) */
+.landing-hero-num {
+  display: inline-block;
+  font-family: var(--landing-number-font);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+  padding: 0.06em 0.18em;
+  margin: 0 -0.08em;
+  border-radius: 0.35em;
+  background: linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.72) 40%, rgba(255,255,255,0.92) 100%);
+  color: rgba(0, 0, 0, 0.90);
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.65);
+}
+
+.landing-hero-sub {
+  font-size: var(--landing-body);
+  color: rgba(255, 255, 255, 0.82);
+  line-height: var(--landing-line-body);
+  margin-bottom: 2.5rem;
+  text-align: center;
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.landing-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform-origin: center;
+}
+
+/* 현재는 “전체 이미지 자리”를 그라데이션으로 채워두고,
+ * 실제 이미지를 넣을 때는 background-image만 교체하면 됩니다. */
+/* 히어로 슬라이드별 배경 이미지 (WebP, 가벼운 오버레이) */
+.landing-hero-bg--one {
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.45) 100%),
+    url('/hero-one.webp');
+}
+
+.landing-hero-bg--two {
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.45) 100%),
+    url('/hero-two-hope-hearts.webp');
+}
+
+.landing-hero-bg--three {
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.45) 100%),
+    url('/hero-three-left-behind.webp');
+}
+
+.landing-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0.5) 100%);
+}
+
+.landing-hero-center {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: 6.5rem; /* fixed header 여유 */
+  padding-bottom: 4rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.landing-hero-copy {
+  max-width: 56rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.landing-hero-kicker {
+  font-family: var(--landing-font);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.landing-hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* 히어로는 항상 중앙 정렬 유지 */
+
+.landing-hero-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 2.5rem;
+}
+
+.landing-hero-play {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.88);
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  font-family: var(--landing-font);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s, background-color 0.2s, border-color 0.2s;
+}
+
+.landing-hero-play:hover {
+  background: rgba(0, 0, 0, 0.32);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.landing-hero-play:active {
+  transform: translateY(1px);
+}
+
+.landing-hero-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.landing-hero-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.36);
+  cursor: pointer;
+  transition: transform 0.15s, background-color 0.2s, width 0.2s;
+}
+
+.landing-hero-dot.is-active {
+  background: rgba(255, 255, 255, 0.9);
+  width: 1.1rem;
+}
+
+.landing-hero-dot:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* 4개 빠른 이동 카드 */
+.landing-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  max-width: 52rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .landing-quick-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+.landing-quick-card {
+  display: block;
+  text-align: center;
+  padding: 1.75rem 1rem;
+  background: var(--landing-white);
+  border-radius: var(--landing-radius-lg);
+  text-decoration: none;
+  color: var(--landing-black);
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.landing-quick-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+}
+
+/* 이모지 제거로 미사용 */
+
+/* 동물 카드 (입양 대기) */
+.landing-pet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .landing-pet-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+.landing-pet-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--landing-white);
+  border-radius: var(--landing-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.landing-pet-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+}
+
+.landing-pet-card-img {
+  aspect-ratio: 1;
+  background: var(--landing-gray-100);
+  object-fit: cover;
+  width: 100%;
+}
+
+.landing-pet-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.landing-pet-card-name {
+  font-weight: 700;
+  font-size: 1.0625rem;
+  color: var(--landing-black);
+  margin-bottom: 0.25rem;
+}
+
+.landing-pet-card-meta {
+  font-size: var(--landing-caption);
+  color: var(--landing-gray-600);
+  margin-bottom: 0.375rem;
+}
+
+.landing-pet-card-story {
+  font-size: 0.8125rem;
+  color: var(--landing-gray-400);
+  line-height: 1.4;
+}
+
+/* 타임라인 (How it works) */
+.landing-timeline-wrap {
+  position: relative;
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.landing-timeline-arrow {
+  position: absolute;
+  top: 0.25rem;
+  width: 48px;
+  height: 48px;
+  margin-left: -24px;
+  color: var(--landing-cta);
+  pointer-events: none;
+  display: none;
+  z-index: 0;
+}
+
+@media (min-width: 768px) {
+  .landing-timeline-arrow {
+    display: block;
+  }
+}
+
+.landing-timeline {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .landing-timeline {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+.landing-timeline-item {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+
+.landing-step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background-color: var(--landing-white);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  font-weight: 700;
+  color: var(--landing-black);
+  margin-bottom: 0.75rem;
+  tabular-nums: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.landing-timeline-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--landing-black);
+  margin-bottom: 0.375rem;
+}
+
+.landing-timeline-desc {
+  font-size: var(--landing-caption);
+  color: var(--landing-gray-600);
+  line-height: 1.5;
+}
+
+/* 2컬럼 카드 (임시보호 / 봉사) */
+.landing-two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  max-width: 52rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .landing-two-col {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+.landing-involve-card {
+  background: var(--landing-white);
+  border-radius: var(--landing-radius-lg);
+  padding: 2rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+.landing-involve-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--landing-black);
+  margin-bottom: 0.5rem;
+}
+
+.landing-involve-card p {
+  font-size: var(--landing-body);
+  color: var(--landing-gray-600);
+  line-height: var(--landing-line-body);
+  margin-bottom: 1.25rem;
+}
+
+
+/* 성공 스토리 카드 */
+.landing-story-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .landing-story-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.landing-story-card {
+  background: var(--landing-white);
+  border-radius: var(--landing-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.landing-story-card-img {
+  aspect-ratio: 4/3;
+  background: var(--landing-gray-100);
+  width: 100%;
+  overflow: hidden;
+}
+
+.landing-story-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.landing-story-card-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.landing-story-card-quote {
+  font-size: var(--landing-body);
+  color: var(--landing-gray-800);
+  line-height: var(--landing-line-body);
+  font-style: italic;
+  margin-bottom: 0.75rem;
+}
+
+.landing-story-card-name {
+  font-size: var(--landing-caption);
+  color: var(--landing-gray-600);
+}
+
+/* FAQ */
+.landing-faq-list {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.landing-faq-item {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--landing-gray-100);
+}
+
+.landing-faq-item:last-child {
+  border-bottom: none;
+}
+
+.landing-faq-q {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--landing-black);
+  margin-bottom: 0.5rem;
+}
+
+.landing-faq-a {
+  font-size: var(--landing-caption);
+  color: var(--landing-gray-600);
+  line-height: 1.6;
+}
+
+/* 최종 CTA - 색구분 없이 동일 배경 */
+.landing-final-cta {
+  background-color: var(--landing-white);
+  color: var(--landing-black);
+  text-align: center;
+  padding-top: var(--landing-section-pad);
+  padding-bottom: var(--landing-section-pad);
+  border-top: 1px solid var(--landing-gray-100);
+}
+
+.landing-final-cta .landing-section-title {
+  color: var(--landing-black);
+  margin-bottom: 0.5rem;
+}
+
+.landing-final-cta .landing-section-desc {
+  color: var(--landing-gray-600);
+  margin-bottom: 2rem;
+}
+
+.landing-final-cta .landing-hero-cta {
+  justify-content: center;
+}
+
+.landing-final-cta .landing-btn-secondary {
+  background-color: var(--landing-white);
+  color: var(--landing-navy);
+  border: 2px solid var(--landing-navy);
+}
+
+.landing-final-cta .landing-btn-secondary:hover {
+  background-color: var(--landing-gray-100);
+}
+
+/* 중앙 정렬 섹션에서 CTA 정렬 */
+.landing-center-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.25rem;
+  margin-bottom: 2.25rem;
+}
+
+/* 통계 섹션 (별도 섹션으로 분리) */
+.landing-stats {
+  background-color: var(--landing-gray-100);
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.landing-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  max-width: var(--landing-container);
+  margin: 0 auto;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .landing-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 960px) {
+  .landing-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.landing-stats-item {
+  background: var(--landing-white);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--landing-radius-lg);
+  padding: 1.25rem 1rem;
+}
+
+.landing-stats-value {
+  font-family: var(--landing-font);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--landing-black);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* 팩트 카드 숫자는 “디자인 요소”로 더 강하게 */
+.landing-stats-value {
+  font-family: var(--landing-number-font);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  letter-spacing: -0.05em;
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
+  background: linear-gradient(180deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.72) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-stats-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-stats-item::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background:
+    radial-gradient(320px 180px at 20% 20%, rgba(3, 199, 90, 0.16) 0%, transparent 55%),
+    radial-gradient(320px 180px at 80% 35%, rgba(254, 229, 0, 0.18) 0%, transparent 60%);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.landing-stats-item > * {
+  position: relative;
+  z-index: 1;
+}
+
+.landing-stats-label {
+  font-family: var(--landing-font);
+  margin-top: 0.375rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--landing-gray-600);
+}
+
+.landing-fact-note {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--landing-gray-600);
+  opacity: 0.9;
+}
+
+/* 후원 카드(2x2) */
+.landing-support-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .landing-support-grid {
+    gap: 1rem;
+  }
+}
+
+.landing-support-card {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--landing-white);
+}
+
+.landing-support-title {
+  font-weight: 700;
+  color: var(--landing-black);
+}
+
+.landing-support-desc {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  color: var(--landing-gray-600);
+}
