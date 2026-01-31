@@ -71,27 +71,52 @@ jobs:
             cp deploy/platform-0.0.1-SNAPSHOT.jar app/
             sudo mkdir -p /var/www/dn-platform
             sudo cp -r deploy/frontend-dist/* /var/www/dn-platform/
-            pkill -f platform-0.0.1-SNAPSHOT.jar || true
-            sleep 2
-            export DB_URL="jdbc:mysql://${RDS_ENDPOINT}/dn_platform?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
-            export DB_USERNAME="${RDS_USERNAME}"
-            export DB_PASSWORD="${RDS_PASSWORD}"
+            DB_URL="jdbc:mysql://${RDS_ENDPOINT}/dn_platform?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
             if [ -n "${FRONTEND_URL}" ]; then
               CORS_ORIGINS="http://localhost:5173,http://localhost:3000,${FRONTEND_URL}"
             else
               CORS_ORIGINS="http://localhost:5173,http://localhost:3000"
             fi
-            ( cd app && nohup java -jar -Dspring.profiles.active=prod platform-0.0.1-SNAPSHOT.jar \
+            cat > app/start.sh << START
+            #!/bin/bash
+            cd /home/ec2-user/app
+            exec java -jar -Dspring.profiles.active=prod platform-0.0.1-SNAPSHOT.jar \
               --spring.datasource.url="${DB_URL}" \
-              --spring.datasource.username="${DB_USERNAME}" \
-              --spring.datasource.password="${DB_PASSWORD}" \
+              --spring.datasource.username="${RDS_USERNAME}" \
+              --spring.datasource.password="${RDS_PASSWORD}" \
               --jwt.secret="${JWT_SECRET}" \
               --resend.api-key="${RESEND_API_KEY}" \
               --resend.from-email="${RESEND_FROM_EMAIL}" \
               --public-api.service-key="${DATA_API_KEY}" \
               --app.frontend-url="${FRONTEND_URL}" \
-              --cors.allowed-origins="${CORS_ORIGINS}" \
-              </dev/null >>/home/ec2-user/log.out 2>>/home/ec2-user/err.out & )
+              --cors.allowed-origins="${CORS_ORIGINS}"
+            START
+            sed -i 's/^[[:space:]]*//' app/start.sh
+            chmod +x app/start.sh
+            if [ ! -f /etc/systemd/system/dn-platform.service ]; then
+              sudo tee /etc/systemd/system/dn-platform.service > /dev/null << 'SVC'
+            [Unit]
+            Description=DN Platform Backend
+            After=network.target
+
+            [Service]
+            Type=simple
+            User=ec2-user
+            WorkingDirectory=/home/ec2-user/app
+            ExecStart=/home/ec2-user/app/start.sh
+            Restart=on-failure
+            RestartSec=5
+            StandardOutput=append:/home/ec2-user/log.out
+            StandardError=append:/home/ec2-user/err.out
+
+            [Install]
+            WantedBy=multi-user.target
+            SVC
+              sudo sed -i 's/^[[:space:]]*//' /etc/systemd/system/dn-platform.service
+              sudo systemctl daemon-reload
+              sudo systemctl enable dn-platform
+            fi
+            sudo systemctl restart dn-platform
             rm -f /home/ec2-user/deploy.tar.gz
         env:
           RDS_ENDPOINT: ${{ secrets.RDS_ENDPOINT }}

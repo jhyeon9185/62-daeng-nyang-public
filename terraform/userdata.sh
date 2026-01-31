@@ -52,6 +52,29 @@ NGINX
 # 기본 index.html (배포 전 빈 페이지)
 echo "<html><body>Deploy in progress...</body></html>" | sudo tee /var/www/dn-platform/index.html
 
+# DN Platform 백엔드 systemd 서비스 (start.sh는 배포 시 생성)
+sudo tee /etc/systemd/system/dn-platform.service <<'SYSTEMD'
+[Unit]
+Description=DN Platform Backend
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/home/ec2-user/app
+ExecStart=/home/ec2-user/app/start.sh
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/home/ec2-user/log.out
+StandardError=append:/home/ec2-user/err.out
+
+[Install]
+WantedBy=multi-user.target
+SYSTEMD
+
+sudo systemctl daemon-reload
+sudo systemctl enable dn-platform
+
 sudo systemctl enable nginx
 sudo systemctl start nginx
 
