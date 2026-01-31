@@ -88,7 +88,7 @@ GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions** 
 | `EC2_SSH_KEY` | `cat ~/.ssh/nas_deploy_key` 전체 출력 | 개인키 전체 내용 |
 | `RDS_ENDPOINT` | `dn-platform-db.c98wmqqswrwy.ap-northeast-2.rds.amazonaws.com:3306` | |
 | `RDS_USERNAME` | `dnadmin` | |
-| `RDS_PASSWORD` | terraform.tfvars의 `db_password` | `YourStrongPassword123!` 또는 변경한 값 |
+| `RDS_PASSWORD` | terraform.tfvars의 `db_password`와 **반드시 동일** | `YourStrongPassword123!` (RDS 생성 시 사용한 비밀번호) |
 
 ### 백엔드 .env 변수 → Secrets (프로덕션 환경변수)
 

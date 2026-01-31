@@ -1,4 +1,4 @@
 aws_region   = "ap-northeast-2"
 db_name      = "dn_platform"
 db_username  = "dnadmin"
-db_password  = "b3BlbnNzaC1rAAdzc2gtcn!"  # 반드시 변경 후 terraform.tfvars로 복사
+db_password  = "YourStrongPassword123!"  # 반드시 변경 후 terraform.tfvars로 복사
