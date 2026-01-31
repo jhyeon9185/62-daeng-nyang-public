@@ -38,6 +38,18 @@ backend/uploads/
 *.log
 logs/
 
+# ===== AWS 자격 증명 =====
+credentials*.csv
+accessKeys*.csv
+*credentials*.csv
+
+# ===== Terraform =====
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+
 # ===== 기타 =====
 *.pid
 *.seed

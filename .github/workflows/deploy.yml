@@ -1,0 +1,96 @@
+name: DN Platform Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build Backend
+        run: |
+          cd backend
+          mvn clean package -DskipTests
+          ls -la target/*.jar
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+          ls -la dist/
+
+      - name: Create deploy package
+        run: |
+          mkdir -p deploy
+          cp backend/target/platform-0.0.1-SNAPSHOT.jar deploy/
+          cp -r frontend/dist deploy/frontend-dist
+          tar -czvf deploy.tar.gz deploy/
+
+      - name: Deploy to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "deploy.tar.gz"
+          target: "/home/ec2-user/"
+
+      - name: Extract and Restart on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: RDS_ENDPOINT,RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL,DATA_API_KEY,FRONTEND_URL
+          script: |
+            cd /home/ec2-user
+            tar -xzvf deploy.tar.gz
+            mkdir -p app
+            cp deploy/platform-0.0.1-SNAPSHOT.jar app/
+            sudo mkdir -p /var/www/dn-platform
+            sudo cp -r deploy/frontend-dist/* /var/www/dn-platform/
+            pkill -f platform-0.0.1-SNAPSHOT.jar || true
+            sleep 2
+            cd app
+            export DB_URL="jdbc:mysql://${RDS_ENDPOINT}/dn_platform?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+            export DB_USERNAME="${RDS_USERNAME}"
+            export DB_PASSWORD="${RDS_PASSWORD}"
+            nohup java -jar -Dspring.profiles.active=prod platform-0.0.1-SNAPSHOT.jar \
+              --spring.datasource.url="${DB_URL}" \
+              --spring.datasource.username="${DB_USERNAME}" \
+              --spring.datasource.password="${DB_PASSWORD}" \
+              --jwt.secret="${JWT_SECRET}" \
+              --resend.api-key="${RESEND_API_KEY}" \
+              --resend.from-email="${RESEND_FROM_EMAIL}" \
+              --public-api.service-key="${DATA_API_KEY}" \
+              --app.frontend-url="${FRONTEND_URL}" \
+              1>/home/ec2-user/log.out 2>/home/ec2-user/err.out &
+            rm -f /home/ec2-user/deploy.tar.gz
+        env:
+          RDS_ENDPOINT: ${{ secrets.RDS_ENDPOINT }}
+          RDS_USERNAME: ${{ secrets.RDS_USERNAME }}
+          RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          DATA_API_KEY: ${{ secrets.DATA_API_KEY }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
