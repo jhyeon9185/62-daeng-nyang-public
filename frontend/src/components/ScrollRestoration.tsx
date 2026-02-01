@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 
 /**
  * 스크롤 복원 컴포넌트
  * - 버튼/링크로 이동(PUSH/REPLACE): 상단으로 스크롤
- * - 뒤로가기/앞으로가기(POP): 이전 스크롤 위치 복원 (일반 사이트와 동일한 UX)
+ * - 뒤로가기/앞으로가기(POP): 페인트 전에 복원 → 스크롤 애니메이션 없이 자리 그대로 (요즘 웹 UX)
  */
 export default function ScrollRestoration() {
   const location = useLocation();
@@ -47,29 +47,35 @@ export default function ScrollRestoration() {
     }
   }, []);
 
-  useEffect(() => {
-    // 이전 페이지 스크롤 저장: 이동 후에는 window.scrollY가 새 페이지 값이므로, 미리 저장해 둔 lastScrollY 사용
+  // 페인트 전에 스크롤 복원 → 화면이 처음부터 그 자리에 있음 (스크롤 이동 없음)
+  useLayoutEffect(() => {
+    // 이전 페이지 스크롤 저장
     if (prevKey.current && prevKey.current !== location.key) {
       scrollPositions.current[prevKey.current] = lastScrollY.current;
     }
 
     if (navigationType === 'POP') {
-      // 뒤로가기/앞으로가기: 저장된 위치로 복원
       const savedPosition = scrollPositions.current[location.key];
       if (savedPosition !== undefined) {
-        const restore = () => window.scrollTo(0, savedPosition);
-        requestAnimationFrame(() => {
-          restore();
-          requestAnimationFrame(restore); // 비동기 렌더(목록 등) 후 한 번 더 복원
-        });
+        window.scrollTo(0, savedPosition);
       }
     } else {
-      // PUSH/REPLACE: 상단으로 스크롤
       window.scrollTo(0, 0);
       lastScrollY.current = 0;
     }
 
     prevKey.current = location.key;
+  }, [location.key, navigationType]);
+
+  // 비동기로 렌더되는 목록(API 등)은 DOM이 늦게 채워지므로, 한 번 더 복원 (스크롤은 이미 맞춰져 있으면 변화 없음)
+  useEffect(() => {
+    if (navigationType !== 'POP') return;
+    const savedPosition = scrollPositions.current[location.key];
+    if (savedPosition === undefined) return;
+    const id = requestAnimationFrame(() => {
+      window.scrollTo(0, savedPosition);
+    });
+    return () => cancelAnimationFrame(id);
   }, [location.key, navigationType]);
 
   return null;
