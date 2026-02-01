@@ -31,19 +31,21 @@ public class AnimalService {
     private final PreferenceService preferenceService;
 
     @Transactional(readOnly = true)
-    public PageResponse<AnimalResponse> findAll(Species species, AnimalStatus status, Size size, String region, String sigungu, Pageable pageable) {
+    public PageResponse<AnimalResponse> findAll(Species species, AnimalStatus status, Size size, String region, String sigungu, String search, Pageable pageable) {
         String regionParam = (region != null && !region.isBlank()) ? region.trim() : null;
         String sigunguParam = (sigungu != null && !sigungu.isBlank()) ? sigungu.trim() : null;
-        Page<Animal> page = animalRepository.findWithFilters(species, status, size, regionParam, sigunguParam, pageable);
+        String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
+        Page<Animal> page = animalRepository.findWithFilters(species, status, size, regionParam, sigunguParam, searchParam, pageable);
         return toPageResponse(page);
     }
 
     /** 필터 동일 + 랜덤 정렬 (많은 아이들이 골고루 노출되도록) */
     @Transactional(readOnly = true)
-    public PageResponse<AnimalResponse> findAllRandom(Species species, AnimalStatus status, Size size, String region, String sigungu, Pageable pageable) {
+    public PageResponse<AnimalResponse> findAllRandom(Species species, AnimalStatus status, Size size, String region, String sigungu, String search, Pageable pageable) {
         String regionParam = (region != null && !region.isBlank()) ? region.trim() : null;
         String sigunguParam = (sigungu != null && !sigungu.isBlank()) ? sigungu.trim() : null;
-        Page<Animal> page = animalRepository.findWithFiltersRandom(species, status, size, regionParam, sigunguParam, pageable);
+        String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
+        Page<Animal> page = animalRepository.findWithFiltersRandom(species, status, size, regionParam, sigunguParam, searchParam, pageable);
         return toPageResponse(page);
     }
 
@@ -163,6 +165,11 @@ public class AnimalService {
                 .first(page.isFirst())
                 .last(page.isLast())
                 .build();
+    }
+
+    /** 다른 서비스에서 Animal -> AnimalResponse 변환 시 사용 */
+    public AnimalResponse toAnimalResponse(Animal a) {
+        return toResponse(a);
     }
 
     private AnimalResponse toResponse(Animal a) {

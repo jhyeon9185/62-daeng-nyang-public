@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AnimatedSection from '@/components/motion/AnimatedSection';
 import AnimatedText from '@/components/motion/AnimatedText';
-import { animalApi } from '@/api';
+import { animalApi, favoriteApi } from '@/api';
+import { useAuthStore } from '@/store/authStore';
+import FavoriteButton from '@/components/animals/FavoriteButton';
 import type { Animal } from '@/types/entities';
 
 const speciesLabels: Record<string, string> = {
@@ -17,7 +19,9 @@ const sizeLabels: Record<string, string> = {
 };
 
 export default function AdoptableSection() {
+  const { isAuthenticated } = useAuthStore();
   const [adoptablePets, setAdoptablePets] = useState<Animal[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
 
   useEffect(() => {
     animalApi
@@ -34,6 +38,14 @@ export default function AdoptableSection() {
       })
       .catch(() => setAdoptablePets([]));
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setFavoriteIds([]);
+      return;
+    }
+    favoriteApi.getMyFavoriteIds().then(setFavoriteIds).catch(() => setFavoriteIds([]));
+  }, [isAuthenticated]);
   return (
     <section className="landing-section landing-magnet">
       <div className="landing-inner">
@@ -51,7 +63,19 @@ export default function AdoptableSection() {
           </div>
           <div className="landing-pet-grid">
             {adoptablePets.map((animal) => (
-              <Link key={animal.id} to={`/animals/${animal.id}`} className="landing-pet-card">
+              <Link key={animal.id} to={`/animals/${animal.id}`} className="landing-pet-card relative">
+                <div className="absolute top-3 right-3 z-10">
+                  <FavoriteButton
+                    animalId={animal.id}
+                    isFavorited={favoriteIds.includes(animal.id)}
+                    onToggle={(added) => {
+                      setFavoriteIds((prev) =>
+                        added ? [...prev, animal.id] : prev.filter((id) => id !== animal.id)
+                      );
+                    }}
+                    size="sm"
+                  />
+                </div>
                 <div
                   className="landing-pet-card-img"
                   style={{

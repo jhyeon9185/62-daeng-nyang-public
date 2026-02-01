@@ -104,6 +104,8 @@ export interface AnimalListRequest {
   region?: string;
   /** 시·군·구 키워드 (시/도 선택 시 세부 조회, 예: 강남구, 수원시) */
   sigungu?: string;
+  /** 이름·품종·보호소명 검색 (서버 검색) */
+  search?: string;
   /** 정렬: random(기본, 많은 아이들이 골고루 노출), createdAt,desc 등 */
   sort?: string;
   page?: number;

@@ -50,19 +50,21 @@ public class AnimalController {
             @RequestParam(required = false) Size size,
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String sigungu,
+            @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int sizeParam,
             @RequestParam(defaultValue = "random") String sort) {
+        String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
         Pageable pageable;
         if (sort != null && sort.trim().toLowerCase().startsWith("random")) {
             pageable = PageRequest.of(page, sizeParam);
-            return ApiResponse.success("조회 성공", animalService.findAllRandom(species, status, size, region, sigungu, pageable));
+            return ApiResponse.success("조회 성공", animalService.findAllRandom(species, status, size, region, sigungu, searchParam, pageable));
         }
         String[] sortParts = sort.split(",");
         Sort.Direction direction = sortParts.length > 1 && "asc".equalsIgnoreCase(sortParts[1])
                 ? Sort.Direction.ASC : Sort.Direction.DESC;
         pageable = PageRequest.of(page, sizeParam, Sort.by(direction, sortParts[0]));
-        PageResponse<AnimalResponse> data = animalService.findAll(species, status, size, region, sigungu, pageable);
+        PageResponse<AnimalResponse> data = animalService.findAll(species, status, size, region, sigungu, searchParam, pageable);
         return ApiResponse.success("조회 성공", data);
     }
 

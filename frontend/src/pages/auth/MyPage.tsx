@@ -7,9 +7,10 @@ import { adoptionApi } from '@/api/adoption';
 import { volunteerApi } from '@/api/volunteer';
 import { donationApi } from '@/api/donation';
 import { preferenceApi } from '@/api/preference';
+import { favoriteApi } from '@/api/favorite';
 import { useAuthStore } from '@/store/authStore';
 import type { UserResponse } from '@/types/dto';
-import type { Preference, Adoption, Volunteer, Donation } from '@/types/entities';
+import type { Preference, Adoption, Volunteer, Donation, Animal } from '@/types/entities';
 
 const statusLabel: Record<string, string> = {
   PENDING: '검토 중',
@@ -29,6 +30,7 @@ export default function MyPage() {
   const [adoptions, setAdoptions] = useState<Adoption[]>([]);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
+  const [favorites, setFavorites] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
   const [editName, setEditName] = useState('');
@@ -47,13 +49,15 @@ export default function MyPage() {
       adoptionApi.getMyList(0, 20).catch(() => ({ content: [] })),
       volunteerApi.getMyList(0, 20).catch(() => ({ content: [] })),
       donationApi.getMyList(0, 20).catch(() => ({ content: [] })),
+      favoriteApi.getMyList(0, 20).catch(() => ({ content: [] })),
     ])
-      .then(([userData, prefData, adoptData, volData, donData]) => {
+      .then(([userData, prefData, adoptData, volData, donData, favData]) => {
         if (userData) setMe(userData);
         setPreference(prefData ?? null);
         setAdoptions(Array.isArray(adoptData) ? adoptData : (adoptData?.content ?? []));
         setVolunteers(Array.isArray(volData) ? volData : (volData?.content ?? []));
         setDonations(Array.isArray(donData) ? donData : (donData?.content ?? []));
+        setFavorites(Array.isArray(favData) ? favData : (favData?.content ?? []));
       })
       .catch(() => {
         logout();
@@ -190,6 +194,36 @@ export default function MyPage() {
                 로그아웃
               </button>
             </div>
+          </section>
+
+          {/* 즐겨찾기(찜) */}
+          <section className="toss-auth-card mb-8">
+            <h2 className="text-lg font-semibold text-[var(--toss-black)] mb-4">즐겨찾기</h2>
+            {favorites.length === 0 ? (
+              <p className="text-[var(--toss-gray-500)] text-sm">찜한 동물이 없습니다.</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {favorites.map((a) => (
+                  <Link key={a.id} to={`/animals/${a.id}`} className="block rounded-xl overflow-hidden border border-[var(--toss-gray-100)] hover:border-[var(--toss-blue)] transition-colors">
+                    <div
+                      className="aspect-square bg-gray-100"
+                      style={{
+                        backgroundImage: a.imageUrl ? `url(${a.imageUrl})` : 'none',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}
+                    />
+                    <div className="p-3">
+                      <p className="font-semibold text-sm text-[var(--toss-gray-900)] truncate">{a.name}</p>
+                      <p className="text-xs text-[var(--toss-gray-500)] truncate">{a.breed ?? '품종미상'} · {a.shelterName ?? ''}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+            <Link to="/animals" className="inline-block mt-3 text-sm font-semibold text-[var(--toss-blue)] hover:text-[var(--toss-blue-hover)]">
+              입양 목록 보기 →
+            </Link>
           </section>
 
           {/* 나의 선호도 */}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { animalApi, preferenceApi } from '@/api';
+import { animalApi, preferenceApi, favoriteApi } from '@/api';
 import { useAuthStore } from '@/store/authStore';
 import type { Animal } from '@/types/entities';
 import type { PreferenceRequest } from '@/types/dto';
@@ -9,6 +9,7 @@ import ListSearch from '@/components/list/ListSearch';
 import Pagination from '@/components/list/Pagination';
 import FilterBar from '@/components/list/FilterBar';
 import PreferenceModal from '@/components/animals/PreferenceModal';
+import FavoriteButton from '@/components/animals/FavoriteButton';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { REGION_SIDO_OPTIONS, SIGUNGU_BY_SIDO } from '@/constants/regions';
@@ -50,8 +51,21 @@ export default function AnimalsPage() {
   const [showPreferenceModal, setShowPreferenceModal] = useState(false);
   const [apiAnimals, setApiAnimals] = useState<Animal[]>([]);
   const [apiTotalElements, setApiTotalElements] = useState(0);
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
 
   const totalPages = Math.ceil(apiTotalElements / pageSize) || 1;
+
+  // 로그인 시 저장된 찜 ID 목록 (하트 표시용)
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setFavoriteIds([]);
+      return;
+    }
+    favoriteApi
+      .getMyFavoriteIds()
+      .then(setFavoriteIds)
+      .catch(() => setFavoriteIds([]));
+  }, [isAuthenticated]);
 
   // 로그인 시 저장된 선호도 로드 (나를 위한 추천 탭에 반영)
   useEffect(() => {
@@ -74,7 +88,14 @@ export default function AnimalsPage() {
       .catch(() => setPreference(null));
   }, [isAuthenticated]);
 
-  // API 모드: 전체 목록 또는 선호도 기반 추천 목록
+  // 검색 debounce (입력 후 400ms 대기)
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(search.trim()), 400);
+    return () => clearTimeout(id);
+  }, [search]);
+
+  // API 모드: 전체 목록 또는 선호도 기반 추천 목록 (검색은 서버 필터)
   useEffect(() => {
     if (viewMode === 'recommended' && !isAuthenticated) {
       setApiAnimals([]);
@@ -99,6 +120,7 @@ export default function AnimalsPage() {
             status: status || undefined,
             region: region || undefined,
             sigungu: sigungu || undefined,
+            search: debouncedSearch || undefined,
             sort: 'random',
           });
           const content = data?.content ?? [];
@@ -119,21 +141,16 @@ export default function AnimalsPage() {
       }
     };
     load();
-  }, [viewMode, page, pageSize, species, size, status, region, sigungu, isAuthenticated]);
+  }, [viewMode, page, pageSize, species, size, status, region, sigungu, debouncedSearch, isAuthenticated]);
 
   const animals = apiAnimals;
 
-  // 검색어가 있으면 현재 페이지 결과에서 클라이언트 필터링
-  const filteredAnimals = useMemo(() => {
-    if (!search.trim()) return animals;
-    const q = search.trim().toLowerCase();
-    return animals.filter(
-      (a) =>
-        (a.name && a.name.toLowerCase().includes(q)) ||
-        (a.breed && a.breed.toLowerCase().includes(q)) ||
-        (a.shelterName && a.shelterName.toLowerCase().includes(q))
-    );
-  }, [animals, search]);
+  // 검색어 변경 시 페이지 0으로 리셋
+  useEffect(() => {
+    if (debouncedSearch) setPage(0);
+  }, [debouncedSearch]);
+
+  const filteredAnimals = animals;
 
   const handleSavePreference = async (pref: PreferenceRequest) => {
     try {
@@ -279,6 +296,7 @@ export default function AnimalsPage() {
                       : []),
                   ]}
                   onReset={() => {
+                    setSearch('');
                     setSpecies('');
                     setSize('');
                     setStatus('');
@@ -330,6 +348,7 @@ export default function AnimalsPage() {
                         setRegion('');
                         setSigungu('');
                         setPage(0);
+                        setViewMode('all');
                       }}
                     >
                       필터 초기화
@@ -342,8 +361,20 @@ export default function AnimalsPage() {
                         <Link
                           key={animal.id}
                           to={`/animals/${animal.id}`}
-                          className="landing-pet-card"
+                          className="landing-pet-card relative"
                         >
+                          <div className="absolute top-3 right-3 z-10">
+                            <FavoriteButton
+                              animalId={animal.id}
+                              isFavorited={favoriteIds.includes(animal.id)}
+                              onToggle={(added) => {
+                                setFavoriteIds((prev) =>
+                                  added ? [...prev, animal.id] : prev.filter((id) => id !== animal.id)
+                                );
+                              }}
+                              size="md"
+                            />
+                          </div>
                           <div
                             className="landing-pet-card-img"
                             style={{

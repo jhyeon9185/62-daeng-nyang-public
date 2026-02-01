@@ -30,6 +30,7 @@ scp -i ~/.ssh/nas_deploy_key \
 scp -i ~/.ssh/nas_deploy_key \
   /Volumes/Samsung\ X5/dev_study/DN_project/DN_project01/docs/migrations/V1__add_reject_reason_columns.sql \
   /Volumes/Samsung\ X5/dev_study/DN_project/DN_project01/docs/migrations/V2__add_volunteer_participant_count.sql \
+  /Volumes/Samsung\ X5/dev_study/DN_project/DN_project01/docs/migrations/V3__add_animal_favorites.sql \
   ec2-user@3.39.187.182:~/
 ```
 
@@ -61,6 +62,10 @@ mysql -h dn-platform-db.c98wmqqswrwy.ap-northeast-2.rds.amazonaws.com \
 # 3) V2 마이그레이션 (participant_count 컬럼)
 mysql -h dn-platform-db.c98wmqqswrwy.ap-northeast-2.rds.amazonaws.com \
   -P 3306 -u dnadmin -p dn_platform < ~/V2__add_volunteer_participant_count.sql
+
+# 4) V3 마이그레이션 (즐겨찾기/찜 테이블)
+mysql -h dn-platform-db.c98wmqqswrwy.ap-northeast-2.rds.amazonaws.com \
+  -P 3306 -u dnadmin -p dn_platform < ~/V3__add_animal_favorites.sql
 ```
 
 > **참고**: RDS는 Terraform으로 `dn_platform` DB가 이미 생성되어 있습니다. `schema.sql`의 `CREATE DATABASE IF NOT EXISTS`는 그대로 실행해도 됩니다.

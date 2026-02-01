@@ -9,5 +9,6 @@ export * from './volunteer';
 export * from './donation';
 export * from './board';
 export * from './preference';
+export * from './favorite';
 export * from './admin';
 export * from './notification';

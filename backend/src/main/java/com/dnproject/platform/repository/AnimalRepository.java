@@ -24,30 +24,36 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
 
     Optional<Animal> findByPublicApiAnimalId(String publicApiAnimalId);
 
-    /** region/sigungu는 Shelter.regionSido, regionSigungu 기준 정확 매칭 (주소 LIKE 대신) */
+    /** region/sigungu는 Shelter.regionSido, regionSigungu 기준 정확 매칭. search는 이름·품종·보호소명 LIKE */
     @Query("SELECT a FROM Animal a JOIN a.shelter s WHERE (:species IS NULL OR a.species = :species) " +
             "AND (:status IS NULL OR a.status = :status) AND (:size IS NULL OR a.size = :size) " +
             "AND (:region IS NULL OR :region = '' OR s.regionSido = :region) " +
-            "AND (:sigungu IS NULL OR :sigungu = '' OR s.regionSigungu = :sigungu)")
+            "AND (:sigungu IS NULL OR :sigungu = '' OR s.regionSigungu = :sigungu) " +
+            "AND (:search IS NULL OR :search = '' OR LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(a.breed) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Animal> findWithFilters(@Param("species") Species species, @Param("status") AnimalStatus status,
                                  @Param("size") Size size, @Param("region") String region,
-                                 @Param("sigungu") String sigungu, Pageable pageable);
+                                 @Param("sigungu") String sigungu, @Param("search") String search, Pageable pageable);
 
     /** 위와 동일 필터 + 랜덤 정렬 (많은 아이들이 노출되도록) */
     @Query(value = "SELECT a.* FROM animals a INNER JOIN shelters s ON a.shelter_id = s.id " +
             "WHERE (:species IS NULL OR a.species = :species) " +
             "AND (:status IS NULL OR a.status = :status) AND (:size IS NULL OR a.size = :size) " +
             "AND (:region IS NULL OR :region = '' OR s.region_sido = :region) " +
-            "AND (:sigungu IS NULL OR :sigungu = '' OR s.region_sigungu = :sigungu) ORDER BY RAND()",
+            "AND (:sigungu IS NULL OR :sigungu = '' OR s.region_sigungu = :sigungu) " +
+            "AND (:search IS NULL OR :search = '' OR LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(a.breed) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))) ORDER BY RAND()",
             countQuery = "SELECT COUNT(a.id) FROM animals a INNER JOIN shelters s ON a.shelter_id = s.id " +
             "WHERE (:species IS NULL OR a.species = :species) " +
             "AND (:status IS NULL OR a.status = :status) AND (:size IS NULL OR a.size = :size) " +
             "AND (:region IS NULL OR :region = '' OR s.region_sido = :region) " +
-            "AND (:sigungu IS NULL OR :sigungu = '' OR s.region_sigungu = :sigungu)",
+            "AND (:sigungu IS NULL OR :sigungu = '' OR s.region_sigungu = :sigungu) " +
+            "AND (:search IS NULL OR :search = '' OR LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(a.breed) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))))",
             nativeQuery = true)
     Page<Animal> findWithFiltersRandom(@Param("species") Species species, @Param("status") AnimalStatus status,
                                        @Param("size") Size size, @Param("region") String region,
-                                       @Param("sigungu") String sigungu, Pageable pageable);
+                                       @Param("sigungu") String sigungu, @Param("search") String search, Pageable pageable);
 
     /** 공공API 유래, 보호중, 등록일이 N일 초과된 동물 (상태 보정 대상) */
     @Query("SELECT a FROM Animal a WHERE a.publicApiAnimalId IS NOT NULL AND a.publicApiAnimalId != '' " +

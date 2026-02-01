@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { animalApi, adoptionApi } from '@/api';
+import { animalApi, adoptionApi, favoriteApi } from '@/api';
+import { useAuthStore } from '@/store/authStore';
 import type { Animal } from '@/types/entities';
 import type { AdoptionRequest } from '@/types/dto';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import KakaoMap from '@/components/map/KakaoMap';
+import FavoriteButton from '@/components/animals/FavoriteButton';
 
 const speciesLabels: Record<string, string> = { DOG: '강아지', CAT: '고양이' };
 const sizeLabels: Record<string, string> = { SMALL: '소형', MEDIUM: '중형', LARGE: '대형' };
@@ -15,8 +17,10 @@ const statusLabels: Record<string, string> = { PROTECTED: '보호 중', ADOPTED:
 export default function AnimalDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<AdoptionRequest>({
@@ -33,6 +37,14 @@ export default function AnimalDetailPage() {
       loadAnimal();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      favoriteApi.getMyFavoriteIds().then(setFavoriteIds).catch(() => setFavoriteIds([]));
+    } else {
+      setFavoriteIds([]);
+    }
+  }, [isAuthenticated]);
 
   const loadAnimal = async () => {
     try {
@@ -116,7 +128,19 @@ export default function AnimalDetailPage() {
                     </div>
                   )}
                 </div>
-                <div className="p-8 flex flex-col">
+                <div className="p-8 flex flex-col relative">
+                  <div className="absolute top-8 right-8">
+                    <FavoriteButton
+                      animalId={animal.id}
+                      isFavorited={favoriteIds.includes(animal.id)}
+                      onToggle={(added) => {
+                        setFavoriteIds((prev) =>
+                          added ? [...prev, animal.id] : prev.filter((i) => i !== animal.id)
+                        );
+                      }}
+                      size="lg"
+                    />
+                  </div>
                   <h1 className="text-3xl font-bold mb-2">{animal.name}</h1>
                   <p className="text-gray-600 mb-4">{animal.shelterName}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mb-6 text-sm">
