@@ -42,14 +42,14 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
             "AND (:region IS NULL OR :region = '' OR s.region_sido = :region) " +
             "AND (:sigungu IS NULL OR :sigungu = '' OR s.region_sigungu = :sigungu) " +
             "AND (:search IS NULL OR :search = '' OR LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(a.breed) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))) ORDER BY RAND()",
+            "OR LOWER(a.breed) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))) ORDER BY RAND()",
             countQuery = "SELECT COUNT(a.id) FROM animals a INNER JOIN shelters s ON a.shelter_id = s.id " +
             "WHERE (:species IS NULL OR a.species = :species) " +
             "AND (:status IS NULL OR a.status = :status) AND (:size IS NULL OR a.size = :size) " +
             "AND (:region IS NULL OR :region = '' OR s.region_sido = :region) " +
             "AND (:sigungu IS NULL OR :sigungu = '' OR s.region_sigungu = :sigungu) " +
             "AND (:search IS NULL OR :search = '' OR LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(a.breed) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))))",
+            "OR LOWER(a.breed) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))",
             nativeQuery = true)
     Page<Animal> findWithFiltersRandom(@Param("species") Species species, @Param("status") AnimalStatus status,
                                        @Param("size") Size size, @Param("region") String region,
