@@ -54,14 +54,15 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
             "AND a.status = :status AND a.registerDate < :cutoff")
     List<Animal> findExpiredFromPublicApi(@Param("status") AnimalStatus status, @Param("cutoff") LocalDate cutoff);
 
-    /** 선호도 기반: 종류·나이 범위·크기로 필터링 (입양 가능한 상태만) */
-    @Query("SELECT a FROM Animal a WHERE a.imageUrl IS NOT NULL AND a.imageUrl != '' " +
+    /** 선호도 기반: 종류·나이 범위·크기·지역으로 필터링 (입양 가능한 상태만) */
+    @Query("SELECT a FROM Animal a JOIN a.shelter s WHERE a.imageUrl IS NOT NULL AND a.imageUrl != '' " +
             "AND a.status IN :statuses " +
             "AND (:species IS NULL OR a.species = :species) " +
             "AND (:minAge IS NULL OR a.age >= :minAge) AND (:maxAge IS NULL OR a.age <= :maxAge) " +
-            "AND (:size IS NULL OR a.size = :size)")
+            "AND (:size IS NULL OR a.size = :size) " +
+            "AND (:region IS NULL OR :region = '' OR s.regionSido = :region)")
     Page<Animal> findRecommended(@Param("statuses") List<AnimalStatus> statuses,
                                  @Param("species") Species species,
                                  @Param("minAge") Integer minAge, @Param("maxAge") Integer maxAge,
-                                 @Param("size") Size size, Pageable pageable);
+                                 @Param("size") Size size, @Param("region") String region, Pageable pageable);
 }

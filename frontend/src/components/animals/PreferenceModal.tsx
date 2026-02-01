@@ -1,9 +1,10 @@
 /**
  * 입양 선호도 설정 모달
- * 종류, 나이 범위, 크기를 설정해 맞춤 추천 받기
+ * 종류, 나이 범위, 크기, 지역(시·도)을 설정해 맞춤 추천 받기
  */
 import { useState } from 'react';
 import type { PreferenceRequest } from '@/types/dto';
+import { REGION_SIDO_OPTIONS } from '@/constants/regions';
 
 interface PreferenceModalProps {
   currentPreference?: PreferenceRequest;
@@ -34,6 +35,7 @@ export default function PreferenceModal({
     minAge: currentPreference?.minAge || undefined,
     maxAge: currentPreference?.maxAge || undefined,
     size: currentPreference?.size || undefined,
+    region: currentPreference?.region || undefined,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -125,6 +127,27 @@ export default function PreferenceModal({
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">비워두면 나이 제한 없이 추천합니다.</p>
+          </div>
+
+          <div>
+            <label className="block font-semibold mb-2 text-sm">선호 지역 (시·도)</label>
+            <select
+              className="w-full border border-gray-300 rounded-lg p-2"
+              value={formData.region ?? ''}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  region: e.target.value ? e.target.value : undefined,
+                })
+              }
+            >
+              {REGION_SIDO_OPTIONS.map(({ value, label }) => (
+                <option key={value || 'all'} value={value}>
+                  {value === '' ? '상관없음' : label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">선호하는 지역의 보호소 아이들만 추천합니다.</p>
           </div>
 
           <div>

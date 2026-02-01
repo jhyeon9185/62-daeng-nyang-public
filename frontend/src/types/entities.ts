@@ -22,6 +22,8 @@ export interface Preference {
   minAge?: number;
   maxAge?: number;
   size?: Size;
+  /** 선호 지역 (시·도 단위) */
+  region?: string;
   createdAt?: string;
   updatedAt?: string;
 }

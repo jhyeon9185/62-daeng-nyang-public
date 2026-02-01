@@ -238,6 +238,7 @@ export default function MyPage() {
                   <li>나이: {preference.minAge ?? '-'} ~ {preference.maxAge ?? '-'}세</li>
                 )}
                 {preference.size && <li>크기: {preference.size}</li>}
+                {preference.region && <li>지역: {preference.region}</li>}
               </ul>
             ) : (
               <p className="text-[var(--toss-gray-500)] text-sm">설정된 선호도가 없습니다.</p>

@@ -4,6 +4,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { preferenceApi } from '@/api/preference';
 import { useAuthStore } from '@/store/authStore';
+import { REGION_SIDO_OPTIONS } from '@/constants/regions';
 import type { PreferenceRequest } from '@/types/dto';
 
 const SPECIES_OPTIONS: { value: '' | 'DOG' | 'CAT'; label: string }[] = [
@@ -26,6 +27,7 @@ export default function PreferencePage() {
   const [minAge, setMinAge] = useState<string>('');
   const [maxAge, setMaxAge] = useState<string>('');
   const [size, setSize] = useState<string>('');
+  const [region, setRegion] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -44,6 +46,7 @@ export default function PreferencePage() {
           setMinAge(data.minAge != null ? String(data.minAge) : '');
           setMaxAge(data.maxAge != null ? String(data.maxAge) : '');
           setSize(data.size ?? '');
+          setRegion(data.region ?? '');
         }
       })
       .catch(() => {
@@ -51,6 +54,7 @@ export default function PreferencePage() {
         setMinAge('');
         setMaxAge('');
         setSize('');
+        setRegion('');
       })
       .finally(() => setLoading(false));
   }, [isAuthenticated, navigate]);
@@ -68,6 +72,7 @@ export default function PreferencePage() {
       if (min != null && !Number.isNaN(min)) payload.minAge = min;
       if (max != null && !Number.isNaN(max)) payload.maxAge = max;
       if (size === 'SMALL' || size === 'MEDIUM' || size === 'LARGE') payload.size = size;
+      if (region && region.trim()) payload.region = region.trim();
       await preferenceApi.update(payload);
       setSuccess(true);
     } catch (err: unknown) {
@@ -180,6 +185,24 @@ export default function PreferencePage() {
                 {SIZE_OPTIONS.map((opt) => (
                   <option key={opt.value || 'none'} value={opt.value}>
                     {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="toss-auth-field">
+              <label htmlFor="pref-region" className="toss-auth-label">
+                지역 (시·도)
+              </label>
+              <select
+                id="pref-region"
+                className="toss-auth-input"
+                value={region ?? ''}
+                onChange={(e) => setRegion(e.target.value)}
+              >
+                {REGION_SIDO_OPTIONS.map((opt) => (
+                  <option key={opt.value || 'none'} value={opt.value}>
+                    {opt.value === '' ? '상관없음' : opt.label}
                   </option>
                 ))}
               </select>

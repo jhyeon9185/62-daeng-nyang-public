@@ -48,6 +48,12 @@ public class PreferenceService {
         if (request.getSize() != null) {
             preference.setSize(request.getSize());
         }
+        if (request.getRegion() != null) {
+            String r = request.getRegion().trim();
+            preference.setRegion(r.isEmpty() ? null : r);
+        } else {
+            preference.setRegion(null);
+        }
 
         preference = preferenceRepository.save(preference);
         return toResponse(preference);
@@ -61,6 +67,7 @@ public class PreferenceService {
                 .minAge(p.getMinAge())
                 .maxAge(p.getMaxAge())
                 .size(p.getSize())
+                .region(p.getRegion())
                 .build();
     }
 }

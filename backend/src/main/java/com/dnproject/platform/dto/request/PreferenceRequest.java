@@ -15,4 +15,6 @@ public class PreferenceRequest {
     private Integer minAge;
     private Integer maxAge;
     private Size size;
+    /** 선호 지역 (시·도 단위, 예: 서울, 경기) */
+    private String region;
 }
