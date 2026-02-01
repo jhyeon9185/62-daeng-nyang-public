@@ -232,12 +232,14 @@
 }
 
 .landing-hero-track {
-  --hero-slide-width: 72vw;
+  /* 슬라이드 폭: 한 개만 중앙에 보이고 양옆만 peek 되도록 (72vw 또는 최대 640px) */
+  --hero-slide-width: min(72vw, 640px);
   --hero-gap: 1rem;
   --hero-offset: calc(var(--hero-slide-width) + var(--hero-gap));
   display: flex;
   gap: var(--hero-gap);
-  padding: 0 calc(50vw - var(--hero-slide-width) / 2 - var(--hero-gap) / 2);
+  padding-left: calc(50vw - var(--hero-slide-width) / 2 - var(--hero-gap) / 2);
+  padding-right: calc(50vw - var(--hero-slide-width) / 2 - var(--hero-gap) / 2);
   transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
   transform: translateX(calc(-1 * var(--hero-active-index, 0) * var(--hero-offset)));
   cursor: grab;
@@ -250,7 +252,6 @@
 .landing-hero-slide {
   flex-shrink: 0;
   width: var(--hero-slide-width);
-  max-width: 520px;
   min-height: 75vh;
   border-radius: var(--landing-radius-lg);
   overflow: hidden;
