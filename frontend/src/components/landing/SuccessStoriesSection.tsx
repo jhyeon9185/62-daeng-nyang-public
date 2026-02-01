@@ -35,7 +35,7 @@ export default function SuccessStoriesSection() {
             숫자는 차갑지만, 선택은 따뜻합니다. 한 사람의 행동이 한 생명의 인생이 됩니다.
           </p>
           <div className="landing-center-actions">
-            <Link to="/boards?type=review" className="landing-btn landing-btn-secondary">
+            <Link to="/boards?type=FREE" className="landing-btn landing-btn-secondary">
               더 많은 후기 보기
             </Link>
           </div>

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import ScrollRestoration from '@/components/ScrollRestoration';
 import LandingPage from '@/pages/landing/LandingPage';
 import AnimalsPage from '@/pages/animals/AnimalsPage';
 import AnimalDetailPage from '@/pages/animals/AnimalDetailPage';
@@ -23,6 +24,7 @@ function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ScrollRestoration />
         <Routes>
         <Route path="/" element={<LandingPage />} />
         

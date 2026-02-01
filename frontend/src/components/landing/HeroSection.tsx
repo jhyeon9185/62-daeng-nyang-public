@@ -38,7 +38,7 @@ export default function HeroSection() {
         desc: '국민 10명 중 6명 이상은 “펫숍이 아니라 보호소 아이를 가족으로 맞이하겠다”는 따뜻한 마음을 갖고 있습니다.',
         links: [
           { to: '/animals', label: '입양하기' },
-          { to: '/boards?type=review', label: '후기 보기' },
+          { to: '/boards?type=FREE', label: '후기 보기' },
         ],
       },
       {
