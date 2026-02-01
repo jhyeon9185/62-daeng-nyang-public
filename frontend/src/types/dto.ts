@@ -224,8 +224,8 @@ export interface PreferenceRequest {
   minAge?: number;
   maxAge?: number;
   size?: 'SMALL' | 'MEDIUM' | 'LARGE';
-  /** 선호 지역 (시·도 단위, 예: 서울, 경기) */
-  region?: string;
+  /** 선호 지역 복수 (시·도 단위, 예: ["서울", "경기"]) */
+  regions?: string[];
 }
 
 export type PreferenceResponse = Preference;

@@ -34,7 +34,7 @@ CREATE TABLE preferences (
     min_age INT,
     max_age INT,
     size VARCHAR(10),
-    region VARCHAR(50),
+    region VARCHAR(200),
     temperament VARCHAR(100),
     created_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),

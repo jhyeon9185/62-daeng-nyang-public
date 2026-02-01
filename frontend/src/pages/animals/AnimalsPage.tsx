@@ -82,7 +82,7 @@ export default function AnimalsPage() {
             minAge: data.minAge ?? undefined,
             maxAge: data.maxAge ?? undefined,
             size: data.size ?? undefined,
-            region: data.region ?? undefined,
+            regions: data.regions ?? [],
           });
         else setPreference(null);
       })
@@ -319,7 +319,7 @@ export default function AnimalsPage() {
                     ? `${preference.minAge ?? 0}~${preference.maxAge ?? '제한없음'}세`
                     : '나이 무관'} ·{' '}
                   {preference.size ? sizeLabels[preference.size] : '크기 무관'}
-                  {preference.region ? ` · ${preference.region}` : ' · 지역 무관'}
+                  {preference.regions?.length ? ` · ${preference.regions.join(', ')}` : ' · 지역 무관'}
                 </p>
               </div>
             )}

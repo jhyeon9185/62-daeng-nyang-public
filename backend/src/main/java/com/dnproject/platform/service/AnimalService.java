@@ -154,9 +154,11 @@ public class AnimalService {
         Integer minAge = pref.getMinAge();
         Integer maxAge = pref.getMaxAge();
         Size size = pref.getSize();
-        String region = (pref.getRegion() != null && !pref.getRegion().isBlank()) ? pref.getRegion().trim() : null;
+        List<String> regions = (pref.getRegions() != null && !pref.getRegions().isEmpty())
+                ? pref.getRegions().stream().map(String::trim).filter(s -> !s.isBlank()).toList()
+                : null;
         List<AnimalStatus> statuses = List.of(AnimalStatus.PROTECTED, AnimalStatus.FOSTERING);
-        Page<Animal> page = animalRepository.findRecommended(statuses, species, minAge, maxAge, size, region, pageable);
+        Page<Animal> page = animalRepository.findRecommended(statuses, species, minAge, maxAge, size, regions, pageable);
         return PageResponse.<AnimalResponse>builder()
                 .content(page.getContent().stream().map(this::toResponse).toList())
                 .page(page.getNumber())

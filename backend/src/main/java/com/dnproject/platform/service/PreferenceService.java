@@ -11,6 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class PreferenceService {
@@ -48,9 +52,12 @@ public class PreferenceService {
         if (request.getSize() != null) {
             preference.setSize(request.getSize());
         }
-        if (request.getRegion() != null) {
-            String r = request.getRegion().trim();
-            preference.setRegion(r.isEmpty() ? null : r);
+        if (request.getRegions() != null && !request.getRegions().isEmpty()) {
+            String joined = request.getRegions().stream()
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.joining(","));
+            preference.setRegion(joined.isEmpty() ? null : joined);
         } else {
             preference.setRegion(null);
         }
@@ -60,6 +67,13 @@ public class PreferenceService {
     }
 
     private PreferenceResponse toResponse(Preference p) {
+        List<String> regions = null;
+        if (p.getRegion() != null && !p.getRegion().isBlank()) {
+            regions = Arrays.stream(p.getRegion().split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList();
+        }
         return PreferenceResponse.builder()
                 .id(p.getId())
                 .userId(p.getUser().getId())
@@ -67,7 +81,7 @@ public class PreferenceService {
                 .minAge(p.getMinAge())
                 .maxAge(p.getMaxAge())
                 .size(p.getSize())
-                .region(p.getRegion())
+                .regions(regions)
                 .build();
     }
 }

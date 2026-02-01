@@ -1,10 +1,13 @@
 /**
  * 입양 선호도 설정 모달
- * 종류, 나이 범위, 크기, 지역(시·도)을 설정해 맞춤 추천 받기
+ * 종류, 나이 범위, 크기, 지역(시·도 복수)을 설정해 맞춤 추천 받기
  */
 import { useState } from 'react';
 import type { PreferenceRequest } from '@/types/dto';
 import { REGION_SIDO_OPTIONS } from '@/constants/regions';
+
+/** 시·도 옵션 중 값이 있는 것만 (전체 제외) */
+const REGION_OPTIONS = REGION_SIDO_OPTIONS.filter((o) => o.value !== '');
 
 interface PreferenceModalProps {
   currentPreference?: PreferenceRequest;
@@ -35,7 +38,7 @@ export default function PreferenceModal({
     minAge: currentPreference?.minAge || undefined,
     maxAge: currentPreference?.maxAge || undefined,
     size: currentPreference?.size || undefined,
-    region: currentPreference?.region || undefined,
+    regions: currentPreference?.regions ?? [],
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -130,24 +133,35 @@ export default function PreferenceModal({
           </div>
 
           <div>
-            <label className="block font-semibold mb-2 text-sm">선호 지역 (시·도)</label>
-            <select
-              className="w-full border border-gray-300 rounded-lg p-2"
-              value={formData.region ?? ''}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  region: e.target.value ? e.target.value : undefined,
-                })
-              }
-            >
-              {REGION_SIDO_OPTIONS.map(({ value, label }) => (
-                <option key={value || 'all'} value={value}>
-                  {value === '' ? '상관없음' : label}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-500 mt-1">선호하는 지역의 보호소 아이들만 추천합니다.</p>
+            <label className="block font-semibold mb-2 text-sm">선호 지역 (시·도, 복수 선택)</label>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
+              {REGION_OPTIONS.map(({ value, label }) => {
+                const selected = (formData.regions ?? []).includes(value);
+                return (
+                  <label
+                    key={value}
+                    className={`flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer text-sm ${
+                      selected ? 'bg-green-50 text-green-700' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={(e) => {
+                        const current = formData.regions ?? [];
+                        const next = e.target.checked
+                          ? [...current, value]
+                          : current.filter((r) => r !== value);
+                        setFormData({ ...formData, regions: next.length > 0 ? next : [] });
+                      }}
+                      className="rounded border-gray-300"
+                    />
+                    {label}
+                  </label>
+                );
+              })}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">선택한 지역의 보호소 아이들만 추천합니다. (비우면 전체)</p>
           </div>
 
           <div>

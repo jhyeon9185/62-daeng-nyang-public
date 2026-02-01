@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,6 +21,6 @@ public class PreferenceResponse {
     private Integer minAge;
     private Integer maxAge;
     private Size size;
-    /** 선호 지역 (시·도 단위) */
-    private String region;
+    /** 선호 지역 복수 (시·도 단위) */
+    private List<String> regions;
 }

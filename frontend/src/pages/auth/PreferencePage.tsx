@@ -27,7 +27,7 @@ export default function PreferencePage() {
   const [minAge, setMinAge] = useState<string>('');
   const [maxAge, setMaxAge] = useState<string>('');
   const [size, setSize] = useState<string>('');
-  const [region, setRegion] = useState<string>('');
+  const [regions, setRegions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -46,7 +46,7 @@ export default function PreferencePage() {
           setMinAge(data.minAge != null ? String(data.minAge) : '');
           setMaxAge(data.maxAge != null ? String(data.maxAge) : '');
           setSize(data.size ?? '');
-          setRegion(data.region ?? '');
+          setRegions(data.regions ?? []);
         }
       })
       .catch(() => {
@@ -54,7 +54,7 @@ export default function PreferencePage() {
         setMinAge('');
         setMaxAge('');
         setSize('');
-        setRegion('');
+        setRegions([]);
       })
       .finally(() => setLoading(false));
   }, [isAuthenticated, navigate]);
@@ -72,7 +72,7 @@ export default function PreferencePage() {
       if (min != null && !Number.isNaN(min)) payload.minAge = min;
       if (max != null && !Number.isNaN(max)) payload.maxAge = max;
       if (size === 'SMALL' || size === 'MEDIUM' || size === 'LARGE') payload.size = size;
-      if (region && region.trim()) payload.region = region.trim();
+      if (regions.length > 0) payload.regions = regions.filter((r) => r.trim());
       await preferenceApi.update(payload);
       setSuccess(true);
     } catch (err: unknown) {
@@ -191,21 +191,35 @@ export default function PreferencePage() {
             </div>
 
             <div className="toss-auth-field">
-              <label htmlFor="pref-region" className="toss-auth-label">
-                지역 (시·도)
+              <label className="toss-auth-label">
+                지역 (시·도, 복수 선택)
               </label>
-              <select
-                id="pref-region"
-                className="toss-auth-input"
-                value={region ?? ''}
-                onChange={(e) => setRegion(e.target.value)}
-              >
-                {REGION_SIDO_OPTIONS.map((opt) => (
-                  <option key={opt.value || 'none'} value={opt.value}>
-                    {opt.value === '' ? '상관없음' : opt.label}
-                  </option>
-                ))}
-              </select>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                {REGION_SIDO_OPTIONS.filter((o) => o.value !== '').map(({ value, label }) => {
+                  const selected = regions.includes(value);
+                  return (
+                    <label
+                      key={value}
+                      className={`flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer text-sm ${
+                        selected ? 'bg-green-50 text-green-700' : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={(e) => {
+                          const next = e.target.checked
+                            ? [...regions, value]
+                            : regions.filter((r) => r !== value);
+                          setRegions(next);
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      {label}
+                    </label>
+                  );
+                })}
+              </div>
             </div>
 
             <button type="submit" disabled={saving} className="toss-auth-submit">
