@@ -64,7 +64,7 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 5m
-          envs: RDS_ENDPOINT,RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL,DATA_API_KEY,FRONTEND_URL
+          envs: RDS_ENDPOINT,RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL,DATA_API_KEY,FRONTEND_URL,PUBLIC_API_SYNC_ENABLED,PUBLIC_API_SYNC_CRON
           script: |
             cd /home/ec2-user
             tar -xzvf deploy.tar.gz
@@ -121,6 +121,8 @@ jobs:
               --resend.api-key="${RESEND_API_KEY}" \
               --resend.from-email="${RESEND_FROM_EMAIL}" \
               --public-api.service-key="${DATA_API_KEY}" \
+              --public-api.sync-enabled="${PUBLIC_API_SYNC_ENABLED:-false}" \
+              --public-api.sync-cron="${PUBLIC_API_SYNC_CRON:-0 0 2 * * *}" \
               --app.frontend-url="${FRONTEND_URL}" \
               --cors.allowed-origins="${CORS_ORIGINS}"
             START
@@ -160,3 +162,5 @@ jobs:
           RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
           DATA_API_KEY: ${{ secrets.DATA_API_KEY }}
           FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          PUBLIC_API_SYNC_ENABLED: ${{ secrets.PUBLIC_API_SYNC_ENABLED }}
+          PUBLIC_API_SYNC_CRON: ${{ secrets.PUBLIC_API_SYNC_CRON }}
