@@ -78,7 +78,7 @@ export default function GuideAdoptionPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 bg-gray-50 py-12 px-4">
+      <main className="flex-1 bg-gray-50 py-12 px-4" style={{ paddingTop: '6.5rem' }}>
         <div className="max-w-2xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">입양 절차 안내</h1>
           <p className="text-gray-600 mb-6">
