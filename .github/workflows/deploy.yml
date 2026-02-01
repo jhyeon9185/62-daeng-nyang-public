@@ -153,7 +153,7 @@ jobs:
               --resend.from-email="${RESEND_FROM_EMAIL}" \
               --public-api.service-key="${DATA_API_KEY}" \
               --public-api.sync-enabled="${PUBLIC_API_SYNC_ENABLED:-false}" \
-              --public-api.sync-cron="${PUBLIC_API_SYNC_CRON:-0 0 2 * * *}" \
+              --public-api.sync-cron="${PUBLIC_API_SYNC_CRON:-0 0 17 * * *}" \
               --app.frontend-url="${FRONTEND_URL}" \
               --cors.allowed-origins="${CORS_ORIGINS}"
             START
