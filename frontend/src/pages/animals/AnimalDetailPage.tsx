@@ -20,6 +20,7 @@ export default function AnimalDetailPage() {
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -76,13 +77,27 @@ export default function AnimalDetailPage() {
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
               <div className="grid md:grid-cols-2 gap-6">
                 <div
-                  className="aspect-square bg-gray-200 flex items-center justify-center"
+                  className={`aspect-square bg-gray-200 flex items-center justify-center relative ${animal.imageUrl ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
                   style={{
                     backgroundImage: animal.imageUrl ? `url(${animal.imageUrl})` : 'none',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }}
+                  onClick={() => animal.imageUrl && setImageModalOpen(true)}
+                  role={animal.imageUrl ? 'button' : undefined}
+                  tabIndex={animal.imageUrl ? 0 : undefined}
+                  onKeyDown={(e) => {
+                    if (animal.imageUrl && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      setImageModalOpen(true);
+                    }
+                  }}
                 >
+                  {animal.imageUrl && (
+                    <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
+                      클릭하여 확대
+                    </div>
+                  )}
                   {!animal.imageUrl && (
                     <div className="text-center text-gray-400">
                       <svg className="w-24 h-24 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
@@ -287,6 +302,38 @@ export default function AnimalDetailPage() {
         </section>
       </main>
       <Footer />
+
+      {/* 이미지 확대 모달 */}
+      {imageModalOpen && animal.imageUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setImageModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="이미지 확대 보기"
+        >
+          <button
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
+            onClick={() => setImageModalOpen(false)}
+            aria-label="닫기"
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="max-w-5xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            <img
+              src={animal.imageUrl}
+              alt={animal.name}
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-4 py-2 rounded">
+            {animal.name}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
