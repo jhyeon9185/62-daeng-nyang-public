@@ -73,7 +73,7 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           {isAuthenticated ? (
             <>
               {(user?.role === 'SUPER_ADMIN' || user?.role === 'SHELTER_ADMIN') && (

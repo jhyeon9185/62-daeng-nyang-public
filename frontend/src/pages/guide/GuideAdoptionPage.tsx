@@ -1,6 +1,10 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import GuideCallBlock from '@/components/guide/GuideCallBlock';
+import { animalApi } from '@/api';
+import type { Animal } from '@/types/entities';
 
 const ADOPTION_STEPS = [
   {
@@ -14,15 +18,15 @@ const ADOPTION_STEPS = [
     step: 2,
     title: '입양 대기 동물 확인',
     desc: '국가동물보호정보시스템에 접속하거나 각 지역 동물보호센터를 방문하여 입양 가능한 강아지를 확인하세요. 유실·유기동물은 보호소 입소 후 10일간의 공고 기간을 거친 후 분양 가능합니다.',
-    linkLabel: '국가동물보호정보시스템',
-    linkUrl: 'https://www.animal.go.kr',
+    linkLabel: null,
+    linkUrl: null,
   },
   {
     step: 3,
     title: '입양상담 예약',
     desc: '선택한 강아지가 있는 보호센터에 사전 전화 예약을 통해 방문 일정을 잡으세요. 유선 예약이 필수이며, 센터마다 다른 운영 시간과 상담자를 배정받습니다. 서울 예: 마포 02-2124-2839, 구로 02-2636-7650·7649, 동대문 02-921-2415.',
-    linkLabel: '서울 동물복지지원센터 (예시)',
-    linkUrl: 'https://news.seoul.go.kr/env/adoptinfo',
+    linkLabel: null,
+    linkUrl: null,
   },
   {
     step: 4,
@@ -48,6 +52,29 @@ const ADOPTION_STEPS = [
 ];
 
 export default function GuideAdoptionPage() {
+  const [searchParams] = useSearchParams();
+  const animalIdParam = searchParams.get('animalId');
+  const [animal, setAnimal] = useState<Animal | null>(null);
+  const [animalLoading, setAnimalLoading] = useState(false);
+
+  useEffect(() => {
+    if (!animalIdParam) {
+      setAnimal(null);
+      return;
+    }
+    const id = Number(animalIdParam);
+    if (Number.isNaN(id)) {
+      setAnimal(null);
+      return;
+    }
+    setAnimalLoading(true);
+    animalApi
+      .getById(id)
+      .then(setAnimal)
+      .catch(() => setAnimal(null))
+      .finally(() => setAnimalLoading(false));
+  }, [animalIdParam]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -66,6 +93,15 @@ export default function GuideAdoptionPage() {
               상담 예약·운영 시간·지원금 등은 지자체·보호센터마다 다를 수 있으므로, 반드시 해당 지역 동물보호센터 또는 지자체에 전화로 확인하세요.
             </p>
           </div>
+
+          {animalLoading && (
+            <p className="text-sm text-gray-500 mb-6">해당 아이 정보 불러오는 중...</p>
+          )}
+          {!animalLoading && animal && (
+            <div className="mb-8">
+              <GuideCallBlock animal={animal} type="adoption" variant="green" />
+            </div>
+          )}
 
           <ol className="space-y-6">
             {ADOPTION_STEPS.map(({ step, title, desc, linkLabel, linkUrl }) => (
@@ -95,20 +131,9 @@ export default function GuideAdoptionPage() {
 
           <div className="mt-8 pt-6 border-t border-gray-200">
             <h3 className="font-semibold text-gray-800 mb-2">고양이 입양 (보호소 유기묘)</h3>
-            <p className="text-gray-600 text-sm mb-3">
-              정보 확인 → 보호소에 전화로 입양 의사 전달 → 서류 준비 → 방문·상담 → 개체 만남 → 입양 확정. 비마이펫, 동물보호관리시스템에서 입양 가능한 고양이를 조회할 수 있습니다.
+            <p className="text-gray-600 text-sm">
+              정보 확인 → 보호소에 전화로 입양 의사 전달 → 서류 준비 → 방문·상담 → 개체 만남 → 입양 확정. 동물보호관리시스템·지역 보호센터에서 입양 가능한 고양이를 조회할 수 있습니다.
             </p>
-            <a
-              href="https://bemiypet.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200"
-            >
-              비마이펫 (보호동물 검색)
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
           </div>
 
           <div className="mt-8 flex gap-3">

@@ -1,21 +1,25 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import GuideCallBlock from '@/components/guide/GuideCallBlock';
+import { animalApi } from '@/api';
+import type { Animal } from '@/types/entities';
 
 const FOSTER_STEPS = [
   {
     step: 1,
     title: '임보 신청서 작성',
     desc: '임보를 희망하는 단체나 개인이 제시하는 신청 양식을 작성합니다. 임보 희망 동물의 이름, 관리 가능한 문제 상황, 임보 가능 기간(최소 2개월 이상), 주거지 형태 등을 기재합니다.',
-    linkLabel: '핌피바이러스 (임보 동물 정보)',
-    linkUrl: 'https://www.pimfyvirus.com/search/01/',
+    linkLabel: null,
+    linkUrl: null,
   },
   {
     step: 2,
     title: '가정 환경 점검',
     desc: '임보 전 반드시 확인할 체크리스트: 가족 전원이 임보에 적극 동의, 환경의 안전 위험 요소 제거, 초기 2주간 집중 돌봄 가능성, 주거 규정(반려동물 사육 허용 여부), 응급 상황 시 병원 접근성.',
-    linkLabel: '반려동물 정보 (NIAS 체크리스트)',
-    linkUrl: 'https://nias.go.kr/companion/new_petBoard.do?cmCode=M210521165508815',
+    linkLabel: null,
+    linkUrl: null,
   },
   {
     step: 3,
@@ -34,6 +38,29 @@ const FOSTER_STEPS = [
 ];
 
 export default function GuideFosterPage() {
+  const [searchParams] = useSearchParams();
+  const animalIdParam = searchParams.get('animalId');
+  const [animal, setAnimal] = useState<Animal | null>(null);
+  const [animalLoading, setAnimalLoading] = useState(false);
+
+  useEffect(() => {
+    if (!animalIdParam) {
+      setAnimal(null);
+      return;
+    }
+    const id = Number(animalIdParam);
+    if (Number.isNaN(id)) {
+      setAnimal(null);
+      return;
+    }
+    setAnimalLoading(true);
+    animalApi
+      .getById(id)
+      .then(setAnimal)
+      .catch(() => setAnimal(null))
+      .finally(() => setAnimalLoading(false));
+  }, [animalIdParam]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -52,6 +79,15 @@ export default function GuideFosterPage() {
               임보 비용·지원 내용은 단체마다 다를 수 있으므로, 희망하는 단체에 직접 전화로 확인하세요.
             </p>
           </div>
+
+          {animalLoading && (
+            <p className="text-sm text-gray-500 mb-6">해당 아이 정보 불러오는 중...</p>
+          )}
+          {!animalLoading && animal && (
+            <div className="mb-8">
+              <GuideCallBlock animal={animal} type="foster" variant="blue" />
+            </div>
+          )}
 
           <ol className="space-y-6">
             {FOSTER_STEPS.map(({ step, title, desc, linkLabel, linkUrl }) => (

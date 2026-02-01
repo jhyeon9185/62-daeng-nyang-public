@@ -141,13 +141,13 @@ export default function AnimalDetailPage() {
                   )}
                   <div className="flex gap-3 mt-auto pt-2">
                     <Link
-                      to="/guide/adoption"
+                      to={`/guide/adoption?animalId=${animal.id}`}
                       className={`landing-btn landing-btn-primary flex-1 text-center ${animal.status === 'ADOPTED' ? 'opacity-50 pointer-events-none' : ''}`}
                     >
                       {animal.status === 'ADOPTED' ? '입양 완료' : '입양 절차 안내'}
                     </Link>
                     <Link
-                      to="/guide/foster"
+                      to={`/guide/foster?animalId=${animal.id}`}
                       className={`landing-btn landing-btn-secondary flex-1 text-center ${animal.status === 'ADOPTED' ? 'opacity-50 pointer-events-none' : ''}`}
                     >
                       임보 절차 안내
