@@ -36,24 +36,15 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
                                  @Param("size") Size size, @Param("region") String region,
                                  @Param("sigungu") String sigungu, @Param("search") String search, Pageable pageable);
 
-    /** 위와 동일 필터 + 랜덤 정렬 (많은 아이들이 노출되도록). COALESCE로 옵셔널 파라미터 처리. */
-    @Query(value = "SELECT a.* FROM animals a INNER JOIN shelters s ON a.shelter_id = s.id " +
-            "WHERE a.image_url IS NOT NULL AND a.image_url != '' " +
-            "AND (a.species = COALESCE(:species, a.species)) " +
-            "AND (a.status = COALESCE(:status, a.status)) AND (a.size = COALESCE(:size, a.size)) " +
-            "AND (COALESCE(NULLIF(TRIM(:region), ''), s.region_sido) = s.region_sido) " +
-            "AND (COALESCE(NULLIF(TRIM(:sigungu), ''), s.region_sigungu) = s.region_sigungu) " +
-            "AND (:search IS NULL OR TRIM(:search) = '' OR (LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(a.breed) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))) ORDER BY RAND()",
-            countQuery = "SELECT COUNT(a.id) FROM animals a INNER JOIN shelters s ON a.shelter_id = s.id " +
-            "WHERE a.image_url IS NOT NULL AND a.image_url != '' " +
-            "AND (a.species = COALESCE(:species, a.species)) " +
-            "AND (a.status = COALESCE(:status, a.status)) AND (a.size = COALESCE(:size, a.size)) " +
-            "AND (COALESCE(NULLIF(TRIM(:region), ''), s.region_sido) = s.region_sido) " +
-            "AND (COALESCE(NULLIF(TRIM(:sigungu), ''), s.region_sigungu) = s.region_sigungu) " +
-            "AND (:search IS NULL OR TRIM(:search) = '' OR (LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(a.breed) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))))",
-            nativeQuery = true)
+    /** 위와 동일 필터 + 랜덤 정렬. JPQL 사용 (네이티브 쿼리 파라미터 바인딩 이슈 회피) */
+    @Query("SELECT a FROM Animal a JOIN a.shelter s WHERE a.imageUrl IS NOT NULL AND a.imageUrl != '' " +
+            "AND (:species IS NULL OR a.species = :species) " +
+            "AND (:status IS NULL OR a.status = :status) AND (:size IS NULL OR a.size = :size) " +
+            "AND (:region IS NULL OR :region = '' OR s.regionSido = :region) " +
+            "AND (:sigungu IS NULL OR :sigungu = '' OR s.regionSigungu = :sigungu) " +
+            "AND (:search IS NULL OR :search = '' OR LOWER(a.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(a.breed) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+            "ORDER BY FUNCTION('RAND')")
     Page<Animal> findWithFiltersRandom(@Param("species") Species species, @Param("status") AnimalStatus status,
                                        @Param("size") Size size, @Param("region") String region,
                                        @Param("sigungu") String sigungu, @Param("search") String search, Pageable pageable);
