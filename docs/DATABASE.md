@@ -1,14 +1,12 @@
 # 데이터베이스 설정 가이드
 
 백엔드는 **localhost:3306**의 MySQL에 연결합니다.  
-**로컬에 설치한 MySQL**을 쓰거나, **Docker MySQL**을 쓰거나 **둘 중 하나**만 맞추면 됩니다.  
-나중에 AWS에 올릴 때는 RDS 등에 DB를 만들고, 배포용 설정(예: `application-prod.yml`)에서 그 주소로 연결하면 됩니다.
+**로컬에 설치한 MySQL**을 사용합니다. (본 프로젝트는 Docker를 사용하지 않습니다.)  
+배포 시에는 AWS RDS 등에 DB를 만들고, 배포용 설정(예: `application-prod.yml`)에서 그 주소로 연결하면 됩니다.
 
 ---
 
-## 1. 로컬 MySQL 사용 (도커 없이, 익스텐션/설치형)
-
-이미 로컬에 MySQL을 설치해 두었다면 **도커는 사용하지 않아도 됩니다.**
+## 1. 로컬 MySQL 사용
 
 ### 1-1. DB 생성
 
@@ -71,34 +69,7 @@ spring:
 
 ---
 
-## 2. Docker로 MySQL 사용 (선택)
-
-Docker를 쓰고 싶을 때만 사용합니다. 프로젝트 루트(`DN_project01`)에서:
-
-```bash
-docker compose up -d
-```
-
-- **컨테이너**: `dn-mysql` (MySQL 8.0)
-- **포트**: `3306`
-- **DB 이름**: `dn_platform`
-- **계정** (기본값): root / `root`, 또는 사용자 `dn` / `dn`
-
-테이블은 **JPA 자동 생성**(백엔드 dev 프로필 실행) 또는 아래처럼 스키마 수동 적용:
-
-```bash
-cat DN_project01/docs/schema.sql | docker exec -i dn-mysql mysql -u root -proot
-```
-
-접속 확인:
-
-```bash
-docker exec -it dn-mysql mysql -u root -proot dn_platform -e "SHOW TABLES;"
-```
-
----
-
-## 3. AWS 등 배포 시
+## 2. AWS 등 배포 시
 
 DB는 AWS RDS(MySQL) 등에 만들고, 배포 환경용 설정(예: `application-prod.yml`)에서 다음만 바꾸면 됩니다.
 
@@ -109,10 +80,9 @@ DB는 AWS RDS(MySQL) 등에 만들고, 배포 환경용 설정(예: `application
 
 ---
 
-## 4. 요약
+## 3. 요약
 
-| 환경       | DB 위치        | 도커 필요 |
-|------------|-----------------|-----------|
-| 로컬 개발  | 로컬 MySQL      | 아니오    |
-| 로컬 개발  | Docker MySQL    | 예        |
-| AWS 배포  | RDS 등          | DB는 RDS 사용 시 도커 불필요 |
+| 환경       | DB 위치        |
+|------------|-----------------|
+| 로컬 개발  | 로컬 MySQL (localhost:3306) |
+| AWS 배포  | RDS 등          |

@@ -59,13 +59,21 @@ export const adminApi = {
   syncFromPublicApi: (params?: { days?: number; maxPages?: number; species?: string }) =>
     axiosInstance.post<
       ApiResponse<{
+        addedCount: number;
+        updatedCount: number;
         syncedCount: number;
+        statusCorrectedCount: number;
         days: number;
         species: string;
-        statusCorrectedCount?: number;
         apiKeyConfigured?: boolean;
       }>
     >('/admin/animals/sync-from-public-api', null, { params, timeout: 180_000 }),
+
+  /** 동기화 이력 목록 (자동/수동, 추가·수정·삭제·보정) */
+  getSyncHistory: (page = 0, size = 20) =>
+    axiosInstance.get<ApiResponse<PageResponse<SyncHistoryItem>>>('/admin/animals/sync-history', {
+      params: { page, size },
+    }),
 
   /** [시스템 관리자] 전체 입양/임보 신청 내역 */
   getAllAdoptions: (page = 0, size = 50) =>
@@ -89,3 +97,16 @@ export const adminApi = {
   sendTestEmail: (to?: string) =>
     axiosInstance.post<ApiResponse<string>>('/admin/email/test', to != null && to.trim() !== '' ? { to: to.trim() } : {}),
 };
+
+export interface SyncHistoryItem {
+  id: number;
+  runAt: string;
+  triggerType: 'AUTO' | 'MANUAL';
+  addedCount: number;
+  updatedCount: number;
+  deletedCount: number;
+  correctedCount: number;
+  errorMessage: string | null;
+  daysParam: number | null;
+  speciesFilter: string | null;
+}

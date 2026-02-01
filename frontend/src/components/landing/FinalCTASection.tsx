@@ -14,11 +14,11 @@ export default function FinalCTASection() {
             마음속 62%를 오늘의 행동으로. 한 생명이 ‘남겨짐’이 아니라 ‘가족’으로 기록되도록.
           </p>
           <div className="landing-hero-cta">
-            <Link to="/animals" className="landing-btn landing-btn-primary">
-              입양 시작하기
+            <Link to="/guide/adoption" className="landing-btn landing-btn-primary">
+              입양 절차 안내
             </Link>
-            <Link to="/animals?type=foster" className="landing-btn landing-btn-secondary">
-              임보 신청하기
+            <Link to="/guide/foster" className="landing-btn landing-btn-secondary">
+              임보 절차 안내
             </Link>
             <Link to="/donations" className="landing-btn landing-btn-secondary">
               후원하기

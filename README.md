@@ -71,35 +71,15 @@ DN_project01/
 ### 요구사항
 - Node.js 18+
 - Java 21
-- MySQL 8.0
-- Docker (선택)
+- MySQL 8.0 (로컬 설치)
 
 ### 환경 설정
 
 1. **데이터베이스 설정 (MySQL 8.0)**
 
-   **방법 A: Docker Compose (권장)**
-   ```bash
-   # 프로젝트 루트(DN_project01)에서
-   docker compose up -d
+   로컬에 MySQL 8.0을 설치한 뒤, DB `dn_platform`을 생성하고 백엔드가 접속할 수 있게 합니다.  
+   상세 절차(DB 생성, 테이블 생성, 연결 설정)는 **[docs/DATABASE.md](docs/DATABASE.md)** 를 참고하세요.
 
-   # 접속 정보 (기본값)
-   # - 호스트: localhost:3306
-   # - DB: dn_platform
-   # - root 비밀번호: root
-   # - 전용 유저: dn / dn
-   ```
-
-   **방법 B: 단일 컨테이너**
-   ```bash
-   docker run --name dn-mysql \
-     -e MYSQL_ROOT_PASSWORD=root \
-     -e MYSQL_DATABASE=dn_platform \
-     -e MYSQL_CHARACTER_SET_SERVER=utf8mb4 \
-     -p 3306:3306 -d mysql:8.0
-   ```
-
-   **테이블 생성**
    - 개발 환경(`application-dev.yml`)에서는 `spring.jpa.hibernate.ddl-auto: update`로 **자동 생성**됩니다.
    - 수동 DDL이 필요하면 `docs/schema.sql`을 MySQL에 실행하세요.
 
@@ -125,8 +105,8 @@ DN_project01/
 
 **Backend (application-dev.yml 또는 환경변수)**
 ```
-DB_USERNAME=root          # Docker 사용 시 root 또는 dn
-DB_PASSWORD=root          # Docker Compose 기본값은 root
+DB_USERNAME=root
+DB_PASSWORD=root
 JWT_SECRET=your-256-bit-base64-encoded-secret
 RESEND_API_KEY=re_xxxxxxxx
 PUBLIC_API_SERVICE_KEY=your-public-api-key
@@ -142,7 +122,7 @@ VITE_MAP_API_KEY=your-map-api-key
 
 ### 일반 사용자
 - 유기동물 조회 및 검색
-- 입양/임시보호 신청
+- 입양·임보 절차 안내 (신청·예약은 보호소 전화)
 - 봉사활동 신청
 - 물품 후원 신청
 - 커뮤니티 게시판

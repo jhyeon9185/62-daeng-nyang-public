@@ -267,8 +267,8 @@ export default function MyPage() {
                 ))}
               </ul>
             )}
-            <Link to="/animals" className="inline-block mt-3 text-sm font-semibold text-[var(--toss-blue)] hover:text-[var(--toss-blue-hover)]">
-              입양 신청하기 →
+            <Link to="/guide/adoption" className="inline-block mt-3 text-sm font-semibold text-[var(--toss-blue)] hover:text-[var(--toss-blue-hover)]">
+              입양 절차 안내 →
             </Link>
           </section>
 

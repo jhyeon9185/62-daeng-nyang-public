@@ -21,8 +21,8 @@ export default function GetInvolvedSection() {
                 입양 전까지 잠시 우리 집에서. 1주일에서 몇 달까지, 당신의 공간이 한 생명에게
                 “기다림”이 아닌 “회복”이 될 수 있어요.
               </p>
-              <Link to="/animals?type=foster" className="landing-btn landing-btn-primary">
-                임보 신청하기
+              <Link to="/guide/foster" className="landing-btn landing-btn-primary">
+                임보 절차 안내
               </Link>
             </div>
             <div className="landing-involve-card">

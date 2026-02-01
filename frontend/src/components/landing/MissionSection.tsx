@@ -4,7 +4,7 @@ import AnimatedText from '@/components/motion/AnimatedText';
 
 const quickLinks = [
   { to: '/animals', label: '입양하기' },
-  { to: '/animals?type=foster', label: '임시보호' },
+  { to: '/guide/foster', label: '임시보호' },
   { to: '/volunteers', label: '봉사하기' },
   { to: '/donations', label: '기부하기' },
 ];

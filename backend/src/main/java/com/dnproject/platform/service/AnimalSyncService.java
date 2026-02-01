@@ -47,7 +47,10 @@ public class AnimalSyncService {
     /** 상태 동기화용 기간 (30일) */
     private static final int STATUS_SYNC_DAYS = 30;
 
-    public record SyncResult(int syncedCount, int statusSyncCount, int statusCorrectedCount) {}
+    /** addedCount: 신규 추가, updatedCount: 기존 수정, statusCorrectedCount: 만료→입양 보정 */
+    public record SyncResult(int addedCount, int updatedCount, int statusCorrectedCount) {
+        public int syncedCount() { return addedCount + updatedCount; }
+    }
 
     /**
      * N일치 변경분만 동기화 (증분 동기화).
@@ -62,22 +65,21 @@ public class AnimalSyncService {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(days);
 
-        int synced = 0;
+        int added = 0, updated = 0;
         if (speciesFilter == null || "DOG".equalsIgnoreCase(speciesFilter)) {
-            synced += syncByUpkind(DOG_CODE, startDate, endDate, maxPages);
+            var c = syncByUpkind(DOG_CODE, startDate, endDate, maxPages);
+            added += c[0]; updated += c[1];
         }
         if (speciesFilter == null || "CAT".equalsIgnoreCase(speciesFilter)) {
-            synced += syncByUpkind(CAT_CODE, startDate, endDate, maxPages);
+            var c = syncByUpkind(CAT_CODE, startDate, endDate, maxPages);
+            added += c[0]; updated += c[1];
         }
-
-        // bgnde/endde가 변경일 기준이므로 별도 상태 동기화 불필요
-        // 상태 변경된 동물은 이미 위 syncByUpkind에서 처리됨
 
         int corrected = markExpiredAsAdopted();
         if (corrected > 0) {
             log.info("기간 지난 동물 상태 보정: {}마리 → ADOPTED(추정)", corrected);
         }
-        return new SyncResult(synced, 0, corrected);
+        return new SyncResult(added, updated, corrected);
     }
 
     /**
@@ -90,15 +92,17 @@ public class AnimalSyncService {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(NEW_DAYS);
 
-        int synced = 0;
-        synced += syncByUpkind(DOG_CODE, startDate, endDate, null);
-        synced += syncByUpkind(CAT_CODE, startDate, endDate, null);
+        int added = 0, updated = 0;
+        var dog = syncByUpkind(DOG_CODE, startDate, endDate, null);
+        added += dog[0]; updated += dog[1];
+        var cat = syncByUpkind(CAT_CODE, startDate, endDate, null);
+        added += cat[0]; updated += cat[1];
 
         int corrected = markExpiredAsAdopted();
         if (corrected > 0) {
             log.info("기간 지난 동물 상태 보정: {}마리 → ADOPTED(추정)", corrected);
         }
-        return new SyncResult(synced, 0, corrected);
+        return new SyncResult(added, updated, corrected);
     }
 
     /** 기존 DB 동물만 상태(status) 갱신. 신규는 추가하지 않음. */
@@ -157,16 +161,14 @@ public class AnimalSyncService {
         log.debug("품종코드 매핑 로드: {}건", kindCodeToName.size());
     }
 
-    private int syncByUpkind(String upkind, LocalDate startDate, LocalDate endDate, Integer maxPages) {
+    /** @return int[2] = { addedCount, updatedCount } */
+    private int[] syncByUpkind(String upkind, LocalDate startDate, LocalDate endDate, Integer maxPages) {
         int pageNo = 1;
         int numOfRows = 100;
-        int total = 0;
-        boolean hasMore = true;
-        // notice(공고중) + protect(보호중) 모두 조회하여 데이터 확보
+        int added = 0, updated = 0;
         for (String state : new String[]{"notice", "protect"}) {
             pageNo = 1;
-            hasMore = true;
-            while (hasMore) {
+            while (true) {
                 List<AnimalItem> items = publicApiService.getAbandonedAnimals(
                         null, null, upkind, state, startDate, endDate, pageNo, numOfRows);
                 if (items == null || items.isEmpty()) break;
@@ -175,15 +177,15 @@ public class AnimalSyncService {
                         log.warn("desertionNo 없음, 스킵");
                         continue;
                     }
-                    if (total == 0 && (item.getPopfile1() == null || item.getPopfile1().isBlank())
+                    if (added + updated == 0 && (item.getPopfile1() == null || item.getPopfile1().isBlank())
                             && (item.getPopfile2() == null || item.getPopfile2().isBlank())
                             && (item.getPopfile() == null || item.getPopfile().isBlank())
                             && (item.getFilename() == null || item.getFilename().isBlank())) {
                         log.info("첫 건 이미지 미제공: desertionNo={}", item.getDesertionNo());
                     }
                     try {
-                        upsertAnimal(item);
-                        total++;
+                        if (upsertAnimal(item)) added++;
+                        else updated++;
                     } catch (Exception e) {
                         log.warn("동물 upsert 실패 desertionNo={}: {}", item.getDesertionNo(), e.getMessage());
                     }
@@ -193,15 +195,18 @@ public class AnimalSyncService {
                 pageNo++;
             }
         }
-        return total;
+        return new int[]{added, updated};
     }
 
-    private void upsertAnimal(AnimalItem item) {
-        animalRepository.findByPublicApiAnimalId(item.getDesertionNo())
-                .ifPresentOrElse(
-                        existing -> updateAnimalFromApi(existing, item),
-                        () -> createAnimalFromApi(item)
-                );
+    /** @return true = 신규 추가, false = 기존 수정 */
+    private boolean upsertAnimal(AnimalItem item) {
+        var existing = animalRepository.findByPublicApiAnimalId(item.getDesertionNo());
+        if (existing.isPresent()) {
+            updateAnimalFromApi(existing.get(), item);
+            return false;
+        }
+        createAnimalFromApi(item);
+        return true;
     }
 
     private void updateAnimalFromApi(Animal animal, AnimalItem item) {

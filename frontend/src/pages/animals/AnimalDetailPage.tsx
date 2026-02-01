@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { animalApi, adoptionApi, favoriteApi } from '@/api';
+import { animalApi, favoriteApi } from '@/api';
 import { useAuthStore } from '@/store/authStore';
 import type { Animal } from '@/types/entities';
-import type { AdoptionRequest } from '@/types/dto';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import KakaoMap from '@/components/map/KakaoMap';
@@ -21,16 +20,6 @@ export default function AnimalDetailPage() {
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
-  const [showModal, setShowModal] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState<AdoptionRequest>({
-    animalId: 0,
-    type: 'ADOPTION',
-    reason: '',
-    experience: '',
-    livingEnv: '',
-    familyAgreement: false,
-  });
 
   useEffect(() => {
     if (id) {
@@ -51,37 +40,12 @@ export default function AnimalDetailPage() {
       setLoading(true);
       const data = await animalApi.getById(Number(id));
       setAnimal(data);
-      setFormData((prev) => ({ ...prev, animalId: data.id }));
     } catch (err) {
       console.error(err);
       alert('동물 정보를 불러오는데 실패했습니다.');
       navigate('/animals');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.reason || !formData.experience || !formData.livingEnv) {
-      alert('모든 필수 항목을 입력해주세요.');
-      return;
-    }
-    if (!formData.familyAgreement) {
-      alert('가족 동의는 필수입니다.');
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      await adoptionApi.apply(formData);
-      alert('입양 신청이 완료되었습니다!');
-      setShowModal(false);
-      navigate('/mypage/adoptions');
-    } catch (err: any) {
-      alert(err.response?.data?.message || '입양 신청에 실패했습니다.');
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -160,24 +124,34 @@ export default function AnimalDetailPage() {
                       <p className="text-gray-700 whitespace-pre-wrap">{animal.description}</p>
                     </div>
                   )}
-                  <div className="flex gap-3 mt-auto pt-4">
-                    <button
-                      onClick={() => setShowModal(true)}
-                      disabled={animal.status === 'ADOPTED'}
-                      className="landing-btn landing-btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  <p className="text-sm text-amber-800 font-medium mb-3 mt-4">
+                    신청·예약은 전화로 진행됩니다. 아래 보호소/담당자 연락처로 문의하세요.
+                  </p>
+                  {(animal.chargePhone || animal.shelterPhone) && (
+                    <p className="text-sm text-gray-600 mb-3">
+                      📞{' '}
+                      <a
+                        href={`tel:${(animal.chargePhone || animal.shelterPhone || '').replace(/\s/g, '')}`}
+                        className="text-green-600 hover:underline font-semibold"
+                      >
+                        {animal.chargePhone || animal.shelterPhone}
+                      </a>
+                      {animal.chargePhone && animal.shelterPhone ? ' (담당자 / 보호소)' : ''}
+                    </p>
+                  )}
+                  <div className="flex gap-3 mt-auto pt-2">
+                    <Link
+                      to="/guide/adoption"
+                      className={`landing-btn landing-btn-primary flex-1 text-center ${animal.status === 'ADOPTED' ? 'opacity-50 pointer-events-none' : ''}`}
                     >
-                      {animal.status === 'ADOPTED' ? '입양 완료' : '입양 신청'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setFormData({ ...formData, type: 'FOSTERING' });
-                        setShowModal(true);
-                      }}
-                      disabled={animal.status === 'ADOPTED'}
-                      className="landing-btn landing-btn-secondary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      {animal.status === 'ADOPTED' ? '입양 완료' : '입양 절차 안내'}
+                    </Link>
+                    <Link
+                      to="/guide/foster"
+                      className={`landing-btn landing-btn-secondary flex-1 text-center ${animal.status === 'ADOPTED' ? 'opacity-50 pointer-events-none' : ''}`}
                     >
-                      임시보호 신청
-                    </button>
+                      임보 절차 안내
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -313,75 +287,6 @@ export default function AnimalDetailPage() {
         </section>
       </main>
       <Footer />
-
-      {/* 신청 모달 */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">
-              {formData.type === 'ADOPTION' ? '입양' : '임시보호'} 신청
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block font-semibold mb-1">신청 사유 *</label>
-                <textarea
-                  className="w-full border border-gray-300 rounded-lg p-2"
-                  rows={3}
-                  value={formData.reason}
-                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block font-semibold mb-1">반려 경험 *</label>
-                <textarea
-                  className="w-full border border-gray-300 rounded-lg p-2"
-                  rows={2}
-                  value={formData.experience}
-                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block font-semibold mb-1">주거 환경 *</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-lg p-2"
-                  value={formData.livingEnv}
-                  onChange={(e) => setFormData({ ...formData, livingEnv: e.target.value })}
-                  placeholder="예: 아파트, 단독주택 등"
-                  required
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="familyAgreement"
-                  checked={formData.familyAgreement}
-                  onChange={(e) => setFormData({ ...formData, familyAgreement: e.target.checked })}
-                />
-                <label htmlFor="familyAgreement" className="text-sm">가족 모두 동의했습니다 *</label>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 landing-btn landing-btn-primary disabled:opacity-50"
-                >
-                  {submitting ? '신청 중...' : '신청하기'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

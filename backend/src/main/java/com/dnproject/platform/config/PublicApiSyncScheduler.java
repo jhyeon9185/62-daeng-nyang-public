@@ -1,6 +1,8 @@
 package com.dnproject.platform.config;
 
+import com.dnproject.platform.domain.constant.SyncTriggerType;
 import com.dnproject.platform.service.AnimalSyncService;
+import com.dnproject.platform.service.SyncHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class PublicApiSyncScheduler {
 
     private final AnimalSyncService animalSyncService;
+    private final SyncHistoryService syncHistoryService;
 
     /** 매일 지정 시간(기본 02:00)에 최근 7일 유기동물 동기화. cron은 application.yml public-api.sync-cron 으로 변경 가능 */
     @Scheduled(cron = "${public-api.sync-cron:0 0 2 * * *}")
@@ -25,9 +28,11 @@ public class PublicApiSyncScheduler {
         log.info("공공데이터 유기동물 스케줄 동기화 시작");
         try {
             var result = animalSyncService.syncDailySchedule();
-            log.info("공공데이터 유기동물 스케줄 동기화 완료: 신규={}, 상태동기화={}, 만료보정={}", result.syncedCount(), result.statusSyncCount(), result.statusCorrectedCount());
+            syncHistoryService.save(result, SyncTriggerType.AUTO, null, "ALL", null);
+            log.info("공공데이터 유기동물 스케줄 동기화 완료: 신규={}, 수정={}, 만료보정={}", result.addedCount(), result.updatedCount(), result.statusCorrectedCount());
         } catch (Exception e) {
             log.error("공공데이터 유기동물 스케줄 동기화 실패", e);
+            syncHistoryService.save(new AnimalSyncService.SyncResult(0, 0, 0), SyncTriggerType.AUTO, null, "ALL", e.getMessage());
         }
     }
 }

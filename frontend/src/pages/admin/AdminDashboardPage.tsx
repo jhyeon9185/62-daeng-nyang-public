@@ -16,7 +16,7 @@ import type { VolunteerRecruitmentCreateRequest } from '@/types/dto';
 import type { DonationRequestCreateRequest } from '@/types/dto';
 import type { UserResponse } from '@/types/dto';
 import type { BoardResponse } from '@/types/dto';
-import type { RoleFilter } from '@/api/admin';
+import type { RoleFilter, SyncHistoryItem } from '@/api/admin';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
@@ -81,6 +81,11 @@ export default function AdminDashboardPage() {
   const [businessRegLoading, setBusinessRegLoading] = useState<number | null>(null);
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [syncHistory, setSyncHistory] = useState<SyncHistoryItem[]>([]);
+  const [syncHistoryLoading, setSyncHistoryLoading] = useState(false);
+  const [syncHistoryPage, setSyncHistoryPage] = useState(0);
+  const [syncHistoryTotalPages, setSyncHistoryTotalPages] = useState(0);
+  const [syncHistoryTotalElements, setSyncHistoryTotalElements] = useState(0);
   const [testEmailLoading, setTestEmailLoading] = useState(false);
   const [testEmailTo, setTestEmailTo] = useState('');
   const [testEmailResult, setTestEmailResult] = useState<{ ok: boolean; message: string } | null>(null);
@@ -246,6 +251,12 @@ export default function AdminDashboardPage() {
   }, [user?.role, superTab, boardsPage, boardTypeFilter]);
 
   useEffect(() => {
+    if (user?.role === 'SUPER_ADMIN' && superTab === 'sync') {
+      loadSyncHistory();
+    }
+  }, [user?.role, superTab, syncHistoryPage]);
+
+  useEffect(() => {
     if (user?.role === 'SUPER_ADMIN' && superTab === 'applicationsLog') {
       loadApplicationsLog();
     }
@@ -342,28 +353,50 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const loadSyncHistory = async () => {
+    setSyncHistoryLoading(true);
+    try {
+      const res = await adminApi.getSyncHistory(syncHistoryPage, 20);
+      const payload = res.data?.data ?? res.data;
+      if (payload?.content) {
+        setSyncHistory(payload.content);
+        setSyncHistoryTotalPages(payload.totalPages ?? 0);
+        setSyncHistoryTotalElements(payload.totalElements ?? 0);
+      }
+    } catch {
+      setSyncHistory([]);
+    } finally {
+      setSyncHistoryLoading(false);
+    }
+  };
+
   const handleSyncFromPublicApi = async () => {
     setSyncLoading(true);
     setSyncResult(null);
     try {
       const res = await adminApi.syncFromPublicApi({ days: 3 });
       const data = res.data?.data ?? res.data;
-      const count = data?.syncedCount ?? 0;
+      const added = data?.addedCount ?? 0;
+      const updated = data?.updatedCount ?? 0;
       const corrected = data?.statusCorrectedCount ?? 0;
       const apiKeyOk = data?.apiKeyConfigured !== false;
       if (!apiKeyOk) {
         setSyncResult('API 키가 설정되지 않았습니다. backend/.env 에 DATA_API_KEY 를 확인하세요.');
-      } else if (count === 0 && corrected === 0) {
-        setSyncResult(`동기화 완료: 변경 없음 (신규/수정된 데이터 없음)`);
+      } else if (added === 0 && updated === 0 && corrected === 0) {
+        setSyncResult('동기화 완료: 변경 없음 (신규/수정된 데이터 없음)');
       } else {
-        const parts = [`동기화 완료: ${count}마리 반영`];
-        if (corrected > 0) parts.push(`${corrected}마리 만료보정`);
-        setSyncResult(parts.join(', '));
+        const parts: string[] = [];
+        if (added > 0) parts.push(`추가 ${added}마리`);
+        if (updated > 0) parts.push(`수정 ${updated}마리`);
+        if (corrected > 0) parts.push(`만료보정 ${corrected}마리`);
+        setSyncResult(`동기화 완료: ${parts.join(', ')}`);
       }
+      loadSyncHistory();
       setTimeout(() => setSyncResult(null), 8000);
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setSyncResult(msg ?? '동기화 실패');
+      loadSyncHistory();
     } finally {
       setSyncLoading(false);
     }
@@ -866,6 +899,82 @@ export default function AdminDashboardPage() {
                       </button>
                       {syncResult && <span className="text-sm text-gray-700">{syncResult}</span>}
                     </div>
+                  </div>
+                  <div className="mt-6">
+                    <h3 className="font-semibold text-gray-800 mb-3">동기화 이력 (자동·수동)</h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      매일 새벽 2시 자동 동기화 및 수동 실행 내역. 추가·수정·삭제·만료보정 건수를 확인할 수 있습니다.
+                    </p>
+                    {syncHistoryLoading ? (
+                      <p className="text-sm text-gray-500">이력 불러오는 중...</p>
+                    ) : syncHistory.length === 0 ? (
+                      <p className="text-sm text-gray-500">동기화 이력이 없습니다.</p>
+                    ) : (
+                      <>
+                        <div className="overflow-x-auto rounded-lg border border-gray-200">
+                          <table className="min-w-full text-sm">
+                            <thead className="bg-gray-100 text-left">
+                              <tr>
+                                <th className="px-3 py-2 font-semibold text-gray-700">실행 시각</th>
+                                <th className="px-3 py-2 font-semibold text-gray-700">구분</th>
+                                <th className="px-3 py-2 font-semibold text-gray-700 text-center">추가</th>
+                                <th className="px-3 py-2 font-semibold text-gray-700 text-center">수정</th>
+                                <th className="px-3 py-2 font-semibold text-gray-700 text-center">삭제</th>
+                                <th className="px-3 py-2 font-semibold text-gray-700 text-center">만료보정</th>
+                                <th className="px-3 py-2 font-semibold text-gray-700">비고</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {syncHistory.map((row) => (
+                                <tr key={row.id} className="hover:bg-gray-50">
+                                  <td className="px-3 py-2 text-gray-700 whitespace-nowrap">
+                                    {new Date(row.runAt).toLocaleString('ko-KR')}
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <span className={row.triggerType === 'AUTO' ? 'text-blue-600 font-medium' : 'text-gray-700'}>
+                                      {row.triggerType === 'AUTO' ? '자동' : '수동'}
+                                    </span>
+                                    {row.daysParam != null && (
+                                      <span className="ml-1 text-gray-500 text-xs">({row.daysParam}일)</span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2 text-center">{row.addedCount}</td>
+                                  <td className="px-3 py-2 text-center">{row.updatedCount}</td>
+                                  <td className="px-3 py-2 text-center">{row.deletedCount}</td>
+                                  <td className="px-3 py-2 text-center">{row.correctedCount}</td>
+                                  <td className="px-3 py-2 text-gray-600 max-w-xs truncate" title={row.errorMessage ?? undefined}>
+                                    {row.errorMessage ? <span className="text-red-600">{row.errorMessage}</span> : '-'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        {syncHistoryTotalPages > 1 && (
+                          <div className="mt-3 flex items-center gap-2">
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn-ghost text-sm"
+                              disabled={syncHistoryPage === 0}
+                              onClick={() => setSyncHistoryPage((p) => Math.max(0, p - 1))}
+                            >
+                              이전
+                            </button>
+                            <span className="text-sm text-gray-600">
+                              {syncHistoryPage + 1} / {syncHistoryTotalPages} (총 {syncHistoryTotalElements}건)
+                            </span>
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn-ghost text-sm"
+                              disabled={syncHistoryPage >= syncHistoryTotalPages - 1}
+                              onClick={() => setSyncHistoryPage((p) => p + 1)}
+                            >
+                              다음
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                   <div className="mt-6 p-6 rounded-lg bg-gray-50 border border-gray-200 max-w-2xl">
                     <h3 className="font-semibold text-gray-800 mb-2">이메일 테스트 발송 (Resend)</h3>

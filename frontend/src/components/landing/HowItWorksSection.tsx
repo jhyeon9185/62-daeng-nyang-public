@@ -4,7 +4,7 @@ import AnimatedText from '@/components/motion/AnimatedText';
 
 const steps = [
   { title: '마음에 드는 아이 찾기', desc: '프로필을 둘러보고 나와 잘 맞는 친구를 찾아보세요.' },
-  { title: '입양 신청하기', desc: '간단한 온라인 양식으로 입양을 신청합니다.' },
+  { title: '절차 확인 및 전화 예약', desc: '단계별 안내에 따라 사이트를 이용하고, 보호소에 전화로 예약합니다.' },
   { title: '상담 & 만남', desc: '보호소와 상담 후 직접 만나서 교감해 보세요.' },
   { title: '가족 되기', desc: '입양 완료 후에도 사후 지원으로 함께합니다.' },
 ];

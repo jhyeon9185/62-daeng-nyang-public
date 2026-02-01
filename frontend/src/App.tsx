@@ -16,6 +16,8 @@ import AdminLoginPage from '@/pages/admin/AdminLoginPage';
 import AdminSignupPage from '@/pages/admin/AdminSignupPage';
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
 import PlaceholderPage from '@/pages/PlaceholderPage';
+import GuideAdoptionPage from '@/pages/guide/GuideAdoptionPage';
+import GuideFosterPage from '@/pages/guide/GuideFosterPage';
 
 function App() {
   return (
@@ -27,6 +29,9 @@ function App() {
         {/* 입양 */}
         <Route path="/animals" element={<AnimalsPage />} />
         <Route path="/animals/:id" element={<AnimalDetailPage />} />
+        {/* 절차 안내 */}
+        <Route path="/guide/adoption" element={<GuideAdoptionPage />} />
+        <Route path="/guide/foster" element={<GuideFosterPage />} />
         
         {/* 봉사 */}
         <Route path="/volunteers" element={<VolunteersPage />} />
