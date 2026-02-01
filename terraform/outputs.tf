@@ -1,11 +1,11 @@
 output "ec2_public_ip" {
-  description = "EC2 Public IP"
-  value       = aws_instance.web.public_ip
+  description = "EC2 Elastic IP (고정 IP)"
+  value       = aws_eip.web.public_ip
 }
 
 output "ec2_public_dns" {
   description = "EC2 Public DNS"
-  value       = aws_instance.web.public_dns
+  value       = aws_eip.web.public_dns
 }
 
 output "rds_endpoint" {
@@ -15,5 +15,10 @@ output "rds_endpoint" {
 
 output "ssh_command" {
   description = "SSH 접속 명령"
-  value       = "ssh -i ~/.ssh/id_rsa ec2-user@${aws_instance.web.public_ip}"
+  value       = "ssh -i ~/.ssh/nas_deploy_key ec2-user@${aws_eip.web.public_ip}"
+}
+
+output "website_url" {
+  description = "웹사이트 접속 주소"
+  value       = "http://${aws_eip.web.public_ip}"
 }

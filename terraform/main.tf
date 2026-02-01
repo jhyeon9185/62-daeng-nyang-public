@@ -125,6 +125,14 @@ resource "aws_instance" "web" {
   tags = { Name = "dn-platform-web" }
 }
 
+# Elastic IP (고정 IP 할당)
+resource "aws_eip" "web" {
+  instance = aws_instance.web.id
+  domain   = "vpc"
+
+  tags = { Name = "dn-platform-web-eip" }
+}
+
 # RDS Subnet Group
 resource "aws_db_subnet_group" "main" {
   name       = "dn-platform-subnet-group"

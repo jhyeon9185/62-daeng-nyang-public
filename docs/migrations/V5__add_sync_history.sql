@@ -5,7 +5,7 @@ USE dn_platform;
 CREATE TABLE IF NOT EXISTS sync_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     run_at TIMESTAMP(6) NOT NULL,
-    trigger_type VARCHAR(20) NOT NULL,
+    trigger_type ENUM('AUTO', 'MANUAL') NOT NULL,
     added_count INT NOT NULL DEFAULT 0,
     updated_count INT NOT NULL DEFAULT 0,
     deleted_count INT NOT NULL DEFAULT 0,

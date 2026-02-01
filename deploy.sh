@@ -20,7 +20,7 @@ if [[ -n $(git status -s) ]]; then
   echo ""
   echo "✅ Push 완료. GitHub Actions에서 배포가 진행됩니다."
   echo "   확인: https://github.com/every-git/62dn/actions"
-  echo "   접속: http://3.39.187.182"
+  echo "   접속: http://13.125.175.126"
 else
   echo "변경사항이 없습니다. 강제 push하려면: git push origin main"
 fi

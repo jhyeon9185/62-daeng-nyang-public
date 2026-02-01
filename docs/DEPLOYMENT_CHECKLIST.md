@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-- ✅ EC2: `3.39.187.182` (실행 중)
+- ✅ EC2: `13.125.175.126` (Elastic IP, 고정)
 - ✅ RDS: `dn-platform-db.c98wmqqswrwy.ap-northeast-2.rds.amazonaws.com:3306`
 - ⬜ MySQL 마이그레이션: **아직 미실행**
 - ⬜ GitHub Secrets: 설정 필요
@@ -112,7 +112,7 @@ GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions** 
 
 | Secret | 값 | 비고 |
 |--------|-----|------|
-| `EC2_HOST` | `3.39.187.182` | EC2 Public IP |
+| `EC2_HOST` | `13.125.175.126` | EC2 Elastic IP (고정) |
 | `EC2_SSH_KEY` | `cat ~/.ssh/id_rsa` 전체 출력 (Terraform 적용 시 쓴 개인키) | 개인키 전체 내용, 헤더/푸터 포함 |
 | `RDS_ENDPOINT` | `dn-platform-db.c98wmqqswrwy.ap-northeast-2.rds.amazonaws.com:3306` | |
 | `RDS_USERNAME` | `dnadmin` | |
@@ -128,7 +128,7 @@ GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions** 
 | `RESEND_API_KEY` | `re_7CWAXtfQ_8ND3ZLPgngKWsbj5Wbzjmzv6` | RESEND_API_KEY |
 | `RESEND_FROM_EMAIL` | `noreply@playw.work` | RESEND_FROM_EMAIL |
 | `DATA_API_KEY` | `3f6a71b1bf37087b7bf177c8f48e9e47348cfcfb7a894109c239f59082c5d69e` | DATA_API_KEY |
-| `FRONTEND_URL` | `http://3.39.187.182` | 운영 시 EC2 IP 또는 도메인 |
+| `FRONTEND_URL` | `http://13.125.175.126` | 운영 시 EC2 Elastic IP 또는 도메인 |
 
 > **JWT_SECRET**: `backend/.env`에 없으면 새로 생성. `openssl rand -base64 32` 실행 결과를 사용하세요.
 
@@ -176,11 +176,11 @@ GitHub Actions가 자동으로:
 ## Step 5: 배포 확인
 
 1. **GitHub Actions**: Repository → Actions 탭에서 워크플로 실행 결과 확인
-2. **프론트엔드**: http://3.39.187.182 접속
-3. **API**: http://3.39.187.182/api/ 로 요청. **API 구조(Swagger)**: http://3.39.187.182/swagger-ui.html
+2. **프론트엔드**: http://13.125.175.126 접속
+3. **API**: http://13.125.175.126/api/ 로 요청. **API 구조(Swagger)**: http://13.125.175.126/swagger-ui.html
 4. **로그 확인**  
    - **GitHub Actions**: 같은 워크플로 로그에서 `[배포] start.sh DB URL 설정 확인됨`, `[배포] err.out 마지막 30줄` 확인. DB 연결 오류가 있으면 여기서 먼저 확인 가능.  
-   - **EC2 직접** (SSH 가능할 때): `ssh -i ~/.ssh/id_rsa ec2-user@3.39.187.182` 후 `tail -f /home/ec2-user/err.out`
+   - **EC2 직접** (SSH 가능할 때): `ssh -i ~/.ssh/nas_deploy_key ec2-user@13.125.175.126` 후 `tail -f /home/ec2-user/err.out`
 
 ---
 
@@ -202,8 +202,8 @@ GitHub Actions가 자동으로:
 
 - **로컬 Mac**에서 실행 중인지 확인: 터미널 프롬프트가 `ec2-user@...`가 아니어야 하고, `echo $HOME`이 `/Users/본인사용자명`이어야 함.
 - Terraform 적용 시 사용한 개인키 사용: 기본은 `~/.ssh/id_rsa`. 다른 키로 키 페어를 만들었다면 그 경로 사용.
-- `ssh -i /Users/jeong-yongjun/.ssh/id_rsa ec2-user@3.39.187.182` 처럼 **절대 경로**로 시도.
+- `ssh -i /Users/jeong-yongjun/.ssh/nas_deploy_key ec2-user@13.125.175.126` 처럼 **절대 경로**로 시도.
 
 ### CORS 오류
 
-프론트엔드가 `http://3.39.187.182`에서 서빙되므로 `application.yml` 또는 `CorsConfig`에 해당 origin이 허용되어 있어야 합니다. 필요 시 EC2 IP 또는 도메인 추가.
+프론트엔드가 `http://13.125.175.126`에서 서빙되므로 `application.yml` 또는 `CorsConfig`에 해당 origin이 허용되어 있어야 합니다. 필요 시 Elastic IP 또는 도메인 추가.
