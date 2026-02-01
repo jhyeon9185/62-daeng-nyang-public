@@ -116,7 +116,7 @@ export default function AnimalsPage() {
             page,
             sizeParam: pageSize,
             species: species || undefined,
-            size: size || undefined,
+            animalSize: size || undefined,
             status: status || undefined,
             region: region || undefined,
             sigungu: sigungu || undefined,

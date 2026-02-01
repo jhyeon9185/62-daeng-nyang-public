@@ -97,7 +97,8 @@ export interface UpdateMeRequest {
 // ========== Animal DTOs ==========
 export interface AnimalListRequest {
   species?: 'DOG' | 'CAT';
-  size?: 'SMALL' | 'MEDIUM' | 'LARGE';
+  /** 동물 크기 필터 (API param: animalSize, size와 충돌 방지) */
+  animalSize?: 'SMALL' | 'MEDIUM' | 'LARGE';
   age?: number;
   status?: 'PROTECTED' | 'ADOPTED' | 'FOSTERING';
   /** 보호소 주소 기준 지역 필터 (시·도 키워드, 예: 서울, 경기) */
