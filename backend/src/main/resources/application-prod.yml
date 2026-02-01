@@ -1,7 +1,7 @@
 spring:
-  # Flyway: 기동 시 마이그레이션 자동 실행. 기존 DB(이력 없음)는 baseline 후 V5 등 신규 스크립트 적용.
+  # Flyway 비활성화 (Hibernate ddl-auto로 스키마 관리)
   flyway:
-    baseline-on-migrate: true
+    enabled: false
 
   # Database Configuration (Production)
   datasource:
@@ -19,7 +19,7 @@ spring:
   # JPA - Production mode
   jpa:
     hibernate:
-      ddl-auto: validate  # Never auto-modify in production
+      ddl-auto: update  # 엔티티 기반 테이블 자동 생성/수정
     show-sql: false
 
 # Logging
