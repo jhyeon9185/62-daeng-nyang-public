@@ -213,6 +213,98 @@
   touch-action: pan-y;
 }
 
+/* Apple 스타일 사이드 슬라이드 캐러셀 */
+.landing-hero--carousel {
+  background: linear-gradient(180deg, #0d0d0d 0%, #1a1a1a 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.landing-hero-carousel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding-top: 6.5rem;
+  padding-bottom: 1rem;
+}
+
+.landing-hero-track {
+  --hero-slide-width: 72vw;
+  --hero-gap: 1rem;
+  --hero-offset: calc(var(--hero-slide-width) + var(--hero-gap));
+  display: flex;
+  gap: var(--hero-gap);
+  padding: 0 calc(50vw - var(--hero-slide-width) / 2 - var(--hero-gap) / 2);
+  transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transform: translateX(calc(-1 * var(--hero-active-index, 0) * var(--hero-offset)));
+  cursor: grab;
+}
+
+.landing-hero-track:active {
+  cursor: grabbing;
+}
+
+.landing-hero-slide {
+  flex-shrink: 0;
+  width: var(--hero-slide-width);
+  max-width: 520px;
+  min-height: 75vh;
+  border-radius: var(--landing-radius-lg);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.landing-hero-slide:not(.is-active) {
+  opacity: 0.75;
+}
+
+.landing-hero-slide.is-active {
+  opacity: 1;
+}
+
+.landing-hero-slide-bg-wrap {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.landing-hero-slide-bg-wrap .landing-hero-bg {
+  border-radius: inherit;
+}
+
+.landing-hero-slide-bg-wrap .landing-hero-overlay {
+  border-radius: inherit;
+}
+
+.landing-hero-slide-content {
+  position: relative;
+  z-index: 1;
+  min-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem 2.5rem;
+}
+
+.landing-hero-slide-content .landing-hero-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+}
+
+.landing-hero-slide-content .landing-hero-sub {
+  font-size: clamp(0.9375rem, 2vw, 1.125rem);
+}
+
+.landing-hero-controls-wrap {
+  flex-shrink: 0;
+  padding: 1.5rem 1rem 2rem;
+}
+
 .landing-hero-media {
   position: absolute;
   inset: 0;
