@@ -46,6 +46,7 @@ jobs:
           mkdir -p deploy
           cp backend/target/platform-0.0.1-SNAPSHOT.jar deploy/
           cp -r frontend/dist deploy/frontend-dist
+          cp docs/migrations/V5__add_sync_history.sql deploy/
           tar -czvf deploy.tar.gz deploy/
 
       - name: Deploy to EC2
@@ -104,6 +105,15 @@ jobs:
             NGINX
             sudo sed -i 's/^[[:space:]]*//' /etc/nginx/conf.d/dn-platform.conf
             sudo nginx -t && sudo systemctl reload nginx
+            # sync_history 테이블이 없으면 백엔드 기동 실패 → 동물 목록 등 API 실패. 배포 시 마이그레이션 선행 적용.
+            if ! command -v mysql >/dev/null 2>&1; then
+              sudo yum install -y mariadb105 2>/dev/null || sudo dnf install -y mariadb105 2>/dev/null || true
+            fi
+            if command -v mysql >/dev/null 2>&1; then
+              export MYSQL_PWD="${RDS_PASSWORD}"
+              mysql -h "${RDS_ENDPOINT}" -u "${RDS_USERNAME}" dn_platform < deploy/V5__add_sync_history.sql 2>/dev/null || true
+              unset MYSQL_PWD
+            fi
             DB_URL="jdbc:mysql://${RDS_ENDPOINT}/dn_platform?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
             if [ -n "${FRONTEND_URL}" ]; then
               CORS_ORIGINS="http://localhost:5173,http://localhost:3000,${FRONTEND_URL}"
