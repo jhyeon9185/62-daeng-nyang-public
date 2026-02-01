@@ -30,7 +30,7 @@ const ADOPTION_STEPS = [
   },
   {
     step: 4,
-    title: '입양상담 및 개체 만남',
+    title: '입양상담 및 동물 만남',
     desc: '입양 심사는 1~2회 이상의 면접과 만남을 통해 진행됩니다. 상담 시 신분증 2장 사본을 지참하고, 이동장, 안전문, 리드줄, 사료 등 기본 물품 준비 여부를 확인받습니다. 입양 후 파양(반환)은 불가능하므로 신중한 결정이 필요합니다.',
     linkLabel: null,
     linkUrl: null,
@@ -132,7 +132,7 @@ export default function GuideAdoptionPage() {
           <div className="mt-8 pt-6 border-t border-gray-200">
             <h3 className="font-semibold text-gray-800 mb-2">고양이 입양 (보호소 유기묘)</h3>
             <p className="text-gray-600 text-sm">
-              정보 확인 → 보호소에 전화로 입양 의사 전달 → 서류 준비 → 방문·상담 → 개체 만남 → 입양 확정. 동물보호관리시스템·지역 보호센터에서 입양 가능한 고양이를 조회할 수 있습니다.
+              정보 확인 → 보호소에 전화로 입양 의사 전달 → 서류 준비 → 방문·상담 → 동물 만남 → 입양 확정. 동물보호관리시스템·지역 보호센터에서 입양 가능한 고양이를 조회할 수 있습니다.
             </p>
           </div>
 
