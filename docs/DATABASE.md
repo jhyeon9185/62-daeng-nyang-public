@@ -78,6 +78,14 @@ DB는 AWS RDS(MySQL) 등에 만들고, 배포 환경용 설정(예: `application
 
 로컬은 **로컬 MySQL**, 배포는 **RDS**로 나누어 두는 구성이 일반적입니다.
 
+**운영(prod) 프로필**에서는 `ddl-auto: validate`를 사용합니다.  
+새 테이블이 필요할 때는 **Flyway**가 앱 기동 시 자동으로 마이그레이션을 실행합니다.
+
+- **Flyway**: 백엔드에 포함되어 있으며, **앱 기동 시** `src/main/resources/db/migration/` 아래의 SQL을 **자동 실행**합니다.  
+  - 로컬·운영 모두 **배포(재기동)만 하면** 적용된 DB URL(dn_platform)에 마이그레이션이 실행됩니다.  
+  - 예: `sync_history` 테이블은 `V5__add_sync_history.sql`로 기동 시 자동 생성됩니다.  
+- 수동 실행이 필요하면: `scripts/run-migration-v5.sh` (로컬은 backend/.env, 운영은 DB_HOST/DB_USERNAME/DB_PASSWORD 설정 후 실행).
+
 ---
 
 ## 3. 요약

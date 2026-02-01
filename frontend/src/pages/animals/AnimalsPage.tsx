@@ -129,12 +129,21 @@ export default function AnimalsPage() {
           setApiAnimals(content);
           setApiTotalElements(total);
         }
-      } catch (err) {
-        setError(
-          viewMode === 'recommended'
-            ? '추천 목록을 불러오는데 실패했습니다. 로그인 후 선호도를 설정해 주세요.'
-            : '동물 목록을 불러오는데 실패했습니다.'
-        );
+      } catch (err: unknown) {
+        const ax = err && typeof err === 'object' && 'response' in err ? (err as { response?: { status?: number; data?: { message?: string } } }) : null;
+        const status = ax?.response?.status;
+        const serverMessage = ax?.response?.data?.message;
+        let message: string;
+        if (viewMode === 'recommended') {
+          message = '추천 목록을 불러오는데 실패했습니다. 로그인 후 선호도를 설정해 주세요.';
+        } else if (status == null) {
+          message = '동물 목록을 불러올 수 없습니다. 서버에 연결할 수 있는지 확인해 주세요.';
+        } else if (status >= 500) {
+          message = serverMessage ? `서버 오류: ${serverMessage}` : '동물 목록을 불러오는데 실패했습니다. (서버 오류)';
+        } else {
+          message = serverMessage ? `동물 목록을 불러오는데 실패했습니다. (${serverMessage})` : '동물 목록을 불러오는데 실패했습니다.';
+        }
+        setError(message);
         setApiAnimals([]);
         setApiTotalElements(0);
       } finally {
