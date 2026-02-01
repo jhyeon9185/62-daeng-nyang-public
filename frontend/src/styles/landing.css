@@ -232,8 +232,8 @@
 }
 
 .landing-hero-track {
-  /* 슬라이드 폭: 한 개만 중앙에 보이고 양옆만 peek 되도록 (72vw 또는 최대 640px) */
-  --hero-slide-width: min(72vw, 640px);
+  /* 슬라이드 폭: 뷰포트 기준 72% (한 개만 중앙, 양옆 14%씩 peek) */
+  --hero-slide-width: 72vw;
   --hero-gap: 1rem;
   --hero-offset: calc(var(--hero-slide-width) + var(--hero-gap));
   display: flex;
