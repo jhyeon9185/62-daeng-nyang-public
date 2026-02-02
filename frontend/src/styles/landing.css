@@ -237,18 +237,20 @@
   --hero-slide-width: 72vw;
   --hero-gap: 1rem;
   --hero-offset: calc(var(--hero-slide-width) + var(--hero-gap));
-  --hero-padding: calc(50vw - var(--hero-slide-width) / 2 - var(--hero-gap) / 2);
+  /* 패딩 없음 - 슬라이드만 연속 배치해 양끝 빈 공간 제거 */
   display: flex;
   gap: var(--hero-gap);
-  padding-left: var(--hero-padding);
-  padding-right: var(--hero-padding);
   transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
-  transform: translateX(calc(-1 * var(--hero-active-index, 0) * var(--hero-offset)));
+  transform: translateX(calc(14vw - var(--hero-active-index, 0) * var(--hero-offset)));
   cursor: grab;
 }
 
 .landing-hero-track:active {
   cursor: grabbing;
+}
+
+.landing-hero-track--no-transition {
+  transition: none;
 }
 
 .landing-hero-slide {

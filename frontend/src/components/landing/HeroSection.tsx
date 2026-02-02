@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { motion, PanInfo } from 'framer-motion';
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+
+const TRANSITION_MS = 700;
 
 export default function HeroSection() {
   const slides = useMemo(
@@ -60,38 +62,88 @@ export default function HeroSection() {
     []
   );
 
+  /** 무한 루프용 확장 트랙: 9개 [0,1,2,0,1,2,0,1,2] - 양끝에 여유 있어 항상 좌우 슬라이드 존재 */
+  const extendedSlides = useMemo(
+    () => [...slides, ...slides, ...slides],
+    [slides]
+  );
+
   const prefersReducedMotion = useMemo(
     () => window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false,
     []
   );
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [displayIndex, setDisplayIndex] = useState(3);
   const [isPlaying, setIsPlaying] = useState(!prefersReducedMotion);
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const logicalIndex = displayIndex < 3 ? (displayIndex + 3) % 3 : displayIndex >= 6 ? (displayIndex - 3) % 3 : displayIndex - 3;
 
   const goTo = useCallback(
-    (index: number) => {
-      const clamped = Math.max(0, Math.min(index, slides.length - 1));
-      setActiveIndex(clamped);
+    (nextLogical: number) => {
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+        resetTimeoutRef.current = null;
+      }
+      const prevLogical = displayIndex < 3 ? (displayIndex + 3) % 3 : displayIndex >= 6 ? (displayIndex - 3) % 3 : displayIndex - 3;
+
+      if (nextLogical === prevLogical) return;
+
+      if (nextLogical === 0 && prevLogical === 2) {
+        setDisplayIndex(6);
+        resetTimeoutRef.current = setTimeout(() => {
+          const track = document.querySelector('.landing-hero-track');
+          track?.classList.add('landing-hero-track--no-transition');
+          setDisplayIndex(3);
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              track?.classList.remove('landing-hero-track--no-transition');
+            });
+          });
+          resetTimeoutRef.current = null;
+        }, TRANSITION_MS);
+      } else if (nextLogical === 2 && prevLogical === 0) {
+        setDisplayIndex(2);
+        resetTimeoutRef.current = setTimeout(() => {
+          const track = document.querySelector('.landing-hero-track');
+          track?.classList.add('landing-hero-track--no-transition');
+          setDisplayIndex(5);
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              track?.classList.remove('landing-hero-track--no-transition');
+            });
+          });
+          resetTimeoutRef.current = null;
+        }, TRANSITION_MS);
+      } else {
+        setDisplayIndex(nextLogical + 3);
+      }
     },
-    [slides.length]
+    [displayIndex]
   );
+
+  useEffect(() => {
+    return () => {
+      if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isPlaying) return;
     const id = window.setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % slides.length);
+      goTo((logicalIndex + 1) % 3);
     }, 6500);
     return () => window.clearInterval(id);
-  }, [isPlaying, slides.length]);
+  }, [isPlaying, logicalIndex, goTo]);
 
   const onDragEnd = (_: unknown, info: PanInfo) => {
     const threshold = 50;
     const velocity = info.velocity.x;
     const offset = info.offset.x;
     if (velocity < -threshold || offset < -80) {
-      goTo(activeIndex + 1);
+      goTo((logicalIndex + 1) % 3);
     } else if (velocity > threshold || offset > 80) {
-      goTo(activeIndex - 1);
+      goTo((logicalIndex + 2) % 3);
     }
   };
 
@@ -104,15 +156,13 @@ export default function HeroSection() {
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.15}
           onDragEnd={onDragEnd}
-          style={
-            { '--hero-active-index': activeIndex } as React.CSSProperties
-          }
+          style={{ '--hero-active-index': displayIndex } as React.CSSProperties}
         >
-          {slides.map((slide, i) => (
+          {extendedSlides.map((slide, i) => (
             <article
-              key={slide.id}
-              className={`landing-hero-slide ${i === activeIndex ? 'is-active' : ''}`}
-              onClick={() => goTo(i)}
+              key={`${slide.id}-${i}`}
+              className={`landing-hero-slide ${i === displayIndex ? 'is-active' : ''}`}
+              onClick={() => goTo(i % 3)}
             >
               <div className="landing-hero-slide-bg-wrap">
                 <div className={`landing-hero-bg ${slide.bgClass}`} aria-hidden />
@@ -152,13 +202,13 @@ export default function HeroSection() {
             {isPlaying ? '일시정지' : '재생'}
           </button>
           <div className="landing-hero-dots" role="tablist" aria-label="슬라이드 선택">
-            {slides.map((slide, i) => (
+            {slides.map((_, i) => (
               <button
-                key={slide.id}
+                key={i}
                 type="button"
-                className={`landing-hero-dot ${i === activeIndex ? 'is-active' : ''}`}
+                className={`landing-hero-dot ${i === logicalIndex ? 'is-active' : ''}`}
                 aria-label={`${i + 1}번 슬라이드`}
-                aria-selected={i === activeIndex}
+                aria-selected={i === logicalIndex}
                 role="tab"
                 onClick={() => goTo(i)}
               />
