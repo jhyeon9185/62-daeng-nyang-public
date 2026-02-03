@@ -235,15 +235,15 @@
   touch-action: pan-y;
 }
 
-/* 데스크톱: 좌우 화살표 네비게이션 */
+/* 좌우 화살표 네비게이션 (데스크톱 + 모바일 공통) */
 .landing-hero-arrow {
-  display: none;
+  display: flex;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
-  width: 3rem;
-  height: 3rem;
+  width: 2.5rem;
+  height: 2.5rem;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.24);
   background: rgba(0, 0, 0, 0.22);
@@ -263,14 +263,21 @@
   transform: translateY(-50%) scale(0.96);
 }
 .landing-hero-arrow--prev {
-  left: 1rem;
+  left: 0.5rem;
 }
 .landing-hero-arrow--next {
-  right: 1rem;
+  right: 0.5rem;
 }
 @media (min-width: 768px) {
   .landing-hero-arrow {
-    display: flex;
+    width: 3rem;
+    height: 3rem;
+  }
+  .landing-hero-arrow--prev {
+    left: 1rem;
+  }
+  .landing-hero-arrow--next {
+    right: 1rem;
   }
 }
 

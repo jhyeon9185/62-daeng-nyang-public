@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { motion, PanInfo } from 'framer-motion';
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 
 const TRANSITION_MS = 700;
@@ -76,6 +75,7 @@ export default function HeroSection() {
   const [displayIndex, setDisplayIndex] = useState(3);
   const [isPlaying, setIsPlaying] = useState(!prefersReducedMotion);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
 
   const logicalIndex = displayIndex < 3 ? (displayIndex + 3) % 3 : displayIndex >= 6 ? (displayIndex - 3) % 3 : displayIndex - 3;
 
@@ -136,19 +136,79 @@ export default function HeroSection() {
     return () => window.clearInterval(id);
   }, [isPlaying, logicalIndex, goTo]);
 
-  const onDragEnd = (_: unknown, info: PanInfo) => {
-    const threshold = 50;
-    const velocity = info.velocity.x;
-    const offset = info.offset.x;
-    if (velocity < -threshold || offset < -80) {
-      goTo((logicalIndex + 1) % 3);
-    } else if (velocity > threshold || offset > 80) {
-      goTo((logicalIndex + 2) % 3);
-    }
-  };
-
   const goPrev = () => goTo((logicalIndex + 2) % 3);
   const goNext = () => goTo((logicalIndex + 1) % 3);
+
+  /** 모바일: 가로 스와이프만 캐러셀에서 처리, 세로는 preventDefault 하지 않아 페이지 스크롤 유지 */
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchLockRef = useRef<'horizontal' | 'vertical' | null>(null);
+  const goToRef = useRef(goTo);
+  const logicalIndexRef = useRef(logicalIndex);
+  goToRef.current = goTo;
+  logicalIndexRef.current = logicalIndex;
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+    touchLockRef.current = null;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current || touchLockRef.current === 'vertical') return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+
+    if (touchLockRef.current === null) {
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+      if (absDx > 12 || absDy > 12) {
+        touchLockRef.current = absDx >= absDy ? 'horizontal' : 'vertical';
+      }
+    }
+    if (touchLockRef.current === 'horizontal') {
+      e.preventDefault();
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current || touchLockRef.current !== 'horizontal') {
+      touchStartRef.current = null;
+      touchLockRef.current = null;
+      return;
+    }
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartRef.current.x;
+    const threshold = 50;
+    if (dx < -threshold) goToRef.current((logicalIndexRef.current + 1) % 3);
+    else if (dx > threshold) goToRef.current((logicalIndexRef.current + 2) % 3);
+    touchStartRef.current = null;
+    touchLockRef.current = null;
+  }, []);
+
+  /** touchmove에서 preventDefault를 쓰려면 passive: false로 등록해야 함 */
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const onMove = (e: TouchEvent) => {
+      if (!touchStartRef.current || touchLockRef.current === 'vertical') return;
+      const t = e.touches[0];
+      const dx = t.clientX - touchStartRef.current.x;
+      const dy = t.clientY - touchStartRef.current.y;
+      if (touchLockRef.current === null) {
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+        if (absDx > 12 || absDy > 12) {
+          touchLockRef.current = absDx >= absDy ? 'horizontal' : 'vertical';
+        }
+      }
+      if (touchLockRef.current === 'horizontal') {
+        e.preventDefault();
+      }
+    };
+    el.addEventListener('touchmove', onMove, { passive: false });
+    return () => el.removeEventListener('touchmove', onMove);
+  }, []);
 
   return (
     <section className="landing-hero landing-hero--carousel" aria-label="메인 소개">
@@ -175,14 +235,13 @@ export default function HeroSection() {
           </svg>
         </button>
 
-        <motion.div
+        <div
+          ref={trackRef}
           className="landing-hero-track"
-          drag="x"
-          dragDirectionLock
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.15}
-          onDragEnd={onDragEnd}
-          style={{ '--hero-active-index': displayIndex, touchAction: 'pan-y' } as React.CSSProperties}
+          style={{ '--hero-active-index': displayIndex } as React.CSSProperties}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {extendedSlides.map((slide, i) => (
             <article
@@ -213,7 +272,7 @@ export default function HeroSection() {
               </div>
             </article>
           ))}
-        </motion.div>
+        </div>
       </div>
 
       <div className="landing-hero-controls-wrap">
