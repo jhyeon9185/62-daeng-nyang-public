@@ -162,8 +162,9 @@ export default function HeroSection() {
     if (touchLockRef.current === null) {
       const absDx = Math.abs(dx);
       const absDy = Math.abs(dy);
-      if (absDx > 12 || absDy > 12) {
-        touchLockRef.current = absDx >= absDy ? 'horizontal' : 'vertical';
+      const threshold = 18;
+      if (absDx > threshold || absDy > threshold) {
+        touchLockRef.current = absDx > absDy * 1.5 ? 'horizontal' : 'vertical';
       }
     }
     if (touchLockRef.current === 'horizontal') {
@@ -198,8 +199,9 @@ export default function HeroSection() {
       if (touchLockRef.current === null) {
         const absDx = Math.abs(dx);
         const absDy = Math.abs(dy);
-        if (absDx > 12 || absDy > 12) {
-          touchLockRef.current = absDx >= absDy ? 'horizontal' : 'vertical';
+        const threshold = 18;
+        if (absDx > threshold || absDy > threshold) {
+          touchLockRef.current = absDx > absDy * 1.5 ? 'horizontal' : 'vertical';
         }
       }
       if (touchLockRef.current === 'horizontal') {
