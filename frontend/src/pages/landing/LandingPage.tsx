@@ -26,7 +26,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
-      <main className="flex-1 relative w-full max-w-full overflow-x-hidden">
+      <main className="flex-1 relative w-full max-w-full overflow-x-hidden overflow-y-visible" style={{ touchAction: 'pan-y' }}>
         <HeroSection />
         <StickyStackingSection zIndex={1} className="landing-stack-bg">
           <MissionSection />

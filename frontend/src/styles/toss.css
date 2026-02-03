@@ -169,10 +169,13 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--toss-gray-700);
+  color: var(--toss-black);
   cursor: pointer;
   border-radius: var(--toss-radius);
   -webkit-tap-highlight-color: transparent;
+}
+.toss-hamburger svg {
+  stroke: var(--toss-black);
 }
 .toss-hamburger:hover {
   background-color: var(--toss-gray-100);

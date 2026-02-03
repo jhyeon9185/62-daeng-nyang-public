@@ -18,10 +18,11 @@ function HamburgerIcon({ open }: { open: boolean }) {
       height="24"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="currentColor"
+      stroke="#191f28"
       strokeWidth="2"
       strokeLinecap="round"
       aria-hidden
+      style={{ flexShrink: 0 }}
     >
       {open ? (
         <>
