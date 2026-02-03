@@ -4,7 +4,7 @@
  */
 
 import axios from 'axios';
-import { getAccessToken, getRefreshToken } from '@/store/authStore';
+import { getAccessToken, getRefreshToken, useAuthStore } from '@/store/authStore';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
@@ -63,6 +63,18 @@ axiosInstance.interceptors.response.use(
         const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage;
         if (accessToken) storage.setItem('accessToken', accessToken);
         if (newRefreshToken) storage.setItem('refreshToken', newRefreshToken);
+
+        if (accessToken && payload.user) {
+          useAuthStore.getState().login(
+            {
+              accessToken,
+              refreshToken: newRefreshToken ?? getRefreshToken() ?? '',
+              expiresIn: payload.expiresIn ?? 86400,
+              user: payload.user,
+            },
+            { keepLoggedIn: !!localStorage.getItem('refreshToken') }
+          );
+        }
 
         // 원래 요청 재시도
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;

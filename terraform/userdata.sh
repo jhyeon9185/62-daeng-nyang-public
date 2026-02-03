@@ -7,9 +7,6 @@ sudo dnf update -y
 # Java 21 (Corretto)
 sudo dnf install -y java-21-amazon-corretto-devel
 
-# Maven
-sudo dnf install -y maven
-
 # Node.js 20 (React 빌드용 - EC2에서 빌드할 경우)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 export NVM_DIR="$HOME/.nvm"

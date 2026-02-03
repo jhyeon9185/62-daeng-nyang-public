@@ -16,13 +16,13 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'maven'
+          cache: 'gradle'
 
       - name: Build Backend
         run: |
           cd backend
-          mvn clean package -DskipTests
-          ls -la target/*.jar
+          ./gradlew clean bootJar -x test
+          ls -la build/libs/*.jar
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -44,7 +44,7 @@ jobs:
       - name: Create deploy package
         run: |
           mkdir -p deploy
-          cp backend/target/platform-0.0.1-SNAPSHOT.jar deploy/
+          cp backend/build/libs/platform-0.0.1-SNAPSHOT.jar deploy/
           cp -r frontend/dist deploy/frontend-dist
           cp docs/migrations/V5__add_sync_history.sql deploy/
           tar -czvf deploy.tar.gz deploy/
@@ -79,7 +79,7 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 5m
-          envs: RDS_ENDPOINT,RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL,DATA_API_KEY,FRONTEND_URL,PUBLIC_API_SYNC_ENABLED,PUBLIC_API_SYNC_CRON
+          envs: RDS_ENDPOINT,RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,JWT_ACCESS_VALIDITY,JWT_REFRESH_VALIDITY,RESEND_API_KEY,RESEND_FROM_EMAIL,DATA_API_KEY,FRONTEND_URL,PUBLIC_API_SYNC_ENABLED,PUBLIC_API_SYNC_CRON
           script: |
             set -e
             cd /home/ec2-user
@@ -149,6 +149,8 @@ jobs:
               --spring.datasource.username="${RDS_USERNAME}" \
               --spring.datasource.password="${RDS_PASSWORD}" \
               --jwt.secret="${JWT_SECRET}" \
+              --jwt.access-token-validity="${JWT_ACCESS_VALIDITY:-86400}" \
+              --jwt.refresh-token-validity="${JWT_REFRESH_VALIDITY:-2592000}" \
               --resend.api-key="${RESEND_API_KEY}" \
               --resend.from-email="${RESEND_FROM_EMAIL}" \
               --public-api.service-key="${DATA_API_KEY}" \
@@ -198,6 +200,8 @@ jobs:
           RDS_USERNAME: ${{ secrets.RDS_USERNAME }}
           RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_ACCESS_VALIDITY: ${{ secrets.JWT_ACCESS_VALIDITY }}
+          JWT_REFRESH_VALIDITY: ${{ secrets.JWT_REFRESH_VALIDITY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
           DATA_API_KEY: ${{ secrets.DATA_API_KEY }}

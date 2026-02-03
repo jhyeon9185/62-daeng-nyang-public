@@ -23,7 +23,7 @@ spring:
       max-request-size: 10MB
 
 # 업로드 파일 저장 경로 (상대 경로 = 서버 실행 시 작업 디렉터리 기준)
-# 예: backend/에서 mvn 실행 시 → backend/uploads. 다른 경로에서 실행하면 파일을 찾지 못할 수 있으므로,
+# 예: backend/에서 gradlew 실행 시 → backend/uploads. 다른 경로에서 실행하면 파일을 찾지 못할 수 있으므로,
 # 재시작 시 같은 디렉터리에서 실행하거나 file.upload-dir을 절대 경로로 설정하세요.
 file:
   upload-dir: uploads
@@ -43,8 +43,8 @@ app:
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET:your-256-bit-base64-encoded-secret-key-here-minimum-32-bytes}
-  access-token-validity: 3600      # 1 hour in seconds
-  refresh-token-validity: 604800   # 7 days in seconds
+  access-token-validity: ${JWT_ACCESS_VALIDITY:86400}    # 24 hours (로그인 유지 개선)
+  refresh-token-validity: ${JWT_REFRESH_VALIDITY:2592000} # 30 days
 
 # Resend Email Configuration
 # 신청(입양/봉사/기부) 접수 시: 신청자·관리자(보호소)에게 메일 발송.

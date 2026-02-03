@@ -78,7 +78,7 @@ aws configure
 
 | 구분 | AWS_Gemini (책) | DN_project01 (현재 프로젝트) |
 |------|-----------------|------------------------------|
-| **빌드 도구** | Gradle | **Maven** (`pom.xml`) |
+| **빌드 도구** | Gradle | **Gradle** (`build.gradle.kts`) |
 | **Java** | Java 21 | Java 21 ✓ |
 | **JAR 파일명** | `aws-v2-0.0.1.jar` | `platform-0.0.1-SNAPSHOT.jar` |
 | **DB** | MariaDB | **MySQL 8.0** |
@@ -362,9 +362,6 @@ sudo dnf update -y
 # Java 21 (Corretto)
 sudo dnf install -y java-21-amazon-corretto-devel
 
-# Maven
-sudo dnf install -y maven
-
 # Node.js 20 (React 빌드)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
@@ -449,14 +446,14 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'maven'
+          cache: 'gradle'
 
-      # Backend 빌드 (Maven)
+      # Backend 빌드 (Gradle)
       - name: Build Backend
         run: |
           cd backend
-          mvn clean package -DskipTests
-          ls -la target/*.jar
+          ./gradlew clean bootJar -x test
+          ls -la build/libs/*.jar
 
       # Node.js + React 빌드
       - name: Set up Node.js
@@ -477,7 +474,7 @@ jobs:
       - name: Create deploy package
         run: |
           mkdir -p deploy
-          cp backend/target/platform-0.0.1-SNAPSHOT.jar deploy/
+          cp backend/build/libs/platform-0.0.1-SNAPSHOT.jar deploy/
           cp -r frontend/dist deploy/frontend-dist
           tar -czvf deploy.tar.gz deploy/
 

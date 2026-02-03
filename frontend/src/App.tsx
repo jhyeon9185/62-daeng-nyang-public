@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import ScrollRestoration from '@/components/ScrollRestoration';
+import { useProactiveRefresh } from '@/hooks/useProactiveRefresh';
 import LandingPage from '@/pages/landing/LandingPage';
 import AnimalsPage from '@/pages/animals/AnimalsPage';
 import AnimalDetailPage from '@/pages/animals/AnimalDetailPage';
@@ -21,6 +22,7 @@ import GuideAdoptionPage from '@/pages/guide/GuideAdoptionPage';
 import GuideFosterPage from '@/pages/guide/GuideFosterPage';
 
 function App() {
+  useProactiveRefresh();
   return (
     <ErrorBoundary>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>

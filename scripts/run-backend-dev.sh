@@ -17,14 +17,10 @@ if [ -z "$JAVA_HOME" ] && command -v /usr/libexec/java_home >/dev/null 2>&1; the
   export JAVA_HOME=$(/usr/libexec/java_home -v 21 2>/dev/null || true)
 fi
 cd "$PROJECT_DIR/backend"
-if [ -f ./mvnw ]; then
-  ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-elif command -v mvn >/dev/null 2>&1; then
-  mvn spring-boot:run -Dspring-boot.run.profiles=dev
+if [ -f ./gradlew ]; then
+  ./gradlew bootRun --args='--spring.profiles.active=dev'
 else
-  echo "Maven이 없습니다. 다음 중 하나를 해주세요:"
-  echo "  1) Maven 설치: brew install maven (macOS)"
-  echo "  2) backend/ 에 Maven Wrapper(mvnw) 추가 후 ./scripts/run-backend-dev.sh 다시 실행"
-  echo "  3) IDE에서 DnPlatformApplication 을 dev 프로필로 실행 (환경 변수에 backend/.env 로드)"
+  echo "Gradle Wrapper(gradlew)가 없습니다. backend/ 디렉터리에 gradlew가 있는지 확인한 뒤 다시 실행하세요."
+  echo "  또는 IDE에서 DnPlatformApplication 을 dev 프로필로 실행 (환경 변수에 backend/.env 로드)"
   exit 1
 fi

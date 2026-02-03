@@ -27,7 +27,7 @@ CREATE DATABASE IF NOT EXISTS dn_platform
 `application-dev.yml`에 `ddl-auto: update`가 있으므로, **백엔드를 dev 프로필로 한 번 실행**하면 테이블이 자동 생성/수정됩니다.
 
 1. MySQL 서비스 실행(로컬)
-2. 백엔드 실행: `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev` (또는 IDE에서 dev 프로필로 실행)
+2. 백엔드 실행: `./gradlew bootRun --args='--spring.profiles.active=dev'` (또는 IDE에서 dev 프로필로 실행)
 
 **방법 B: 스크립트로 한 번에 생성**  
 프로젝트 루트(`DN_project01`)에서:

@@ -12,19 +12,12 @@ Generate email service using Resend API:
 - Email templates
 
 ## Dependencies
-Add to `pom.xml`:
-```xml
-<dependency>
-    <groupId>com.resend</groupId>
-    <artifactId>resend-java</artifactId>
-    <version>2.2.1</version>
-</dependency>
-```
-
-Or `build.gradle.kts`:
+Add to `build.gradle.kts`:
 ```kotlin
 implementation("com.resend:resend-java:2.2.1")
 ```
+
+(Maven `pom.xml` 예시는 프로젝트가 Maven일 때만 참고.)
 
 ## Email Service Implementation
 Location: `backend/src/main/java/com/dnproject/platform/service/EmailService.java`

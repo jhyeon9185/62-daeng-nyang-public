@@ -88,7 +88,7 @@ DN_project01/
    # 프로젝트 루트(DN_project01)에서 - backend/.env 자동 로드
    ./scripts/run-backend-dev.sh
    ```
-   (또는 `cd backend` 후 `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev`. DB 비밀번호는 `backend/.env` 또는 `DB_PASSWORD` 환경 변수로 설정.)
+   (또는 `cd backend` 후 `./gradlew bootRun --args='--spring.profiles.active=dev'`. DB 비밀번호는 `backend/.env` 또는 `DB_PASSWORD` 환경 변수로 설정.)
 
 3. **Frontend 실행**
    ```bash
