@@ -76,7 +76,8 @@
 .toss-header-inner {
   max-width: var(--toss-container);
   margin: 0 auto;
-  padding: 0 var(--toss-space-6);
+  padding-left: max(var(--toss-space-6), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--toss-space-6), env(safe-area-inset-right, 0px));
   height: 3.5rem;
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -156,6 +157,144 @@
 .toss-btn-ghost:hover {
   background-color: var(--toss-gray-100);
   color: var(--toss-black);
+}
+
+/* 모바일 햄버거 버튼 */
+.toss-hamburger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--toss-gray-700);
+  cursor: pointer;
+  border-radius: var(--toss-radius);
+  -webkit-tap-highlight-color: transparent;
+}
+.toss-hamburger:hover {
+  background-color: var(--toss-gray-100);
+  color: var(--toss-black);
+}
+
+/* 모바일 메뉴 드로어 - 오른쪽에서 슬라이드 */
+.toss-menu-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 49;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+@media (max-width: 767px) {
+  .toss-menu-backdrop {
+    display: block;
+  }
+  .toss-menu-backdrop--open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.toss-menu-drawer {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 51;
+  width: min(280px, 85vw);
+  background: var(--toss-white);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+  padding: calc(var(--header-height, 3.5rem) + 1rem) 1rem 1rem;
+  padding-right: max(1rem, env(safe-area-inset-right));
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 767px) {
+  .toss-menu-drawer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .toss-menu-drawer--open {
+    transform: translateX(0);
+  }
+}
+
+.toss-menu-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.toss-menu-link {
+  display: block;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--toss-gray-700);
+  text-decoration: none;
+  border-radius: var(--toss-radius);
+  transition: background 0.15s, color 0.15s;
+}
+.toss-menu-link:hover {
+  background: var(--toss-gray-100);
+  color: var(--toss-black);
+}
+.toss-menu-link--primary {
+  color: var(--toss-blue);
+  font-weight: 600;
+}
+.toss-menu-link--admin {
+  font-size: 0.875rem;
+  color: var(--toss-gray-500);
+}
+.toss-menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--toss-gray-100);
+}
+.toss-menu-btn {
+  display: block;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--toss-radius);
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.toss-menu-btn--logout {
+  background: var(--toss-blue);
+  color: var(--toss-white);
+}
+.toss-menu-btn--logout:hover {
+  background: var(--toss-blue-hover);
+}
+.toss-menu-btn--signup {
+  background: var(--toss-blue);
+  color: var(--toss-white);
+}
+.toss-menu-btn--signup:hover {
+  background: var(--toss-blue-hover);
+}
+
+/* 메뉴 열림 시 body 스크롤 방지 */
+body.toss-menu-open {
+  overflow: hidden;
+  touch-action: none;
 }
 
 /* 우측 액션 영역을 grid 오른쪽으로 정렬 */

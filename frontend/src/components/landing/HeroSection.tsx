@@ -147,9 +147,34 @@ export default function HeroSection() {
     }
   };
 
+  const goPrev = () => goTo((logicalIndex + 2) % 3);
+  const goNext = () => goTo((logicalIndex + 1) % 3);
+
   return (
     <section className="landing-hero landing-hero--carousel" aria-label="메인 소개">
       <div className="landing-hero-carousel">
+        {/* 데스크톱: 좌우 화살표 네비게이션 */}
+        <button
+          type="button"
+          className="landing-hero-arrow landing-hero-arrow--prev"
+          onClick={goPrev}
+          aria-label="이전 슬라이드"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="landing-hero-arrow landing-hero-arrow--next"
+          onClick={goNext}
+          aria-label="다음 슬라이드"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+
         <motion.div
           className="landing-hero-track"
           drag="x"

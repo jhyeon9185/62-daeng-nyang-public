@@ -11,18 +11,50 @@ const navItems = [
   { to: '/boards', label: '게시판' },
 ];
 
+function HamburgerIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      {open ? (
+        <>
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </>
+      ) : (
+        <>
+          <line x1="4" y1="6" x2="20" y2="6" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="18" x2="20" y2="18" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 export default function Header() {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuthStore();
   const [hidden, setHidden] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const lastYRef = useRef(0);
   const tickingRef = useRef(false);
 
   const handleLogout = () => {
     authApi.logout().catch(() => {});
     logout();
+    setMenuOpen(false);
     navigate('/', { replace: true });
   };
+
+  const closeMenu = () => setMenuOpen(false);
 
   useEffect(() => {
     lastYRef.current = window.scrollY;
@@ -35,19 +67,15 @@ export default function Header() {
         const y = window.scrollY;
         const delta = y - lastYRef.current;
 
-        // 작은 흔들림은 무시
         const threshold = 8;
         if (Math.abs(delta) > threshold) {
-          // 아래로 스크롤 + 어느 정도 내려간 경우 숨김
           if (delta > 0 && y > 80) setHidden(true);
-          // 위로 스크롤이면 노출
           if (delta < 0) setHidden(false);
           lastYRef.current = y;
         } else {
           lastYRef.current = y;
         }
 
-        // 최상단에서는 항상 노출
         if (y <= 10) setHidden(false);
 
         tickingRef.current = false;
@@ -57,6 +85,20 @@ export default function Header() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onEsc = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false);
+    const onResize = () => window.innerWidth >= 768 && setMenuOpen(false);
+    document.body.classList.add('toss-menu-open');
+    document.addEventListener('keydown', onEsc);
+    window.addEventListener('resize', onResize);
+    return () => {
+      document.body.classList.remove('toss-menu-open');
+      document.removeEventListener('keydown', onEsc);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [menuOpen]);
 
   return (
     <header className={clsx('toss-header', hidden && 'toss-header--hidden')}>
@@ -73,31 +115,111 @@ export default function Header() {
           ))}
         </nav>
 
+        {/* 데스크톱: 버튼들 / 모바일: 햄버거 */}
         <div className="flex items-center gap-3 shrink-0">
+          <div className="hidden md:flex items-center gap-3">
+            {isAuthenticated ? (
+              <>
+                {(user?.role === 'SUPER_ADMIN' || user?.role === 'SHELTER_ADMIN') && (
+                  <Link to="/admin" className="toss-btn toss-btn-ghost">
+                    관리자
+                  </Link>
+                )}
+                <Link to="/mypage" className="toss-btn toss-btn-ghost">
+                  마이페이지
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="toss-btn toss-btn-primary"
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="toss-btn toss-btn-ghost">
+                  로그인
+                </Link>
+                <Link to="/signup" className="landing-btn landing-btn-primary">
+                  회원가입
+                </Link>
+              </>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="toss-hamburger md:hidden"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-expanded={menuOpen}
+            aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
+          >
+            <HamburgerIcon open={menuOpen} />
+          </button>
+        </div>
+      </div>
+
+      {/* 모바일 햄버거 메뉴 드로어 */}
+      <div
+        className={clsx('toss-menu-backdrop', menuOpen && 'toss-menu-backdrop--open')}
+        onClick={closeMenu}
+        aria-hidden
+      />
+      <div className={clsx('toss-menu-drawer', menuOpen && 'toss-menu-drawer--open')}>
+        <nav className="toss-menu-nav" aria-label="모바일 메뉴">
+          {navItems.map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className="toss-menu-link"
+              onClick={closeMenu}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <div className="toss-menu-actions">
           {isAuthenticated ? (
             <>
               {(user?.role === 'SUPER_ADMIN' || user?.role === 'SHELTER_ADMIN') && (
-                <Link to="/admin" className="toss-btn toss-btn-ghost">
+                <Link
+                  to="/admin"
+                  className="toss-menu-link toss-menu-link--admin"
+                  onClick={closeMenu}
+                >
                   관리자
                 </Link>
               )}
-              <Link to="/mypage" className="toss-btn toss-btn-ghost">
+              <Link
+                to="/mypage"
+                className="toss-menu-link toss-menu-link--primary"
+                onClick={closeMenu}
+              >
                 마이페이지
               </Link>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="toss-btn toss-btn-primary"
+                className="toss-menu-btn toss-menu-btn--logout"
               >
                 로그아웃
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="toss-btn toss-btn-ghost">
+              <Link
+                to="/login"
+                className="toss-menu-link toss-menu-link--primary"
+                onClick={closeMenu}
+              >
                 로그인
               </Link>
-              <Link to="/signup" className="landing-btn landing-btn-primary">
+              <Link
+                to="/signup"
+                className="toss-menu-btn toss-menu-btn--signup"
+                onClick={closeMenu}
+              >
                 회원가입
               </Link>
             </>

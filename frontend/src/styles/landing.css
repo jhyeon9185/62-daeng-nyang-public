@@ -230,6 +230,46 @@
   overflow: hidden;
   padding-top: calc(var(--header-height, 3.5rem) + 3rem);
   padding-bottom: 1rem;
+  position: relative;
+}
+
+/* 데스크톱: 좌우 화살표 네비게이션 */
+.landing-hero-arrow {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.88);
+  border-radius: 50%;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s, transform 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.landing-hero-arrow:hover {
+  background: rgba(0, 0, 0, 0.36);
+  border-color: rgba(255, 255, 255, 0.36);
+}
+.landing-hero-arrow:active {
+  transform: translateY(-50%) scale(0.96);
+}
+.landing-hero-arrow--prev {
+  left: 1rem;
+}
+.landing-hero-arrow--next {
+  right: 1rem;
+}
+@media (min-width: 768px) {
+  .landing-hero-arrow {
+    display: flex;
+  }
 }
 
 .landing-hero-track {
