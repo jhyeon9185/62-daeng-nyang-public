@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { useAuthStore } from '@/store/authStore';
@@ -161,13 +162,15 @@ export default function Header() {
         </div>
       </div>
 
-      {/* 모바일 햄버거 메뉴 드로어 */}
-      <div
-        className={clsx('toss-menu-backdrop', menuOpen && 'toss-menu-backdrop--open')}
-        onClick={closeMenu}
-        aria-hidden
-      />
-      <div className={clsx('toss-menu-drawer', menuOpen && 'toss-menu-drawer--open')}>
+      {/* 모바일 햄버거 메뉴 드로어 - body에 포탈 렌더링으로 z-index/스택 텍스트 이슈 방지 */}
+      {createPortal(
+        <>
+          <div
+            className={clsx('toss-menu-backdrop', menuOpen && 'toss-menu-backdrop--open')}
+            onClick={closeMenu}
+            aria-hidden
+          />
+          <div className={clsx('toss-menu-drawer', menuOpen && 'toss-menu-drawer--open')}>
         <nav className="toss-menu-nav" aria-label="모바일 메뉴">
           {navItems.map(({ to, label }) => (
             <Link
@@ -226,7 +229,10 @@ export default function Header() {
             </>
           )}
         </div>
-      </div>
+          </div>
+        </>,
+        document.body
+      )}
     </header>
   );
 }

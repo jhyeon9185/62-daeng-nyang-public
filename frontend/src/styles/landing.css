@@ -231,6 +231,8 @@
   padding-top: calc(var(--header-height, 3.5rem) + 3rem);
   padding-bottom: 1rem;
   position: relative;
+  /* 모바일: 세로 스크롤이 페이지로 전달되도록 */
+  touch-action: pan-y;
 }
 
 /* 데스크톱: 좌우 화살표 네비게이션 */
@@ -283,6 +285,8 @@
   transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
   transform: translateX(calc(14vw - var(--hero-active-index, 0) * var(--hero-offset)));
   cursor: grab;
+  /* 세로 스크롤 허용(pan-y)으로 페이지 스크롤 방해 방지, 가로 스와이프는 JS에서 처리 */
+  touch-action: pan-y;
 }
 
 .landing-hero-track:active {

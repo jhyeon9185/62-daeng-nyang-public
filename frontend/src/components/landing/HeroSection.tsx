@@ -4,19 +4,7 @@ import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 
 const TRANSITION_MS = 700;
 
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-  return isMobile;
-}
-
 export default function HeroSection() {
-  const isMobile = useIsMobile();
   const slides = useMemo(
     () => [
       {
@@ -189,12 +177,12 @@ export default function HeroSection() {
 
         <motion.div
           className="landing-hero-track"
-          drag={isMobile ? false : 'x'}
-          dragDirectionLock={!isMobile}
+          drag="x"
+          dragDirectionLock
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.15}
-          onDragEnd={isMobile ? undefined : onDragEnd}
-          style={{ '--hero-active-index': displayIndex } as React.CSSProperties}
+          onDragEnd={onDragEnd}
+          style={{ '--hero-active-index': displayIndex, touchAction: 'pan-y' } as React.CSSProperties}
         >
           {extendedSlides.map((slide, i) => (
             <article

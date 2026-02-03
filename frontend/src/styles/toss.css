@@ -209,6 +209,7 @@
   top: 0;
   right: 0;
   bottom: 0;
+  left: auto;
   z-index: 51;
   width: min(280px, 85vw);
   background: var(--toss-white);
@@ -219,6 +220,8 @@
   transition: transform 0.25s ease;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  visibility: hidden;
+  pointer-events: none;
 }
 @media (max-width: 767px) {
   .toss-menu-drawer {
@@ -228,6 +231,8 @@
   }
   .toss-menu-drawer--open {
     transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
   }
 }
 
