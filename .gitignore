@@ -12,6 +12,7 @@ target/
 backend/target/
 *.class
 *.jar
+!backend/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 .gradle/
