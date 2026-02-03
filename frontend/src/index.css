@@ -16,10 +16,14 @@ html {
   /* 모바일: 세로 스크롤만 허용, 터치가 특정 요소에 잡히지 않도록 */
   touch-action: pan-y;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body {
   margin: 0;
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
   font-family: 'GmarketSans', var(--toss-font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -27,6 +31,7 @@ body {
   background-color: var(--toss-white);
   touch-action: pan-y;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 #root {

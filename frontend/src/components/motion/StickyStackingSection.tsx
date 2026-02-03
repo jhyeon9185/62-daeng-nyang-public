@@ -6,7 +6,7 @@ interface StickyStackingSectionProps {
   zIndex: number;
   className?: string;
   /**
-   * fixed header 아래로 붙도록 offset(px)
+   * fixed header 아래로 붙도록 offset(px). 미지정 시 CSS var(--header-height) 사용
    */
   topOffsetPx?: number;
 }
@@ -21,7 +21,7 @@ export default function StickyStackingSection({
   children,
   zIndex,
   className = '',
-  topOffsetPx = 56, // toss header height(3.5rem)
+  topOffsetPx, // 기본값은 CSS var(--header-height) 사용
 }: StickyStackingSectionProps) {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -34,9 +34,8 @@ export default function StickyStackingSection({
 
   const style = {
     zIndex,
-    top: `${topOffsetPx}px`,
-    // CSS에서 스택 높이/여백 계산에 사용
-    ['--landing-stack-top' as any]: `${topOffsetPx}px`,
+    top: topOffsetPx != null ? `${topOffsetPx}px` : 'var(--header-height)',
+    ['--landing-stack-top' as any]: topOffsetPx != null ? `${topOffsetPx}px` : 'var(--header-height)',
   } as const;
 
   return (

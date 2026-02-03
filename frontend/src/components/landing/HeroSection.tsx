@@ -153,6 +153,7 @@ export default function HeroSection() {
         <motion.div
           className="landing-hero-track"
           drag="x"
+          dragDirectionLock
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.15}
           onDragEnd={onDragEnd}

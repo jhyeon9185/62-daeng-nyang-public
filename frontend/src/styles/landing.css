@@ -58,7 +58,7 @@
 
 /* 스티키 스택에서 “빽빽함”만 살짝 풀어주는 최소 여유 */
 .landing-stack-stage {
-  min-height: calc(100vh - var(--landing-stack-top, 56px));
+  min-height: calc(100vh - var(--landing-stack-top, var(--header-height, 56px)));
   padding-bottom: clamp(1.25rem, 3vw, 2rem);
   touch-action: pan-y;
 }
@@ -73,7 +73,7 @@
 .landing-section,
 .landing-stats,
 .landing-final-cta {
-  scroll-margin-top: 5.25rem;
+  scroll-margin-top: calc(var(--header-height, 3.5rem) + 1.75rem);
 }
 
 /* 좌우 반복 2컬럼: 내용(left/right) + 비주얼(right/left) */
@@ -228,7 +228,7 @@
   align-items: center;
   justify-content: flex-start;
   overflow: hidden;
-  padding-top: 6.5rem;
+  padding-top: calc(var(--header-height, 3.5rem) + 3rem);
   padding-bottom: 1rem;
 }
 
@@ -405,7 +405,7 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
-  padding-top: 6.5rem; /* fixed header 여유 */
+  padding-top: calc(var(--header-height, 3.5rem) + 3rem); /* fixed header 여유 */
   padding-bottom: 4rem;
   padding-left: 1.5rem;
   padding-right: 1.5rem;
