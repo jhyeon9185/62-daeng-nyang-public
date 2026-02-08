@@ -58,17 +58,31 @@ public class AdminAnimalController {
     @DeleteMapping("/cleanup-invalid")
     public ApiResponse<Map<String, Object>> cleanupInvalidStatus(
             @RequestParam(defaultValue = "30") int days) {
+        int syncRemoved = 0, syncAdded = 0, syncUpdated = 0;
+        String syncError = null;
+
         // 1) 먼저 동기화 실행 → 공공API에서 전체 상태 조회하여 비보호 동물 삭제
-        var syncResult = animalService.syncFromPublicApiWithStatus(days, null, null);
+        try {
+            var syncResult = animalService.syncFromPublicApiWithStatus(days, null, null);
+            syncRemoved = syncResult.removedCount();
+            syncAdded = syncResult.addedCount();
+            syncUpdated = syncResult.updatedCount();
+        } catch (Exception e) {
+            syncError = e.getMessage();
+            // 동기화 실패해도 DB 정리는 계속 진행
+        }
 
         // 2) 혹시 남은 ADOPTED / NULL 상태 레코드도 정리
         int[] dbCleanup = animalService.cleanupInvalidStatus();
 
-        int totalRemoved = syncResult.removedCount() + dbCleanup[0] + dbCleanup[1];
-        return ApiResponse.success("동기화 + 정리 완료", Map.of(
-                "syncRemoved", syncResult.removedCount(),
-                "syncAdded", syncResult.addedCount(),
-                "syncUpdated", syncResult.updatedCount(),
+        int totalRemoved = syncRemoved + dbCleanup[0] + dbCleanup[1];
+        String message = syncError != null
+                ? "동기화 일부 실패, DB 정리 완료 (" + syncError + ")"
+                : "동기화 + 정리 완료";
+        return ApiResponse.success(message, Map.of(
+                "syncRemoved", syncRemoved,
+                "syncAdded", syncAdded,
+                "syncUpdated", syncUpdated,
                 "adoptedDeleted", dbCleanup[0],
                 "nullDeleted", dbCleanup[1],
                 "totalRemoved", totalRemoved
