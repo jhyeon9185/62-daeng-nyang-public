@@ -54,14 +54,24 @@ public class AdminAnimalController {
         }
     }
 
-    @Operation(summary = "기존 ADOPTED / NULL 상태 동물 일괄 정리")
+    @Operation(summary = "동기화 실행 후 비보호 상태 동물 일괄 정리 (입양·안락사·반환 등)")
     @DeleteMapping("/cleanup-invalid")
-    public ApiResponse<Map<String, Object>> cleanupInvalidStatus() {
-        int[] result = animalService.cleanupInvalidStatus();
-        return ApiResponse.success("정리 완료", Map.of(
-                "adoptedDeleted", result[0],
-                "nullDeleted", result[1],
-                "totalDeleted", result[0] + result[1]
+    public ApiResponse<Map<String, Object>> cleanupInvalidStatus(
+            @RequestParam(defaultValue = "30") int days) {
+        // 1) 먼저 동기화 실행 → 공공API에서 전체 상태 조회하여 비보호 동물 삭제
+        var syncResult = animalService.syncFromPublicApiWithStatus(days, null, null);
+
+        // 2) 혹시 남은 ADOPTED / NULL 상태 레코드도 정리
+        int[] dbCleanup = animalService.cleanupInvalidStatus();
+
+        int totalRemoved = syncResult.removedCount() + dbCleanup[0] + dbCleanup[1];
+        return ApiResponse.success("동기화 + 정리 완료", Map.of(
+                "syncRemoved", syncResult.removedCount(),
+                "syncAdded", syncResult.addedCount(),
+                "syncUpdated", syncResult.updatedCount(),
+                "adoptedDeleted", dbCleanup[0],
+                "nullDeleted", dbCleanup[1],
+                "totalRemoved", totalRemoved
         ));
     }
 

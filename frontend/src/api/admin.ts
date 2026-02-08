@@ -93,11 +93,12 @@ export const adminApi = {
       params: { page, size },
     }),
 
-  /** 기존 ADOPTED / NULL 상태 동물 일괄 정리 */
+  /** 동기화 실행 후 비보호 동물 일괄 정리 (입양·반환·안락사 등) */
   cleanupInvalidAnimals: () =>
-    axiosInstance.delete<ApiResponse<{ adoptedDeleted: number; nullDeleted: number; totalDeleted: number }>>(
-      '/admin/animals/cleanup-invalid',
-    ),
+    axiosInstance.delete<ApiResponse<{
+      syncRemoved: number; syncAdded: number; syncUpdated: number;
+      adoptedDeleted: number; nullDeleted: number; totalRemoved: number;
+    }>>('/admin/animals/cleanup-invalid', { timeout: 180_000 }),
 
   /** 테스트 이메일 발송 (관리자). to 미입력 시 로그인한 관리자 이메일로 발송 */
   sendTestEmail: (to?: string) =>

@@ -410,13 +410,20 @@ export default function AdminDashboardPage() {
     try {
       const res = await adminApi.cleanupInvalidAnimals();
       const data = res.data?.data ?? res.data;
-      const total = data?.totalDeleted ?? 0;
-      if (total === 0) {
-        setCleanupResult('정리 완료: 삭제 대상 없음');
+      const totalRemoved = data?.totalRemoved ?? 0;
+      const syncRemoved = data?.syncRemoved ?? 0;
+      const adoptedDel = data?.adoptedDeleted ?? 0;
+      const nullDel = data?.nullDeleted ?? 0;
+      if (totalRemoved === 0) {
+        setCleanupResult('동기화 + 정리 완료: 비보호 동물 없음');
       } else {
-        setCleanupResult(`정리 완료: ADOPTED ${data?.adoptedDeleted ?? 0}마리, NULL ${data?.nullDeleted ?? 0}마리 삭제`);
+        const parts: string[] = [];
+        if (syncRemoved > 0) parts.push(`동기화 중 ${syncRemoved}마리 제거`);
+        if (adoptedDel > 0) parts.push(`ADOPTED ${adoptedDel}마리 삭제`);
+        if (nullDel > 0) parts.push(`NULL ${nullDel}마리 삭제`);
+        setCleanupResult(`정리 완료: ${parts.join(', ')} (총 ${totalRemoved}마리)`);
       }
-      setTimeout(() => setCleanupResult(null), 8000);
+      setTimeout(() => setCleanupResult(null), 12000);
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setCleanupResult(msg ?? '정리 실패');
@@ -924,9 +931,10 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
                   <div className="p-6 rounded-lg bg-red-50 border border-red-200 max-w-2xl mt-4">
-                    <h3 className="font-semibold text-gray-800 mb-2">DB 데이터 정리</h3>
+                    <h3 className="font-semibold text-gray-800 mb-2">비보호 동물 정리</h3>
                     <p className="text-sm text-gray-600 mb-4">
-                      기존 DB에 남아있는 ADOPTED(입양완료) 및 상태값 없는(NULL) 동물 데이터를 일괄 삭제합니다.
+                      공공API에서 최신 상태를 조회하여 입양·반환·안락사 등 비보호 상태 동물을 DB에서 삭제합니다.<br />
+                      (동기화 30일치 실행 → 비보호 상태 삭제 → 잔여 ADOPTED/NULL 정리)
                     </p>
                     <div className="flex items-center gap-3 flex-wrap">
                       <button
@@ -935,7 +943,7 @@ export default function AdminDashboardPage() {
                         disabled={cleanupLoading}
                         onClick={handleCleanupInvalid}
                       >
-                        {cleanupLoading ? '정리 중...' : '불필요 데이터 정리'}
+                        {cleanupLoading ? '동기화 + 정리 중...' : '비보호 동물 정리'}
                       </button>
                       {cleanupResult && <span className="text-sm text-gray-700">{cleanupResult}</span>}
                     </div>
