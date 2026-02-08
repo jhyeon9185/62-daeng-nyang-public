@@ -81,6 +81,8 @@ export default function AdminDashboardPage() {
   const [businessRegLoading, setBusinessRegLoading] = useState<number | null>(null);
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [cleanupLoading, setCleanupLoading] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState<string | null>(null);
   const [syncHistory, setSyncHistory] = useState<SyncHistoryItem[]>([]);
   const [syncHistoryLoading, setSyncHistoryLoading] = useState(false);
   const [syncHistoryPage, setSyncHistoryPage] = useState(0);
@@ -378,17 +380,17 @@ export default function AdminDashboardPage() {
       const data = res.data?.data ?? res.data;
       const added = data?.addedCount ?? 0;
       const updated = data?.updatedCount ?? 0;
-      const corrected = data?.statusCorrectedCount ?? 0;
+      const removed = data?.removedCount ?? 0;
       const apiKeyOk = data?.apiKeyConfigured !== false;
       if (!apiKeyOk) {
         setSyncResult('API 키가 설정되지 않았습니다. backend/.env 에 DATA_API_KEY 를 확인하세요.');
-      } else if (added === 0 && updated === 0 && corrected === 0) {
+      } else if (added === 0 && updated === 0 && removed === 0) {
         setSyncResult('동기화 완료: 변경 없음 (신규/수정된 데이터 없음)');
       } else {
         const parts: string[] = [];
         if (added > 0) parts.push(`추가 ${added}마리`);
         if (updated > 0) parts.push(`수정 ${updated}마리`);
-        if (corrected > 0) parts.push(`만료보정 ${corrected}마리`);
+        if (removed > 0) parts.push(`삭제 ${removed}마리`);
         setSyncResult(`동기화 완료: ${parts.join(', ')}`);
       }
       loadSyncHistory();
@@ -399,6 +401,27 @@ export default function AdminDashboardPage() {
       loadSyncHistory();
     } finally {
       setSyncLoading(false);
+    }
+  };
+
+  const handleCleanupInvalid = async () => {
+    setCleanupLoading(true);
+    setCleanupResult(null);
+    try {
+      const res = await adminApi.cleanupInvalidAnimals();
+      const data = res.data?.data ?? res.data;
+      const total = data?.totalDeleted ?? 0;
+      if (total === 0) {
+        setCleanupResult('정리 완료: 삭제 대상 없음');
+      } else {
+        setCleanupResult(`정리 완료: ADOPTED ${data?.adoptedDeleted ?? 0}마리, NULL ${data?.nullDeleted ?? 0}마리 삭제`);
+      }
+      setTimeout(() => setCleanupResult(null), 8000);
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setCleanupResult(msg ?? '정리 실패');
+    } finally {
+      setCleanupLoading(false);
     }
   };
 
@@ -898,6 +921,23 @@ export default function AdminDashboardPage() {
                         {syncLoading ? '동기화 중...' : '동기화 실행'}
                       </button>
                       {syncResult && <span className="text-sm text-gray-700">{syncResult}</span>}
+                    </div>
+                  </div>
+                  <div className="p-6 rounded-lg bg-red-50 border border-red-200 max-w-2xl mt-4">
+                    <h3 className="font-semibold text-gray-800 mb-2">DB 데이터 정리</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      기존 DB에 남아있는 ADOPTED(입양완료) 및 상태값 없는(NULL) 동물 데이터를 일괄 삭제합니다.
+                    </p>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn-danger"
+                        disabled={cleanupLoading}
+                        onClick={handleCleanupInvalid}
+                      >
+                        {cleanupLoading ? '정리 중...' : '불필요 데이터 정리'}
+                      </button>
+                      {cleanupResult && <span className="text-sm text-gray-700">{cleanupResult}</span>}
                     </div>
                   </div>
                   <div className="mt-6">

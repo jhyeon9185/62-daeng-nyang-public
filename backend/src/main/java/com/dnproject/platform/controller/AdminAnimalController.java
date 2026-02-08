@@ -41,7 +41,7 @@ public class AdminAnimalController {
                     "addedCount", result.addedCount(),
                     "updatedCount", result.updatedCount(),
                     "syncedCount", result.syncedCount(),
-                    "statusCorrectedCount", result.statusCorrectedCount(),
+                    "removedCount", result.removedCount(),
                     "days", days,
                     "species", species != null ? species : "ALL",
                     "apiKeyConfigured", apiKeyConfigured
@@ -52,6 +52,17 @@ public class AdminAnimalController {
                     SyncTriggerType.MANUAL, days, species != null ? species : "ALL", e.getMessage());
             throw e;
         }
+    }
+
+    @Operation(summary = "기존 ADOPTED / NULL 상태 동물 일괄 정리")
+    @DeleteMapping("/cleanup-invalid")
+    public ApiResponse<Map<String, Object>> cleanupInvalidStatus() {
+        int[] result = animalService.cleanupInvalidStatus();
+        return ApiResponse.success("정리 완료", Map.of(
+                "adoptedDeleted", result[0],
+                "nullDeleted", result[1],
+                "totalDeleted", result[0] + result[1]
+        ));
     }
 
     @Operation(summary = "동기화 이력 목록 (자동/수동, 추가·수정·삭제·보정 건수)")

@@ -40,15 +40,11 @@ public class AnimalSyncService {
     private final AnimalRepository animalRepository;
     private final ShelterRepository shelterRepository;
 
-    /** 기간 지난 동물을 ADOPTED로 보정하는 기준 일수 (등록일 + N일 초과 시) */
-    private static final int EXPIRED_DAYS_THRESHOLD = 30;
     /** 신규 추가용 기간 (1일) */
     private static final int NEW_DAYS = 1;
-    /** 상태 동기화용 기간 (30일) */
-    private static final int STATUS_SYNC_DAYS = 30;
 
-    /** addedCount: 신규 추가, updatedCount: 기존 수정, statusCorrectedCount: 만료→입양 보정 */
-    public record SyncResult(int addedCount, int updatedCount, int statusCorrectedCount) {
+    /** addedCount: 신규 추가, updatedCount: 기존 수정, removedCount: 입양·만료 삭제 */
+    public record SyncResult(int addedCount, int updatedCount, int removedCount) {
         public int syncedCount() { return addedCount + updatedCount; }
     }
 
@@ -57,7 +53,7 @@ public class AnimalSyncService {
      * - API의 bgnde/endde는 변경일(수정일) 기준
      * - N일 내 신규 등록 또는 상태 변경된 동물만 API가 반환
      * - full upsert로 모든 필드 갱신
-     * - 30일 초과 보호중 → ADOPTED(추정) 보정
+     * - 입양·안락사·자연사·반환 등 보호 종료 동물은 DB에서 삭제
      */
     @Transactional
     public SyncResult syncFromPublicApi(int days, Integer maxPages, String speciesFilter) {
@@ -75,16 +71,12 @@ public class AnimalSyncService {
             added += c[0]; updated += c[1];
         }
 
-        int corrected = markExpiredAsAdopted();
-        if (corrected > 0) {
-            log.info("기간 지난 동물 상태 보정: {}마리 → ADOPTED(추정)", corrected);
-        }
-        return new SyncResult(added, updated, corrected);
+        return new SyncResult(added, updated, 0);
     }
 
     /**
      * 스케줄용: 1일치 변경분 동기화.
-     * - bgnde/endde가 변경일 기준이므로 1일 조회만으로 신규+상태변경 모두 처리됨
+     * state 필터 없이 전체 조회하므로 입양·안락사 등 상태 변경도 자연스럽게 반영됨.
      */
     @Transactional
     public SyncResult syncDailySchedule() {
@@ -98,54 +90,7 @@ public class AnimalSyncService {
         var cat = syncByUpkind(CAT_CODE, startDate, endDate, null);
         added += cat[0]; updated += cat[1];
 
-        int corrected = markExpiredAsAdopted();
-        if (corrected > 0) {
-            log.info("기간 지난 동물 상태 보정: {}마리 → ADOPTED(추정)", corrected);
-        }
-        return new SyncResult(added, updated, corrected);
-    }
-
-    /** 기존 DB 동물만 상태(status) 갱신. 신규는 추가하지 않음. */
-    private int syncStatusOnlyByUpkind(String upkind, LocalDate startDate, LocalDate endDate) {
-        int pageNo = 1;
-        int numOfRows = 100;
-        int[] updated = {0};
-        for (String state : new String[]{"notice", "protect"}) {
-            pageNo = 1;
-            while (true) {
-                List<AnimalItem> items = publicApiService.getAbandonedAnimals(
-                        null, null, upkind, state, startDate, endDate, pageNo, numOfRows);
-                if (items == null || items.isEmpty()) break;
-                for (AnimalItem item : items) {
-                    if (item.getDesertionNo() == null || item.getDesertionNo().isBlank()) continue;
-                    animalRepository.findByPublicApiAnimalId(item.getDesertionNo()).ifPresent(existing -> {
-                        AnimalStatus newStatus = mapStatus(item.getProcessState());
-                        if (!existing.getStatus().equals(newStatus)) {
-                            existing.setStatus(newStatus);
-                            animalRepository.save(existing);
-                            updated[0]++;
-                        }
-                    });
-                }
-                if (items.size() < numOfRows) break;
-                pageNo++;
-            }
-        }
-        return updated[0];
-    }
-
-    /**
-     * 공공API 유래 + 등록일이 N일 초과 + 보호중 → ADOPTED(추정)로 보정.
-     * API 기간 조회에 포함되지 않는 동물이 계속 PROTECTED로 쌓이는 것 방지.
-     */
-    private int markExpiredAsAdopted() {
-        LocalDate cutoff = LocalDate.now().minusDays(EXPIRED_DAYS_THRESHOLD);
-        List<Animal> expired = animalRepository.findExpiredFromPublicApi(AnimalStatus.PROTECTED, cutoff);
-        for (Animal a : expired) {
-            a.setStatus(AnimalStatus.ADOPTED);
-            animalRepository.save(a);
-        }
-        return expired.size();
+        return new SyncResult(added, updated, 0);
     }
 
     /** 품종코드→품종명 매핑 로드 (동기화 시작 시 1회) */
@@ -166,41 +111,43 @@ public class AnimalSyncService {
         int pageNo = 1;
         int numOfRows = 100;
         int added = 0, updated = 0;
-        for (String state : new String[]{"notice", "protect"}) {
-            pageNo = 1;
-            while (true) {
-                List<AnimalItem> items = publicApiService.getAbandonedAnimals(
-                        null, null, upkind, state, startDate, endDate, pageNo, numOfRows);
-                if (items == null || items.isEmpty()) break;
-                for (AnimalItem item : items) {
-                    if (item.getDesertionNo() == null || item.getDesertionNo().isBlank()) {
-                        log.warn("desertionNo 없음, 스킵");
-                        continue;
-                    }
-                    if (added + updated == 0 && (item.getPopfile1() == null || item.getPopfile1().isBlank())
-                            && (item.getPopfile2() == null || item.getPopfile2().isBlank())
-                            && (item.getPopfile() == null || item.getPopfile().isBlank())
-                            && (item.getFilename() == null || item.getFilename().isBlank())) {
-                        log.info("첫 건 이미지 미제공: desertionNo={}", item.getDesertionNo());
-                    }
-                    try {
-                        if (upsertAnimal(item)) added++;
-                        else updated++;
-                    } catch (Exception e) {
-                        log.warn("동물 upsert 실패 desertionNo={}: {}", item.getDesertionNo(), e.getMessage());
-                    }
+        // state 필터 없이 전체 조회 → 입양·안락사 등 상태 변경된 동물도 포함
+        while (true) {
+            List<AnimalItem> items = publicApiService.getAbandonedAnimals(
+                    null, null, upkind, null, startDate, endDate, pageNo, numOfRows);
+            if (items == null || items.isEmpty()) break;
+            for (AnimalItem item : items) {
+                if (item.getDesertionNo() == null || item.getDesertionNo().isBlank()) {
+                    log.warn("desertionNo 없음, 스킵");
+                    continue;
                 }
-                if (items.size() < numOfRows) break;
-                if (maxPages != null && pageNo >= maxPages) break;
-                pageNo++;
+                try {
+                    Boolean result = upsertAnimal(item);
+                    if (result == null) { /* 입양·안락사 등 → 스킵/삭제 */ }
+                    else if (result) added++;
+                    else updated++;
+                } catch (Exception e) {
+                    log.warn("동물 upsert 실패 desertionNo={}: {}", item.getDesertionNo(), e.getMessage());
+                }
             }
+            if (items.size() < numOfRows) break;
+            if (maxPages != null && pageNo >= maxPages) break;
+            pageNo++;
         }
         return new int[]{added, updated};
     }
 
-    /** @return true = 신규 추가, false = 기존 수정 */
-    private boolean upsertAnimal(AnimalItem item) {
+    /** @return true = 신규 추가, false = 기존 수정, null = 입양·안락사 등으로 스킵/삭제 */
+    private Boolean upsertAnimal(AnimalItem item) {
+        AnimalStatus status = mapStatus(item.getProcessState());
         var existing = animalRepository.findByPublicApiAnimalId(item.getDesertionNo());
+
+        // 보호 대상이 아닌 동물(입양·안락사·자연사·반환 등)은 저장하지 않고, 기존에 있으면 삭제
+        if (status == null) {
+            existing.ifPresent(animalRepository::delete);
+            return null;
+        }
+
         if (existing.isPresent()) {
             updateAnimalFromApi(existing.get(), item);
             return false;
@@ -379,11 +326,17 @@ public class AnimalSyncService {
         };
     }
 
+    /**
+     * 공공 API processState → AnimalStatus 매핑.
+     * 보호중/공고중 → PROTECTED, 임시보호 → FOSTERING,
+     * 입양·안락사·자연사·반환 등 → null (DB에 저장하지 않을 대상)
+     */
     private AnimalStatus mapStatus(String processState) {
         if (processState == null) return AnimalStatus.PROTECTED;
-        if (processState.contains("입양")) return AnimalStatus.ADOPTED;
         if (processState.contains("임시보호")) return AnimalStatus.FOSTERING;
-        return AnimalStatus.PROTECTED;
+        if (processState.contains("보호") || processState.contains("공고")) return AnimalStatus.PROTECTED;
+        // 입양, 안락사, 자연사, 반환 등 → null (제거 대상)
+        return null;
     }
 
     private BigDecimal parseWeight(String weight) {

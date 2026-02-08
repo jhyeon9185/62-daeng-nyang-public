@@ -54,6 +54,16 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
             "AND a.status = :status AND a.registerDate < :cutoff")
     List<Animal> findExpiredFromPublicApi(@Param("status") AnimalStatus status, @Param("cutoff") LocalDate cutoff);
 
+    /** 특정 상태 동물 일괄 삭제 */
+    void deleteAllByStatus(AnimalStatus status);
+
+    /** status가 NULL인 동물 삭제 */
+    @Query("SELECT a FROM Animal a WHERE a.status IS NULL")
+    List<Animal> findAllByStatusIsNull();
+
+    /** ADOPTED 건수 조회 */
+    long countByStatus(AnimalStatus status);
+
     /** 선호도 기반: 종류·나이 범위·크기·지역(복수)으로 필터링 (입양 가능한 상태만) */
     @Query("SELECT a FROM Animal a JOIN a.shelter s WHERE a.imageUrl IS NOT NULL AND a.imageUrl != '' " +
             "AND a.status IN :statuses " +

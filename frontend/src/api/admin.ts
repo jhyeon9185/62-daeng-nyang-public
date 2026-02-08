@@ -62,7 +62,7 @@ export const adminApi = {
         addedCount: number;
         updatedCount: number;
         syncedCount: number;
-        statusCorrectedCount: number;
+        removedCount: number;
         days: number;
         species: string;
         apiKeyConfigured?: boolean;
@@ -92,6 +92,12 @@ export const adminApi = {
     axiosInstance.get<ApiResponse<PageResponse<Donation>>>('/admin/applications/donations', {
       params: { page, size },
     }),
+
+  /** 기존 ADOPTED / NULL 상태 동물 일괄 정리 */
+  cleanupInvalidAnimals: () =>
+    axiosInstance.delete<ApiResponse<{ adoptedDeleted: number; nullDeleted: number; totalDeleted: number }>>(
+      '/admin/animals/cleanup-invalid',
+    ),
 
   /** 테스트 이메일 발송 (관리자). to 미입력 시 로그인한 관리자 이메일로 발송 */
   sendTestEmail: (to?: string) =>

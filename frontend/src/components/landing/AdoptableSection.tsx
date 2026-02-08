@@ -31,10 +31,7 @@ export default function AdoptableSection() {
         sort: 'random',
       })
       .then((data) => {
-        const content = (data?.content ?? []).filter(
-          (a) => a.status === 'PROTECTED' || a.status === 'FOSTERING'
-        );
-        setAdoptablePets(content.slice(0, 8));
+        setAdoptablePets((data?.content ?? []).slice(0, 8));
       })
       .catch(() => setAdoptablePets([]));
   }, []);

@@ -27,7 +27,7 @@ public class SyncHistoryService {
                 .addedCount(result.addedCount())
                 .updatedCount(result.updatedCount())
                 .deletedCount(0)
-                .correctedCount(result.statusCorrectedCount())
+                .correctedCount(result.removedCount())
                 .errorMessage(errorMessage != null && errorMessage.length() > 1000 ? errorMessage.substring(0, 1000) : errorMessage)
                 .daysParam(daysParam)
                 .speciesFilter(speciesFilter)

@@ -170,6 +170,21 @@ public class AnimalService {
                 .build();
     }
 
+    /**
+     * 기존 DB에 쌓인 ADOPTED 및 status=NULL 동물 일괄 정리.
+     * @return [adoptedDeleted, nullDeleted]
+     */
+    @Transactional
+    public int[] cleanupInvalidStatus() {
+        long adoptedCount = animalRepository.countByStatus(AnimalStatus.ADOPTED);
+        animalRepository.deleteAllByStatus(AnimalStatus.ADOPTED);
+
+        var nullAnimals = animalRepository.findAllByStatusIsNull();
+        animalRepository.deleteAll(nullAnimals);
+
+        return new int[]{(int) adoptedCount, nullAnimals.size()};
+    }
+
     /** 다른 서비스에서 Animal -> AnimalResponse 변환 시 사용 */
     public AnimalResponse toAnimalResponse(Animal a) {
         return toResponse(a);

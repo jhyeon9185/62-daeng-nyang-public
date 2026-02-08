@@ -100,7 +100,7 @@ export interface AnimalListRequest {
   /** 동물 크기 필터 (API param: animalSize, size와 충돌 방지) */
   animalSize?: 'SMALL' | 'MEDIUM' | 'LARGE';
   age?: number;
-  status?: 'PROTECTED' | 'ADOPTED' | 'FOSTERING';
+  status?: 'PROTECTED' | 'FOSTERING';
   /** 보호소 주소 기준 지역 필터 (시·도 키워드, 예: 서울, 경기) */
   region?: string;
   /** 시·군·구 키워드 (시/도 선택 시 세부 조회, 예: 강남구, 수원시) */

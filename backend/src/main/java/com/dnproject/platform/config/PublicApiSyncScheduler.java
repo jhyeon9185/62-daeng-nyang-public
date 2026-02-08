@@ -29,7 +29,7 @@ public class PublicApiSyncScheduler {
         try {
             var result = animalSyncService.syncDailySchedule();
             syncHistoryService.save(result, SyncTriggerType.AUTO, null, "ALL", null);
-            log.info("공공데이터 유기동물 스케줄 동기화 완료: 신규={}, 수정={}, 만료보정={}", result.addedCount(), result.updatedCount(), result.statusCorrectedCount());
+            log.info("공공데이터 유기동물 스케줄 동기화 완료: 신규={}, 수정={}, 삭제={}", result.addedCount(), result.updatedCount(), result.removedCount());
         } catch (Exception e) {
             log.error("공공데이터 유기동물 스케줄 동기화 실패", e);
             syncHistoryService.save(new AnimalSyncService.SyncResult(0, 0, 0), SyncTriggerType.AUTO, null, "ALL", e.getMessage());

@@ -11,7 +11,7 @@ import FavoriteButton from '@/components/animals/FavoriteButton';
 const speciesLabels: Record<string, string> = { DOG: '강아지', CAT: '고양이' };
 const sizeLabels: Record<string, string> = { SMALL: '소형', MEDIUM: '중형', LARGE: '대형' };
 const genderLabels: Record<string, string> = { MALE: '수컷', FEMALE: '암컷' };
-const statusLabels: Record<string, string> = { PROTECTED: '보호 중', ADOPTED: '입양 완료', FOSTERING: '임시보호 중' };
+const statusLabels: Record<string, string> = { PROTECTED: '보호 중', FOSTERING: '임시보호 중' };
 
 export default function AnimalDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -130,7 +130,7 @@ export default function AnimalDetailPage() {
                     <p><strong>크기</strong> {sizeLabels[animal.size] ?? '미상'}</p>
                     <p><strong>중성화</strong> {animal.neutered ? '완료' : '미완료'}</p>
                     <p className="sm:col-span-2"><strong>상태</strong>{' '}
-                      <span className={animal.status === 'ADOPTED' ? 'text-gray-500' : 'text-green-600'}>{statusLabels[animal.status]}</span>
+                      <span className="text-green-600">{statusLabels[animal.status]}</span>
                     </p>
                   </div>
                   {animal.description && (
@@ -157,13 +157,13 @@ export default function AnimalDetailPage() {
                   <div className="flex gap-3 mt-auto pt-2">
                     <Link
                       to={`/guide/adoption?animalId=${animal.id}`}
-                      className={`landing-btn landing-btn-primary flex-1 text-center ${animal.status === 'ADOPTED' ? 'opacity-50 pointer-events-none' : ''}`}
+                      className="landing-btn landing-btn-primary flex-1 text-center"
                     >
-                      {animal.status === 'ADOPTED' ? '입양 완료' : '입양 절차 안내'}
+                      입양 절차 안내
                     </Link>
                     <Link
                       to={`/guide/foster?animalId=${animal.id}`}
-                      className={`landing-btn landing-btn-secondary flex-1 text-center ${animal.status === 'ADOPTED' ? 'opacity-50 pointer-events-none' : ''}`}
+                      className="landing-btn landing-btn-secondary flex-1 text-center"
                     >
                       임보 절차 안내
                     </Link>

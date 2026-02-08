@@ -86,7 +86,7 @@ public class PublicApiService {
         if (uprCd != null && !uprCd.isBlank()) builder.queryParam("upr_cd", uprCd);
         if (orgCd != null && !orgCd.isBlank()) builder.queryParam("org_cd", orgCd);
         if (upkind != null && !upkind.isBlank()) builder.queryParam("upkind", upkind);
-        builder.queryParam("state", state != null && !state.isBlank() ? state : "protect");
+        if (state != null && !state.isBlank()) builder.queryParam("state", state);
         if (bgnde != null) builder.queryParam("bgnde", bgnde.format(DATE_FORMAT));
         if (endde != null) builder.queryParam("endde", endde.format(DATE_FORMAT));
         String uri = builder.build().toUriString();

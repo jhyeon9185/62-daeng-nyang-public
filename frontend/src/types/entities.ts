@@ -31,7 +31,7 @@ export interface Preference {
 export type Species = 'DOG' | 'CAT';
 export type Gender = 'MALE' | 'FEMALE';
 export type Size = 'SMALL' | 'MEDIUM' | 'LARGE';
-export type AnimalStatus = 'PROTECTED' | 'ADOPTED' | 'FOSTERING';
+export type AnimalStatus = 'PROTECTED' | 'FOSTERING';
 
 export interface Animal {
   id: number;
