@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import type { BoardResponse } from '@/types/dto';
 import type { BoardType } from '@/types/entities';
+import { boardApi } from '@/api';
 import { mockBoards } from '@/data/mockBoards';
 import ListSearch from '@/components/list/ListSearch';
 import Pagination from '@/components/list/Pagination';
@@ -38,11 +40,36 @@ export default function BoardsPage() {
   const [pageSize, setPageSize] = useState(15);
   const [loading, setLoading] = useState(true);
 
-  const USE_MOCK = true;
-  const rawList = USE_MOCK ? mockBoards : [];
+  // 실제 서버 데이터 상태
+  const [serverBoards, setServerBoards] = useState<BoardResponse[]>([]);
+  const [serverTotalElements, setServerTotalElements] = useState(0);
 
-  const filteredList = useMemo(() => {
-    let list = type ? rawList.filter((b) => b.type === type) : rawList;
+  // 서버 데이터 조회
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // 실제 API 호출 (검색은 아직 백엔드 미지원으로 제외, 타입/페이징만 적용)
+        const res = await boardApi.getAll({
+          type,
+          page,
+          size: pageSize,
+        });
+        setServerBoards(res.content);
+        setServerTotalElements(res.totalElements);
+      } catch (err) {
+        console.error('Failed to fetch boards:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [type, page, pageSize]);
+
+  // Mock 데이터 필터링 (클라이언트 검색 지원)
+  const filteredMocks = useMemo(() => {
+    let list = type ? mockBoards.filter((b) => b.type === type) : mockBoards;
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter(
@@ -53,18 +80,21 @@ export default function BoardsPage() {
       );
     }
     return list;
-  }, [rawList, type, search]);
+  }, [type, search]);
 
-  const paginatedList = useMemo(() => {
-    const start = page * pageSize;
-    return filteredList.slice(start, start + pageSize);
-  }, [filteredList, page, pageSize]);
+  // 데이터 병합: 실제 데이터(이미 페이징됨) + Mock 데이터(현재 페이지 슬라이스)
+  const displayList = useMemo(() => {
+    const mockStart = page * pageSize;
+    const mockPage = filteredMocks.slice(mockStart, mockStart + pageSize);
+    return [...serverBoards, ...mockPage];
+  }, [serverBoards, filteredMocks, page, pageSize]);
 
-  const totalPages = Math.ceil(filteredList.length / pageSize) || 1;
-
-  useEffect(() => {
-    setLoading(false);
-  }, []);
+  // 페이지 계산: 서버 데이터와 Mock 데이터 중 더 많은 쪽 기준
+  const totalPages =
+    Math.max(
+      Math.ceil(serverTotalElements / pageSize),
+      Math.ceil(filteredMocks.length / pageSize)
+    ) || 1;
 
   const handleTypeChange = (newType?: BoardType) => {
     if (newType) setSearchParams({ type: newType });
@@ -92,7 +122,7 @@ export default function BoardsPage() {
                   setSearch(v);
                   setPage(0);
                 }}
-                placeholder="제목, 내용, 작성자로 검색"
+                placeholder="제목, 내용, 작성자로 검색 (Mock 데이터만 검색 가능)"
               />
               <FilterBar
                 groups={[
@@ -117,16 +147,17 @@ export default function BoardsPage() {
               <div className="text-center py-20">
                 <p className="text-gray-600">로딩 중...</p>
               </div>
-            ) : paginatedList.length === 0 ? (
+            ) : displayList.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-xl">
-                <p className="text-gray-600">검색 결과가 없습니다.</p>
+                <p className="text-gray-600">게시글이 없습니다.</p>
               </div>
             ) : (
               <>
                 <div className="list-card-list">
-                  {paginatedList.map((board) => (
+                  {displayList.map((board, index) => (
                     <Link
-                      key={board.id}
+                      // ID 충돌 방지를 위해 index 활용 (실제 운영 시에는 ID가 유니크해야 함)
+                      key={`${board.id}-${index}`}
                       to={`/boards/${board.id}`}
                       className="list-card"
                     >
@@ -153,7 +184,7 @@ export default function BoardsPage() {
                 <Pagination
                   page={page}
                   totalPages={totalPages}
-                  totalElements={filteredList.length}
+                  totalElements={Math.max(serverTotalElements, filteredMocks.length)}
                   size={pageSize}
                   onPageChange={setPage}
                   onSizeChange={(s) => {

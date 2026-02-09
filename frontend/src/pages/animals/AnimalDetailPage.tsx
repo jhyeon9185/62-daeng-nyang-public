@@ -136,11 +136,15 @@ export default function AnimalDetailPage() {
                   {animal.description && (
                     <div className="mb-6">
                       <h3 className="font-bold mb-2 text-gray-800">소개</h3>
-                      <p className="text-gray-700 whitespace-pre-wrap">{animal.description}</p>
+                      <p className="text-gray-700 whitespace-pre-wrap">
+                        {animal.description?.replace(/\s*\[특징\]/g, '\n\n[특징]')}
+                      </p>
                     </div>
                   )}
                   <p className="text-sm text-amber-800 font-medium mb-3 mt-4">
-                    신청·예약은 전화로 진행됩니다. 아래 보호소/담당자 연락처로 문의하세요.
+                    신청·예약은 전화로 진행됩니다.
+                    <br />
+                    아래 보호소/담당자 연락처로 문의하세요.
                   </p>
                   {(animal.chargePhone || animal.shelterPhone) && (
                     <p className="text-sm text-gray-600 mb-3">

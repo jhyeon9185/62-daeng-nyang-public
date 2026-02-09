@@ -11,7 +11,9 @@ export default function FinalCTASection() {
             <AnimatedText text="당신이 ‘62’를 바꿀 수 있습니다" />
           </h2>
           <p className="landing-section-desc landing-section-desc--center">
-            마음속 62%를 오늘의 행동으로. 한 생명이 ‘남겨짐’이 아니라 ‘가족’으로 기록되도록.
+            마음속 62%를 오늘의 행동으로.
+            <br />
+            한 생명이 ‘남겨짐’이 아니라 ‘가족’으로 기록되도록.
           </p>
           <div className="landing-hero-cta">
             <Link to="/guide/adoption" className="landing-btn landing-btn-primary">
