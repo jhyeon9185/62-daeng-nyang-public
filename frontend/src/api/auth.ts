@@ -30,6 +30,10 @@ export const authApi = {
   googleLogin: (idToken: string) =>
     axiosInstance.post<ApiResponse<TokenResponse>>('/auth/google', { idToken }),
 
+  /** 카카오 인가 코드로 로그인 (백엔드에서 토큰 교환 후 JWT 발급) */
+  kakaoLogin: (code: string) =>
+    axiosInstance.post<ApiResponse<TokenResponse>>('/auth/kakao', { code }),
+
   logout: () =>
     axiosInstance.post<ApiResponse<null>>('/auth/logout'),
 

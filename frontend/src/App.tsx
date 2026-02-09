@@ -12,6 +12,8 @@ import BoardDetailPage from '@/pages/boards/BoardDetailPage';
 import BoardWritePage from '@/pages/boards/BoardWritePage';
 import LoginPage from '@/pages/auth/LoginPage';
 import SignupPage from '@/pages/auth/SignupPage';
+// import ShelterSignupPage from '@/pages/auth/ShelterSignupPage';
+import KakaoCallback from '@/pages/auth/KakaoCallback';
 import MyPage from '@/pages/auth/MyPage';
 import PreferencePage from '@/pages/auth/PreferencePage';
 import AdminLoginPage from '@/pages/admin/AdminLoginPage';
@@ -51,6 +53,8 @@ function App() {
         {/* 인증 */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        {/* <Route path="/shelter-signup" element={<ShelterSignupPage />} /> */}
+        <Route path="/oauth/kakao" element={<KakaoCallback />} />
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/mypage/preferences" element={<PreferencePage />} />
         <Route path="/admin" element={<AdminDashboardPage />} />

@@ -264,24 +264,52 @@ export default function LoginPage() {
             {loading ? '로그인 중...' : '로그인'}
           </button>
 
-          {GOOGLE_CLIENT_ID && (
-            <>
-              <div className="flex items-center gap-3 my-6">
-                <div className="h-px flex-1 bg-gray-100" />
-                <span className="text-xs text-gray-400 font-medium whitespace-nowrap">또는</span>
-                <div className="h-px flex-1 bg-gray-100" />
-              </div>
 
-              <div className="toss-auth-google-wrap flex justify-center" style={{ minHeight: 44 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', marginTop: '32px' }}>
+            {/* 구글 로그인 스크립트가 렌더링될 영역 */}
+            {GOOGLE_CLIENT_ID && (
+              <div className="toss-auth-google-wrap" style={{ minHeight: 40, display: 'flex', justifyContent: 'center' }}>
                 {googleLoading && (
-                  <div className="toss-auth-google-loading" style={{ marginBottom: 8, color: 'var(--toss-gray-600)', fontSize: 14 }}>
-                    로그인 중...
+                  <div style={{ marginBottom: 8, color: 'var(--toss-gray-600)', fontSize: 14 }}>
+                    구글 로그인 중...
                   </div>
                 )}
                 <div ref={setGoogleButtonRef} aria-hidden={googleLoading} />
               </div>
-            </>
-          )}
+            )}
+
+            {/* 카카오 로그인 */}
+            <button
+              type="button"
+              onClick={() => {
+                const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
+                const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
+                const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
+                window.location.href = kakaoURL;
+              }}
+              style={{
+                width: '356px',
+                height: '40px',
+                backgroundColor: '#FEE500',
+                borderRadius: '6px',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: 'rgba(0, 0, 0, 0.85)',
+                padding: '0 12px'
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 3C5.13437 3 2 5.34375 2 8.25C2 10.0875 3.25 11.6625 5.125 12.6375L4.40625 15.1875C4.34375 15.4312 4.6125 15.6188 4.81875 15.4688L8.03125 13.35H9C12.8656 13.35 16 11.0062 16 8.1C16 5.19375 12.8656 2.85 9 2.85V3Z" fill="black"/>
+              </svg>
+              카카오 로그인
+            </button>
+          </div>
 
 
           <p className="toss-auth-foot">

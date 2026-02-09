@@ -52,6 +52,9 @@ dependencies {
     // Resend Email SDK
     implementation("com.resend:resend-java:2.2.1")
 
+    // Environment Variables
+    implementation("io.github.cdimascio:dotenv-java:3.0.0")
+
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
