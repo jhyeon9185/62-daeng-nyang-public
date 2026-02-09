@@ -1,50 +1,50 @@
-import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
-import { animalApi, preferenceApi, favoriteApi } from '@/api';
-import { useAuthStore } from '@/store/authStore';
-import type { Animal } from '@/types/entities';
-import type { PreferenceRequest } from '@/types/dto';
-import ListSearch from '@/components/list/ListSearch';
-import Pagination from '@/components/list/Pagination';
-import FilterBar from '@/components/list/FilterBar';
-import PreferenceModal from '@/components/animals/PreferenceModal';
-import FavoriteButton from '@/components/animals/FavoriteButton';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import { REGION_SIDO_OPTIONS, SIGUNGU_BY_SIDO } from '@/constants/regions';
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { Link } from "react-router-dom";
+import { animalApi, preferenceApi, favoriteApi } from "@/api";
+import { useAuthStore } from "@/store/authStore";
+import type { Animal } from "@/types/entities";
+import type { PreferenceRequest } from "@/types/dto";
+import ListSearch from "@/components/list/ListSearch";
+import Pagination from "@/components/list/Pagination";
+import FilterBar from "@/components/list/FilterBar";
+import PreferenceModal from "@/components/animals/PreferenceModal";
+import FavoriteButton from "@/components/animals/FavoriteButton";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import { REGION_SIDO_OPTIONS, SIGUNGU_BY_SIDO } from "@/constants/regions";
 
 const speciesLabels: Record<string, string> = {
-  DOG: '강아지',
-  CAT: '고양이',
+  DOG: "강아지",
+  CAT: "고양이",
 };
 
 const sizeLabels: Record<string, string> = {
-  SMALL: '소형',
-  MEDIUM: '중형',
-  LARGE: '대형',
+  SMALL: "소형",
+  MEDIUM: "중형",
+  LARGE: "대형",
 };
 
 const genderLabels: Record<string, string> = {
-  MALE: '수컷',
-  FEMALE: '암컷',
+  MALE: "수컷",
+  FEMALE: "암컷",
 };
 
 const PAGE_SIZE_OPTIONS = [8, 12, 20];
 
-type ViewMode = 'all' | 'recommended';
+type ViewMode = "all" | "recommended";
 
 export default function AnimalsPage() {
   const { isAuthenticated } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('all');
-  const [search, setSearch] = useState('');
-  const [species, setSpecies] = useState<'DOG' | 'CAT' | ''>('');
-  const [size, setSize] = useState<'SMALL' | 'MEDIUM' | 'LARGE' | ''>('');
-  const [status, setStatus] = useState<'PROTECTED' | 'FOSTERING' | ''>('');
-  const [region, setRegion] = useState<string>('');
-  const [sigungu, setSigungu] = useState<string>('');
+  const [viewMode, setViewMode] = useState<ViewMode>("all");
+  const [search, setSearch] = useState("");
+  const [species, setSpecies] = useState<"DOG" | "CAT" | "">("");
+  const [size, setSize] = useState<"SMALL" | "MEDIUM" | "LARGE" | "">("");
+  const [status, setStatus] = useState<"PROTECTED" | "FOSTERING" | "">("");
+  const [region, setRegion] = useState<string>("");
+  const [sigungu, setSigungu] = useState<string>("");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(12);
   const [preference, setPreference] = useState<PreferenceRequest | null>(null);
@@ -90,7 +90,7 @@ export default function AnimalsPage() {
   }, [isAuthenticated]);
 
   // 검색 debounce (입력 후 400ms 대기)
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
     const id = setTimeout(() => setDebouncedSearch(search.trim()), 400);
     return () => clearTimeout(id);
@@ -98,7 +98,7 @@ export default function AnimalsPage() {
 
   // API 모드: 전체 목록 또는 선호도 기반 추천 목록 (검색은 서버 필터)
   useEffect(() => {
-    if (viewMode === 'recommended' && !isAuthenticated) {
+    if (viewMode === "recommended" && !isAuthenticated) {
       setApiAnimals([]);
       setApiTotalElements(0);
       setLoading(false);
@@ -108,8 +108,11 @@ export default function AnimalsPage() {
     setError(null);
     const load = async () => {
       try {
-        if (viewMode === 'recommended') {
-          const data = await preferenceApi.getRecommendedAnimals(page, pageSize) as { content?: Animal[]; totalElements?: number } | null;
+        if (viewMode === "recommended") {
+          const data = (await preferenceApi.getRecommendedAnimals(
+            page,
+            pageSize,
+          )) as { content?: Animal[]; totalElements?: number } | null;
           setApiAnimals(data?.content ?? []);
           setApiTotalElements(data?.totalElements ?? 0);
         } else {
@@ -122,7 +125,7 @@ export default function AnimalsPage() {
             region: region || undefined,
             sigungu: sigungu || undefined,
             search: debouncedSearch || undefined,
-            sort: 'random',
+            sort: "random",
           });
           const content = data?.content ?? [];
           const total = data?.totalElements ?? content.length;
@@ -130,18 +133,29 @@ export default function AnimalsPage() {
           setApiTotalElements(total);
         }
       } catch (err: unknown) {
-        const ax = err && typeof err === 'object' && 'response' in err ? (err as { response?: { status?: number; data?: { message?: string } } }) : null;
+        const ax =
+          err && typeof err === "object" && "response" in err
+            ? (err as {
+                response?: { status?: number; data?: { message?: string } };
+              })
+            : null;
         const status = ax?.response?.status;
         const serverMessage = ax?.response?.data?.message;
         let message: string;
-        if (viewMode === 'recommended') {
-          message = '추천 목록을 불러오는데 실패했습니다. 로그인 후 선호도를 설정해 주세요.';
+        if (viewMode === "recommended") {
+          message =
+            "추천 목록을 불러오는데 실패했습니다. 로그인 후 선호도를 설정해 주세요.";
         } else if (status == null) {
-          message = '동물 목록을 불러올 수 없습니다. 서버에 연결할 수 있는지 확인해 주세요.';
+          message =
+            "동물 목록을 불러올 수 없습니다. 서버에 연결할 수 있는지 확인해 주세요.";
         } else if (status >= 500) {
-          message = serverMessage ? `서버 오류: ${serverMessage}` : '동물 목록을 불러오는데 실패했습니다. (서버 오류)';
+          message = serverMessage
+            ? `서버 오류: ${serverMessage}`
+            : "동물 목록을 불러오는데 실패했습니다. (서버 오류)";
         } else {
-          message = serverMessage ? `동물 목록을 불러오는데 실패했습니다. (${serverMessage})` : '동물 목록을 불러오는데 실패했습니다.';
+          message = serverMessage
+            ? `동물 목록을 불러오는데 실패했습니다. (${serverMessage})`
+            : "동물 목록을 불러오는데 실패했습니다.";
         }
         setError(message);
         setApiAnimals([]);
@@ -151,7 +165,18 @@ export default function AnimalsPage() {
       }
     };
     load();
-  }, [viewMode, page, pageSize, species, size, status, region, sigungu, debouncedSearch, isAuthenticated]);
+  }, [
+    viewMode,
+    page,
+    pageSize,
+    species,
+    size,
+    status,
+    region,
+    sigungu,
+    debouncedSearch,
+    isAuthenticated,
+  ]);
 
   const animals = apiAnimals;
 
@@ -166,18 +191,24 @@ export default function AnimalsPage() {
     try {
       await preferenceApi.update(pref);
       setPreference(pref);
-      setViewMode('recommended');
+      setViewMode("recommended");
       setShowPreferenceModal(false);
       setPage(0);
     } catch {
-      alert('선호도 저장에 실패했습니다. 다시 시도해 주세요.');
+      alert("선호도 저장에 실패했습니다. 다시 시도해 주세요.");
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
-      <main className="flex-1" style={{ background: 'var(--landing-gray-100)', paddingTop: '6.5rem' }}>
+      <main
+        className="flex-1"
+        style={{
+          background: "var(--landing-gray-100)",
+          paddingTop: "6.5rem",
+        }}
+      >
         <section className="landing-section">
           <div className="landing-inner">
             <div className="text-center mb-8">
@@ -194,33 +225,33 @@ export default function AnimalsPage() {
               <button
                 type="button"
                 className={`px-6 py-2 rounded-full font-semibold transition ${
-                  viewMode === 'all'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:border-green-600 hover:text-green-600'
+                  viewMode === "all"
+                    ? "bg-green-600 text-white"
+                    : "bg-white border border-gray-300 text-gray-700 hover:border-green-600 hover:text-green-600"
                 }`}
-                onClick={() => setViewMode('all')}
+                onClick={() => setViewMode("all")}
               >
                 전체
               </button>
               <button
                 type="button"
                 className={`px-6 py-2 rounded-full font-semibold transition ${
-                  viewMode === 'recommended'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:border-green-600 hover:text-green-600'
+                  viewMode === "recommended"
+                    ? "bg-green-600 text-white"
+                    : "bg-white border border-gray-300 text-gray-700 hover:border-green-600 hover:text-green-600"
                 }`}
                 onClick={() => {
                   if (!preference) {
                     setShowPreferenceModal(true);
                   } else {
-                    setViewMode('recommended');
+                    setViewMode("recommended");
                     setPage(0);
                   }
                 }}
               >
-                나를 위한 추천 {preference && '✓'}
+                나를 위한 추천 {preference && "✓"}
               </button>
-              {viewMode === 'recommended' && (
+              {viewMode === "recommended" && (
                 <button
                   type="button"
                   className="px-4 py-2 rounded-full border border-gray-300 text-gray-700 hover:border-gray-400 text-sm"
@@ -237,56 +268,56 @@ export default function AnimalsPage() {
                 onChange={setSearch}
                 placeholder="이름, 품종, 보호소로 검색"
               />
-              {viewMode === 'all' && (
+              {viewMode === "all" && (
                 <FilterBar
                   groups={[
                     {
-                      label: '종류',
+                      label: "종류",
                       options: [
-                        { value: '', label: '전체' },
-                        { value: 'DOG', label: speciesLabels.DOG },
-                        { value: 'CAT', label: speciesLabels.CAT },
+                        { value: "", label: "전체" },
+                        { value: "DOG", label: speciesLabels.DOG },
+                        { value: "CAT", label: speciesLabels.CAT },
                       ],
                       value: species,
                       onChange: (v) => {
-                        setSpecies(v as 'DOG' | 'CAT' | '');
+                        setSpecies(v as "DOG" | "CAT" | "");
                         setPage(0);
                       },
                     },
                     {
-                      label: '크기',
+                      label: "크기",
                       options: [
-                        { value: '', label: '전체' },
-                        { value: 'SMALL', label: sizeLabels.SMALL },
-                        { value: 'MEDIUM', label: sizeLabels.MEDIUM },
-                        { value: 'LARGE', label: sizeLabels.LARGE },
+                        { value: "", label: "전체" },
+                        { value: "SMALL", label: sizeLabels.SMALL },
+                        { value: "MEDIUM", label: sizeLabels.MEDIUM },
+                        { value: "LARGE", label: sizeLabels.LARGE },
                       ],
                       value: size,
                       onChange: (v) => {
-                        setSize(v as 'SMALL' | 'MEDIUM' | 'LARGE' | '');
+                        setSize(v as "SMALL" | "MEDIUM" | "LARGE" | "");
                         setPage(0);
                       },
                     },
                     {
-                      label: '상태',
+                      label: "상태",
                       options: [
-                        { value: '', label: '전체' },
-                        { value: 'PROTECTED', label: '보호 중' },
-                        { value: 'FOSTERING', label: '임시보호' },
+                        { value: "", label: "전체" },
+                        { value: "PROTECTED", label: "보호 중" },
+                        { value: "FOSTERING", label: "임시보호" },
                       ],
                       value: status,
                       onChange: (v) => {
-                        setStatus(v as 'PROTECTED' | 'FOSTERING' | '');
+                        setStatus(v as "PROTECTED" | "FOSTERING" | "");
                         setPage(0);
                       },
                     },
                     {
-                      label: '시/도',
+                      label: "시/도",
                       options: REGION_SIDO_OPTIONS,
                       value: region,
                       onChange: (v) => {
                         setRegion(v);
-                        setSigungu('');
+                        setSigungu("");
                         setPage(0);
                       },
                     },
@@ -294,8 +325,10 @@ export default function AnimalsPage() {
                     ...(region
                       ? [
                           {
-                            label: '시/군/구',
-                            options: SIGUNGU_BY_SIDO[region] ?? [{ value: '', label: '전체' }],
+                            label: "시/군/구",
+                            options: SIGUNGU_BY_SIDO[region] ?? [
+                              { value: "", label: "전체" },
+                            ],
                             value: sigungu,
                             onChange: (v: string) => {
                               setSigungu(v);
@@ -306,12 +339,12 @@ export default function AnimalsPage() {
                       : []),
                   ]}
                   onReset={() => {
-                    setSearch('');
-                    setSpecies('');
-                    setSize('');
-                    setStatus('');
-                    setRegion('');
-                    setSigungu('');
+                    setSearch("");
+                    setSpecies("");
+                    setSize("");
+                    setStatus("");
+                    setRegion("");
+                    setSigungu("");
                     setPage(0);
                   }}
                 />
@@ -319,16 +352,23 @@ export default function AnimalsPage() {
             </div>
 
             {/* 추천 모드 안내 */}
-            {viewMode === 'recommended' && preference && (
+            {viewMode === "recommended" && preference && (
               <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 max-w-3xl mx-auto">
                 <p className="text-green-800 text-sm font-medium">
-                  <span className="font-bold">선호도 기준:</span>{' '}
-                  {preference.species ? speciesLabels[preference.species] : '종류 무관'} ·{' '}
-                  {preference.minAge !== undefined || preference.maxAge !== undefined
-                    ? `${preference.minAge ?? 0}~${preference.maxAge ?? '제한없음'}세`
-                    : '나이 무관'} ·{' '}
-                  {preference.size ? sizeLabels[preference.size] : '크기 무관'}
-                  {preference.regions?.length ? ` · ${preference.regions.join(', ')}` : ' · 지역 무관'}
+                  <span className="font-bold">선호도 기준:</span>{" "}
+                  {preference.species
+                    ? speciesLabels[preference.species]
+                    : "종류 무관"}{" "}
+                  ·{" "}
+                  {preference.minAge !== undefined ||
+                  preference.maxAge !== undefined
+                    ? `${preference.minAge ?? 0}~${preference.maxAge ?? "제한없음"}세`
+                    : "나이 무관"}{" "}
+                  ·{" "}
+                  {preference.size ? sizeLabels[preference.size] : "크기 무관"}
+                  {preference.regions?.length
+                    ? ` · ${preference.regions.join(", ")}`
+                    : " · 지역 무관"}
                 </p>
               </div>
             )}
@@ -347,19 +387,21 @@ export default function AnimalsPage() {
                   </div>
                 ) : filteredAnimals.length === 0 ? (
                   <div className="text-center py-20 bg-white rounded-xl">
-                    <p className="text-gray-600">조건에 맞는 아이가 없습니다.</p>
+                    <p className="text-gray-600">
+                      조건에 맞는 아이가 없습니다.
+                    </p>
                     <button
                       type="button"
                       className="mt-3 text-green-600 font-medium hover:underline"
                       onClick={() => {
-                        setSearch('');
-                        setSpecies('');
-                        setSize('');
-                        setStatus('');
-                        setRegion('');
-                        setSigungu('');
+                        setSearch("");
+                        setSpecies("");
+                        setSize("");
+                        setStatus("");
+                        setRegion("");
+                        setSigungu("");
                         setPage(0);
-                        setViewMode('all');
+                        setViewMode("all");
                       }}
                     >
                       필터 초기화
@@ -380,7 +422,9 @@ export default function AnimalsPage() {
                               isFavorited={favoriteIds.includes(animal.id)}
                               onToggle={(added) => {
                                 setFavoriteIds((prev) =>
-                                  added ? [...prev, animal.id] : prev.filter((id) => id !== animal.id)
+                                  added
+                                    ? [...prev, animal.id]
+                                    : prev.filter((id) => id !== animal.id),
                                 );
                               }}
                               size="md"
@@ -389,21 +433,33 @@ export default function AnimalsPage() {
                           <div
                             className="landing-pet-card-img"
                             style={{
-                              backgroundImage: animal.imageUrl ? `url(${animal.imageUrl})` : 'none',
-                              backgroundSize: 'cover',
-                              backgroundPosition: 'center',
+                              backgroundImage: animal.imageUrl
+                                ? `url(${animal.imageUrl})`
+                                : "none",
+                              backgroundSize: "cover",
+                              backgroundPosition: "center",
                             }}
                           />
                           <div className="landing-pet-card-body">
-                            <p className="landing-pet-card-name">{animal.name}</p>
+                            <p className="landing-pet-card-name">
+                              {animal.name}
+                            </p>
                             <p className="landing-pet-card-meta">
-                              {speciesLabels[animal.species] ?? ''} · {animal.age != null ? `${animal.age}세` : '나이미상'} · {sizeLabels[animal.size] ?? '크기미상'} · {genderLabels[animal.gender] ?? '성별미상'}
+                              {speciesLabels[animal.species] ?? ""} ·{" "}
+                              {animal.age != null
+                                ? `${animal.age}세`
+                                : "나이미상"}{" "}
+                              · {sizeLabels[animal.size] ?? "크기미상"} ·{" "}
+                              {genderLabels[animal.gender] ?? "성별미상"}
                             </p>
                             <p className="landing-pet-card-story">
-                              {animal.breed ?? '품종미상'} · {animal.neutered ? '중성화 완료' : '미중성화'}
+                              {animal.breed ?? "품종미상"} ·{" "}
+                              {animal.neutered ? "중성화 완료" : "미중성화"}
                             </p>
                             {animal.shelterName && (
-                              <p className="text-xs text-gray-500 mt-1">{animal.shelterName}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {animal.shelterName}
+                              </p>
                             )}
                           </div>
                         </Link>
@@ -438,7 +494,7 @@ export default function AnimalsPage() {
             onSave={handleSavePreference}
             onClose={() => setShowPreferenceModal(false)}
           />,
-          document.body
+          document.body,
         )}
     </div>
   );

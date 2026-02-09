@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuthStore, getRefreshToken } from '@/store/authStore';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? '/api' : 'http://localhost:8080/api');
 const REFRESH_INTERVAL_MS = 23 * 60 * 60 * 1000; // 23시간 (액세스 24h 대비 여유)
 
 export function useProactiveRefresh() {

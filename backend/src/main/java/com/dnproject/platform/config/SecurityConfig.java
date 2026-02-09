@@ -28,6 +28,7 @@ public class SecurityConfig {
             "/api/auth/signup",
             "/api/auth/shelter-signup",
             "/api/auth/login",
+            "/api/auth/google",
             "/api/auth/refresh",
             "/api/animals",
             "/api/animals/**",

@@ -6,7 +6,8 @@
 import axios from 'axios';
 import { getAccessToken, getRefreshToken, useAuthStore } from '@/store/authStore';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+// 개발 시 미설정이면 상대 경로 /api 사용 → Vite 프록시(localhost:8080)로 전달됨. 백엔드 동시 실행 필요.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? '/api' : 'http://localhost:8080/api');
 
 export const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -36,57 +37,54 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 401 Unauthorized: 토큰 만료
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // 401 Unauthorized: 토큰 만료 (단, 로그인/가입/구글로그인/리프레시 요청은 제외해서 무한루프 및 에러 왜곡 방지)
+    const isAuthRequest = originalRequest.url.includes('/auth/login') || 
+                          originalRequest.url.includes('/auth/google') || 
+                          originalRequest.url.includes('/auth/signup') ||
+                          originalRequest.url.includes('/auth/refresh');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
       originalRequest._retry = true;
 
-      try {
-        const refreshToken = getRefreshToken();
-        if (!refreshToken) {
-          // 리프레시 토큰 없으면 로그아웃 처리
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          sessionStorage.removeItem('accessToken');
-          sessionStorage.removeItem('refreshToken');
+      const refreshToken = getRefreshToken();
+      if (refreshToken) {
+        try {
+          // 토큰 갱신 요청
+          const response = await axios.post(`${BASE_URL}/auth/refresh`, {
+            refreshToken,
+          });
+
+          const payload = response.data?.data ?? response.data;
+          const accessToken = payload.accessToken;
+          const newRefreshToken = payload.refreshToken;
+          const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage;
+          if (accessToken) storage.setItem('accessToken', accessToken);
+          if (newRefreshToken) storage.setItem('refreshToken', newRefreshToken);
+
+          if (accessToken && payload.user) {
+            useAuthStore.getState().login(
+              {
+                accessToken,
+                refreshToken: newRefreshToken ?? refreshToken,
+                expiresIn: payload.expiresIn ?? 86400,
+                user: payload.user,
+              },
+              { keepLoggedIn: !!localStorage.getItem('refreshToken') }
+            );
+          }
+
+          // 원래 요청 재시도
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return axiosInstance(originalRequest);
+        } catch (refreshError) {
+          // 리프레시 실패 시 로그아웃
+          useAuthStore.getState().logout();
           window.location.href = '/login';
-          return Promise.reject(error);
         }
-
-        // 토큰 갱신 요청
-        const response = await axios.post(`${BASE_URL}/auth/refresh`, {
-          refreshToken,
-        });
-
-        const payload = response.data?.data ?? response.data;
-        const accessToken = payload.accessToken;
-        const newRefreshToken = payload.refreshToken;
-        const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage;
-        if (accessToken) storage.setItem('accessToken', accessToken);
-        if (newRefreshToken) storage.setItem('refreshToken', newRefreshToken);
-
-        if (accessToken && payload.user) {
-          useAuthStore.getState().login(
-            {
-              accessToken,
-              refreshToken: newRefreshToken ?? getRefreshToken() ?? '',
-              expiresIn: payload.expiresIn ?? 86400,
-              user: payload.user,
-            },
-            { keepLoggedIn: !!localStorage.getItem('refreshToken') }
-          );
-        }
-
-        // 원래 요청 재시도
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return axiosInstance(originalRequest);
-      } catch (refreshError) {
-        // 리프레시 실패 시 로그아웃
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        sessionStorage.removeItem('accessToken');
-        sessionStorage.removeItem('refreshToken');
+      } else {
+        // 리프레시 토큰 없으면 로그아웃
+        useAuthStore.getState().logout();
         window.location.href = '/login';
-        return Promise.reject(refreshError);
       }
     }
 

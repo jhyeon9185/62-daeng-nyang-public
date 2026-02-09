@@ -24,16 +24,25 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
+    private static final String GOOGLE_TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo?id_token={idToken}";
+
     private final UserRepository userRepository;
     private final ShelterRepository shelterRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final WebClient.Builder webClientBuilder;
 
     @Transactional
     public UserResponse signup(SignupRequest request) {
@@ -108,6 +117,64 @@ public class AuthService {
                 .verificationStatus(VerificationStatus.PENDING)
                 .message("보호소 가입 신청이 완료되었습니다. 관리자 인증 후 서비스 이용이 가능합니다.")
                 .build();
+    }
+
+    /**
+     * 구글 ID 토큰을 검증한 뒤 사용자 조회/생성 후 JWT 발급.
+     * tokeninfo API로 검증 후 email로 기존 사용자 조회, 없으면 신규 생성(비밀번호는 난수 해시 저장).
+     */
+    public TokenResponse googleLogin(String idToken) {
+        if (idToken == null || idToken.isBlank()) {
+            throw new UnauthorizedException("구글 ID 토큰이 없습니다.");
+        }
+        Map<String, Object> tokenInfo;
+        try {
+            tokenInfo = webClientBuilder.build()
+                    .get()
+                    .uri(GOOGLE_TOKENINFO_URL, idToken)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+        } catch (WebClientResponseException e) {
+            log.warn("구글 tokeninfo 실패: status={} body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new UnauthorizedException("구글 로그인이 만료되었거나 유효하지 않습니다. 다시 시도해 주세요.");
+        }
+        if (tokenInfo == null) {
+            throw new UnauthorizedException("구글 토큰 검증에 실패했습니다.");
+        }
+        String email = Optional.ofNullable(tokenInfo.get("email")).map(Object::toString).map(String::trim).orElse(null);
+        if (email == null || email.isEmpty()) {
+            log.warn("구글 tokeninfo에 email 없음: {}", tokenInfo.keySet());
+            throw new UnauthorizedException("구글 계정 정보를 확인할 수 없습니다.");
+        }
+        String name = Optional.ofNullable(tokenInfo.get("name")).map(Object::toString).map(String::trim).orElse(null);
+        final String displayName = (name == null || name.isBlank())
+                ? Optional.ofNullable(tokenInfo.get("given_name")).map(Object::toString).map(String::trim).orElse(email)
+                : name;
+
+        User user = userRepository.findByEmailTrimmed(email)
+                .orElseGet(() -> createGoogleUser(email, displayName));
+        String accessToken = jwtProvider.createAccessToken(user.getEmail(), user.getRole().name(), user.getId());
+        String refreshToken = jwtProvider.createRefreshToken(user.getEmail());
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(jwtProvider.getAccessValiditySeconds())
+                .user(toUserResponse(user))
+                .build();
+    }
+
+    @Transactional
+    protected User createGoogleUser(String email, String name) {
+        String randomPassword = passwordEncoder.encode(UUID.randomUUID().toString());
+        User user = User.builder()
+                .email(email)
+                .password(randomPassword)
+                .name(name != null && !name.isBlank() ? name : email)
+                .role(Role.USER)
+                .build();
+        return userRepository.save(user);
     }
 
     public TokenResponse login(LoginRequest request) {

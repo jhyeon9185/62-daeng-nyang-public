@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authApi } from '@/api/auth';
 import { useAuthStore } from '@/store/authStore';
 import type { LoginRequest } from '@/types/dto';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
 
 const STORAGE_EMAIL = 'login_saved_email';
 const STORAGE_PASSWORD = 'login_saved_password';
@@ -46,6 +48,15 @@ export default function LoginPage() {
   const [keepLoggedIn, setKeepLoggedIn] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleButtonMounted, setGoogleButtonMounted] = useState(false);
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
+  const googleRenderedRef = useRef(false);
+
+  const setGoogleButtonRef = useCallback((el: HTMLDivElement | null) => {
+    googleButtonRef.current = el;
+    if (el) setGoogleButtonMounted(true);
+  }, []);
 
   useEffect(() => {
     const saved = loadSavedCredentials();
@@ -55,6 +66,68 @@ export default function LoginPage() {
     setRememberPassword(saved.rememberPassword);
     setKeepLoggedIn(saved.keepLoggedIn);
   }, []);
+
+  // 구글 GSI 스크립트 로드 및 ID 토큰용 초기화(initialize + renderButton)
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID || googleRenderedRef.current) return;
+
+    const initGoogle = () => {
+      const accounts = window.google?.accounts;
+      if (!accounts?.id) return;
+      const el = googleButtonRef.current;
+      if (!el) return;
+
+      accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (res: CredentialResponse) => {
+          setError('');
+          setGoogleLoading(true);
+          try {
+            const apiRes = await authApi.googleLogin(res.credential);
+            const data = apiRes.data?.data ?? apiRes.data;
+            if (data?.accessToken && data?.user) {
+              loginStore(
+                {
+                  accessToken: data.accessToken,
+                  refreshToken: data.refreshToken ?? '',
+                  expiresIn: data.expiresIn ?? 3600,
+                  user: data.user,
+                },
+                { keepLoggedIn: true }
+              );
+              navigate('/', { replace: true });
+            } else {
+              setError('로그인 응답 형식이 올바르지 않습니다.');
+            }
+          } catch (err: unknown) {
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+            setError(msg ?? '구글 로그인에 실패했습니다.');
+          } finally {
+            setGoogleLoading(false);
+          }
+        },
+      });
+
+      accounts.id.renderButton(el, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'signin_with',
+        width: 356, // 폼 너비(420px)에서 패딩(32px*2)을 뺀 값에 가깝게 조정
+      });
+      googleRenderedRef.current = true;
+    };
+
+    if (window.google?.accounts?.id) {
+      initGoogle();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.onload = initGoogle;
+    document.head.appendChild(script);
+  }, [GOOGLE_CLIENT_ID, googleButtonMounted, loginStore, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,6 +263,26 @@ export default function LoginPage() {
           <button type="submit" disabled={loading} className="toss-auth-submit">
             {loading ? '로그인 중...' : '로그인'}
           </button>
+
+          {GOOGLE_CLIENT_ID && (
+            <>
+              <div className="flex items-center gap-3 my-6">
+                <div className="h-px flex-1 bg-gray-100" />
+                <span className="text-xs text-gray-400 font-medium whitespace-nowrap">또는</span>
+                <div className="h-px flex-1 bg-gray-100" />
+              </div>
+
+              <div className="toss-auth-google-wrap flex justify-center" style={{ minHeight: 44 }}>
+                {googleLoading && (
+                  <div className="toss-auth-google-loading" style={{ marginBottom: 8, color: 'var(--toss-gray-600)', fontSize: 14 }}>
+                    로그인 중...
+                  </div>
+                )}
+                <div ref={setGoogleButtonRef} aria-hidden={googleLoading} />
+              </div>
+            </>
+          )}
+
 
           <p className="toss-auth-foot">
             계정이 없으신가요?{' '}

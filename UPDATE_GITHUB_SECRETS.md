@@ -33,8 +33,8 @@
 - **신규: `13.125.175.126`** ← 클릭하여 복사
 
 #### 2) FRONTEND_URL
-- 기존: `http://3.39.187.182`
-- **신규: `http://13.125.175.126`** ← 클릭하여 복사
+- 기존: `http://3.39.187.182` 또는 `http://13.125.175.126`
+- **신규: `http://13.125.175.126.nip.io`** ← 클릭하여 복사 (구글 OAuth는 IP 미지원, nip.io 사용)
 
 #### 3) PUBLIC_API_SYNC_CRON (중요!)
 - 기존: `0 0 2 * * *` (또는 미설정)
@@ -50,7 +50,7 @@
 | Secret | 값 | 상태 |
 |--------|-----|------|
 | ✏️ `EC2_HOST` | `13.125.175.126` | **업데이트 필요** |
-| ✏️ `FRONTEND_URL` | `http://13.125.175.126` | **업데이트 필요** |
+| ✏️ `FRONTEND_URL` | `http://13.125.175.126.nip.io` | **업데이트 필요** (구글 로그인 원본과 일치) |
 | ✏️ `PUBLIC_API_SYNC_CRON` | `0 0 17 * * *` | **업데이트 필요** |
 | `EC2_SSH_KEY` | (nas_deploy_key 전체 내용) | 변경 없음 |
 | `RDS_ENDPOINT` | `dn-platform-db.c98wmqqswrwy.ap-northeast-2.rds.amazonaws.com:3306` | 변경 없음 |
@@ -70,12 +70,12 @@
 ### 1. 로컬에서 새 IP 접속 테스트
 
 ```bash
-curl http://13.125.175.126
+curl http://13.125.175.126.nip.io
 ```
 
 ### 2. 브라우저 접속 테스트
 
-1. 브라우저에서 **http://13.125.175.126** 접속
+1. 브라우저에서 **http://13.125.175.126.nip.io** 접속 (구글 로그인은 이 주소로만 동작)
 2. **Cmd+Shift+R** (Mac) 또는 **Ctrl+Shift+R** (Windows) 강제 새로고침
 3. 정상 로딩 확인
 
@@ -110,9 +110,9 @@ mysql -h dn-platform-db.c98wmqqswrwy.ap-northeast-2.rds.amazonaws.com \
 
 ## 📞 접속 정보 (신규)
 
-- **웹사이트:** http://13.125.175.126
-- **API:** http://13.125.175.126/api
-- **Swagger:** http://13.125.175.126/swagger-ui.html
+- **웹사이트:** http://13.125.175.126.nip.io
+- **API:** http://13.125.175.126.nip.io/api
+- **Swagger:** http://13.125.175.126.nip.io/swagger-ui.html
 - **SSH:** `ssh -i ~/.ssh/nas_deploy_key ec2-user@13.125.175.126`
 
 ---
