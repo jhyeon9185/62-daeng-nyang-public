@@ -93,6 +93,50 @@ public class AnimalSyncService {
         return new SyncResult(added, updated, 0);
     }
 
+    /**
+     * 경량 정리: API에서 전체 상태 조회 → DB에 있는 동물 중 비보호 상태인 것만 삭제.
+     * insert/update 없이 삭제만 수행하므로 빠르고 실패 위험이 낮음.
+     */
+    @Transactional
+    public int removeNonProtectedFromApi(int days) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(days);
+        int removed = 0;
+
+        for (String upkind : new String[]{DOG_CODE, CAT_CODE}) {
+            int pageNo = 1;
+            while (true) {
+                List<AnimalItem> items;
+                try {
+                    items = publicApiService.getAbandonedAnimals(
+                            null, null, upkind, null, startDate, endDate, pageNo, 100);
+                } catch (Exception e) {
+                    log.warn("정리용 API 조회 실패 upkind={} page={}: {}", upkind, pageNo, e.getMessage());
+                    break;
+                }
+                if (items == null || items.isEmpty()) break;
+
+                for (AnimalItem item : items) {
+                    if (item.getDesertionNo() == null || item.getDesertionNo().isBlank()) continue;
+                    AnimalStatus status = mapStatus(item.getProcessState());
+                    if (status != null) continue; // 보호중/임보 → 스킵
+
+                    // 비보호 상태 → DB에 있으면 삭제
+                    animalRepository.findByPublicApiAnimalId(item.getDesertionNo())
+                            .ifPresent(animal -> {
+                                log.info("비보호 동물 삭제: {} (유기번호={}, 상태={})",
+                                        animal.getName(), item.getDesertionNo(), item.getProcessState());
+                                animalRepository.delete(animal);
+                            });
+                    removed++;
+                }
+                if (items.size() < 100) break;
+                pageNo++;
+            }
+        }
+        return removed;
+    }
+
     /** 품종코드→품종명 매핑 로드 (동기화 시작 시 1회) */
     private void ensureKindMapLoaded() {
         if (!kindCodeToName.isEmpty()) return;

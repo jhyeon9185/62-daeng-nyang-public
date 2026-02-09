@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.data.go.kr)",
+      "Bash(grep:*)",
+      "Bash(ping:*)",
+      "Bash(aws ec2 describe-instances:*)",
+      "Bash(aws ec2 describe-security-groups:*)",
+      "Bash(curl -v --connect-timeout 5 http://3.39.187.182)",
+      "Bash(ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@3.39.187.182 'sudo systemctl status nginx dn-platform')",
+      "Bash(ssh:*)",
+      "Bash(aws ec2 describe-key-pairs:*)",
+      "Bash(cd:*)",
+      "Bash(terraform plan:*)",
+      "Bash(terraform apply -auto-approve)",
+      "Bash(curl:*)",
+      "Bash(scp:*)",
+      "Bash(ssh-keygen:*)",
+      "Bash(./deploy.sh)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAWS 안정성 개선 및 동기화 스키마 수정\n\n- Elastic IP 할당 \\(13.125.175.126, 고정\\)\n- 자동 헬스체크 시스템 추가 \\(5분마다 Nginx/Backend 모니터링\\)\n- sync_history 테이블 trigger_type을 ENUM으로 수정\n- IP 주소 변경 반영 \\(deploy.sh, DEPLOYMENT_CHECKLIST.md\\)\n- Terraform 설정 업데이트 \\(Elastic IP 리소스 추가\\)\n- 가이드 문서 추가 \\(AWS_STABILITY_GUIDE.md, UPDATE_GITHUB_SECRETS.md, SYNC_FIX_REPORT.md\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push origin main)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\n자동 동기화 시간 수정: 한국시간 새벽 2시로 변경\n\n- Cron 표현식: 0 0 2 * * * \\(UTC 02시\\) → 0 0 17 * * * \\(UTC 17시\\)\n- 한국시간: 오전 11시 → 새벽 2시 ✅\n- deploy.yml 기본값 수정\n- PUBLIC_API.md 시간대 명시 및 예시 업데이트\n- SYNC_FIX_REPORT.md 실행 시간 수정\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\n이미지 확대 모달 추가 및 GitHub Secrets 가이드 업데이트\n\n- 동물 상세 페이지: 이미지 클릭 시 원본 확대 모달 표시\n  - 비율 문제로 잘린 이미지 전체 확인 가능\n  - ESC 키 또는 배경 클릭으로 닫기\n  - 접근성: role, aria-label, 키보드 네비게이션 지원\n- UPDATE_GITHUB_SECRETS.md: PUBLIC_API_SYNC_CRON 추가 안내\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)",
+      "Bash(./gradlew compileJava:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(npm run build:*)",
+      "Bash(./gradlew bootJar:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}
