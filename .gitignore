@@ -59,6 +59,4 @@ terraform/terraform.tfvars
 *.pid
 *.seed
 *.pid.lock
-
-# ===== Documentation =====
-docs/
+.antigravityrules
