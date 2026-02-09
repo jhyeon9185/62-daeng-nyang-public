@@ -1,0 +1,29 @@
+spring:
+  # Flyway 비활성화 (Hibernate ddl-auto로 스키마 관리)
+  flyway:
+    enabled: false
+
+  # Database Configuration (Production)
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+
+  # JPA - Production mode
+  jpa:
+    hibernate:
+      ddl-auto: update  # 엔티티 기반 테이블 자동 생성/수정
+    show-sql: false
+
+# Logging
+logging:
+  level:
+    root: WARN
+    com.dnproject: INFO
