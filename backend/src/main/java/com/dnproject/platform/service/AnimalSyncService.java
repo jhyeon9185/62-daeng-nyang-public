@@ -63,19 +63,21 @@ public class AnimalSyncService {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(days);
 
-        int added = 0, updated = 0;
+        int added = 0, updated = 0, removed = 0;
         if (speciesFilter == null || "DOG".equalsIgnoreCase(speciesFilter)) {
             var c = syncByUpkind(DOG_CODE, startDate, endDate, maxPages);
             added += c[0];
             updated += c[1];
+            removed += c[2];
         }
         if (speciesFilter == null || "CAT".equalsIgnoreCase(speciesFilter)) {
             var c = syncByUpkind(CAT_CODE, startDate, endDate, maxPages);
             added += c[0];
             updated += c[1];
+            removed += c[2];
         }
 
-        return new SyncResult(added, updated, 0);
+        return new SyncResult(added, updated, removed);
     }
 
     /**
@@ -88,15 +90,17 @@ public class AnimalSyncService {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(NEW_DAYS);
 
-        int added = 0, updated = 0;
+        int added = 0, updated = 0, removed = 0;
         var dog = syncByUpkind(DOG_CODE, startDate, endDate, null);
         added += dog[0];
         updated += dog[1];
+        removed += dog[2];
         var cat = syncByUpkind(CAT_CODE, startDate, endDate, null);
         added += cat[0];
         updated += cat[1];
+        removed += cat[2];
 
-        return new SyncResult(added, updated, 0);
+        return new SyncResult(added, updated, removed);
     }
 
     /**
@@ -161,11 +165,18 @@ public class AnimalSyncService {
         log.debug("품종코드 매핑 로드: {}건", kindCodeToName.size());
     }
 
-    /** @return int[2] = { addedCount, updatedCount } */
+    private enum SyncAction {
+        ADDED,
+        UPDATED,
+        REMOVED,
+        SKIPPED
+    }
+
+    /** @return int[3] = { addedCount, updatedCount, removedCount } */
     private int[] syncByUpkind(String upkind, LocalDate startDate, LocalDate endDate, Integer maxPages) {
         int pageNo = 1;
         int numOfRows = 100;
-        int added = 0, updated = 0;
+        int added = 0, updated = 0, removed = 0;
         // state 필터 없이 전체 조회 → 입양·안락사 등 상태 변경된 동물도 포함
         while (true) {
             List<AnimalItem> items = publicApiService.getAbandonedAnimals(
@@ -178,12 +189,14 @@ public class AnimalSyncService {
                     continue;
                 }
                 try {
-                    Boolean result = upsertAnimal(item);
-                    if (result == null) {
-                        /* 입양·안락사 등 → 스킵/삭제 */ } else if (result)
-                        added++;
-                    else
-                        updated++;
+                    SyncAction action = upsertAnimal(item);
+                    switch (action) {
+                        case ADDED -> added++;
+                        case UPDATED -> updated++;
+                        case REMOVED -> removed++;
+                        case SKIPPED -> {
+                            /* ignore */ }
+                    }
                 } catch (Exception e) {
                     log.warn("동물 upsert 실패 desertionNo={}: {}", item.getDesertionNo(), e.getMessage());
                 }
@@ -194,63 +207,29 @@ public class AnimalSyncService {
                 break;
             pageNo++;
         }
-        return new int[] { added, updated };
+        return new int[] { added, updated, removed };
     }
 
-    /** @return true = 신규 추가, false = 기존 수정, null = 입양·안락사 등으로 스킵/삭제 */
-    private Boolean upsertAnimal(AnimalItem item) {
+    /** @return ADDED=신규추가, UPDATED=기존수정, REMOVED=보호종료삭제, SKIPPED=무시 */
+    private SyncAction upsertAnimal(AnimalItem item) {
         AnimalStatus status = mapStatus(item.getProcessState());
         var existing = animalRepository.findByPublicApiAnimalId(item.getDesertionNo());
 
         // 보호 대상이 아닌 동물(입양·안락사·자연사·반환 등)은 저장하지 않고, 기존에 있으면 삭제
         if (status == null) {
-            existing.ifPresent(animalRepository::delete);
-            return null;
+            if (existing.isPresent()) {
+                animalRepository.delete(existing.get());
+                return SyncAction.REMOVED;
+            }
+            return SyncAction.SKIPPED;
         }
 
         if (existing.isPresent()) {
             updateAnimalFromApi(existing.get(), item);
-            return false;
+            return SyncAction.UPDATED;
         }
         createAnimalFromApi(item);
-        return true;
-    }
-
-    private void updateAnimalFromApi(Animal animal, AnimalItem item) {
-        animal.setSpecies(mapSpecies(item));
-        animal.setBreed(extractBreed(item));
-        animal.setName(generateName(item));
-        animal.setImageUrl(resolveImageUrl(item));
-        animal.setStatus(mapStatus(item.getProcessState()));
-        animal.setDescription(buildDescription(item));
-        animal.setOrgName(nullToBlank(item.getOrgNm(), 100));
-        animal.setChargeName(nullToBlank(item.getChargeNm(), 50));
-        animal.setChargePhone(nullToBlank(item.getOfficetel(), 30));
-        animalRepository.save(animal);
-    }
-
-    private void createAnimalFromApi(AnimalItem item) {
-        Shelter shelter = findOrCreateShelter(item);
-        Animal animal = Animal.builder()
-                .publicApiAnimalId(item.getDesertionNo())
-                .shelter(shelter)
-                .species(mapSpecies(item))
-                .breed(extractBreed(item))
-                .name(generateName(item))
-                .age(parseAge(item.getAge()))
-                .gender(mapGender(item.getSexCd()))
-                .size(estimateSize(item.getWeight()))
-                .weight(parseWeight(item.getWeight()))
-                .description(buildDescription(item))
-                .neutered("Y".equalsIgnoreCase(item.getNeuterYn()))
-                .imageUrl(resolveImageUrl(item))
-                .status(mapStatus(item.getProcessState()))
-                .registerDate(parseDate(item.getHappenDt()))
-                .orgName(nullToBlank(item.getOrgNm(), 100))
-                .chargeName(nullToBlank(item.getChargeNm(), 50))
-                .chargePhone(nullToBlank(item.getOfficetel(), 30))
-                .build();
-        animalRepository.save(animal);
+        return SyncAction.ADDED;
     }
 
     /**
