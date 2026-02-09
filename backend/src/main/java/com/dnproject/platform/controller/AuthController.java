@@ -1,10 +1,6 @@
 package com.dnproject.platform.controller;
 
-import com.dnproject.platform.dto.request.GoogleLoginRequest;
-import com.dnproject.platform.dto.request.LoginRequest;
-import com.dnproject.platform.dto.request.ShelterSignupRequest;
-import com.dnproject.platform.dto.request.SignupRequest;
-import com.dnproject.platform.dto.request.UpdateMeRequest;
+import com.dnproject.platform.dto.request.*;
 import com.dnproject.platform.dto.response.ApiResponse;
 import com.dnproject.platform.dto.response.ShelterSignupResponse;
 import com.dnproject.platform.dto.response.TokenResponse;
@@ -60,14 +56,17 @@ public class AuthController {
                 .shelterName(shelterName.trim())
                 .address(address.trim())
                 .shelterPhone(shelterPhone.trim())
-                .businessRegistrationNumber(businessRegistrationNumber != null ? businessRegistrationNumber.trim().replaceAll("-", "") : null)
+                .businessRegistrationNumber(
+                        businessRegistrationNumber != null ? businessRegistrationNumber.trim().replaceAll("-", "")
+                                : null)
                 .build();
         if (businessRegistrationFile != null && !businessRegistrationFile.isEmpty()) {
             try {
                 String path = fileStorageService.storeBusinessRegistration(businessRegistrationFile);
                 request.setBusinessRegistrationFile(path);
             } catch (IOException e) {
-                throw new CustomException("사업자등록증 파일 저장에 실패했습니다.", org.springframework.http.HttpStatus.BAD_REQUEST, "FILE_UPLOAD_FAILED");
+                throw new CustomException("사업자등록증 파일 저장에 실패했습니다.", org.springframework.http.HttpStatus.BAD_REQUEST,
+                        "FILE_UPLOAD_FAILED");
             }
         }
         ShelterSignupResponse data = authService.shelterSignup(request);
@@ -86,6 +85,13 @@ public class AuthController {
     public ApiResponse<TokenResponse> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
         TokenResponse data = authService.googleLogin(request.getIdToken());
         return ApiResponse.success("로그인 성공", data);
+    }
+
+    @Operation(summary = "카카오 인가 코드로 로그인")
+    @PostMapping("/kakao")
+    public ApiResponse<TokenResponse> kakaoLogin(@Valid @RequestBody KakaoLoginRequest request) {
+        TokenResponse data = authService.kakaoLogin(request.getCode());
+        return ApiResponse.success("카카오 로그인 성공", data);
     }
 
     @Operation(summary = "토큰 갱신")

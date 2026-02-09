@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,12 +38,128 @@ import java.util.UUID;
 public class AuthService {
 
     private static final String GOOGLE_TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo?id_token={idToken}";
+    private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
+    private static final String KAKAO_USER_INFO_URL = "https://kapi.kakao.com/v2/user/me";
+
+    @org.springframework.beans.factory.annotation.Value("${KAKAO_CLIENT_ID:}")
+    private String kakaoClientId;
+
+    @org.springframework.beans.factory.annotation.Value("${KAKAO_CLIENT_SECRET:}")
+    private String kakaoClientSecret;
+
+    @org.springframework.beans.factory.annotation.Value("${KAKAO_REDIRECT_URI:}")
+    private String kakaoRedirectUri;
 
     private final UserRepository userRepository;
     private final ShelterRepository shelterRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final WebClient.Builder webClientBuilder;
+
+    /**
+     * 카카오 인가 코드로 로그인을 처리합니다.
+     */
+    @Transactional
+    public TokenResponse kakaoLogin(String code) {
+        if (code == null || code.isBlank()) {
+            throw new UnauthorizedException("카카오 인가 코드가 없습니다.");
+        }
+
+        // 1. Authorization Code로 Access Token 받기
+        Map<String, Object> tokenResponse;
+        try {
+            var bodyBuilder = org.springframework.web.reactive.function.BodyInserters
+                    .fromFormData("grant_type", "authorization_code")
+                    .with("client_id", kakaoClientId)
+                    .with("redirect_uri", kakaoRedirectUri)
+                    .with("code", code);
+
+            if (kakaoClientSecret != null && !kakaoClientSecret.isBlank()) {
+                bodyBuilder.with("client_secret", kakaoClientSecret);
+            }
+
+            tokenResponse = webClientBuilder.build()
+                    .post()
+                    .uri(KAKAO_TOKEN_URL)
+                    .contentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(bodyBuilder)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+        } catch (WebClientResponseException e) {
+            log.error("Kakao token exchange failed: status={} body={}", e.getStatusCode(),
+                    e.getResponseBodyAsString());
+            throw new UnauthorizedException("카카오 토큰 발급에 실패했습니다: " + e.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("Kakao token exchange unexpected error", e);
+            throw new CustomException("카카오 토큰 발급 중 예상치 못한 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR,
+                    "KAKAO_TOKEN_ERROR");
+        }
+
+        if (tokenResponse == null || !tokenResponse.containsKey("access_token")) {
+            log.error("Kakao token response is empty or missing access_token: {}", tokenResponse);
+            throw new UnauthorizedException("카카오 토큰 발급에 실패했습니다.");
+        }
+
+        String kakaoAccessToken = tokenResponse.get("access_token").toString();
+
+        // 2. Access Token으로 사용자 정보 가져오기
+        Map<String, Object> userInfo;
+        try {
+            userInfo = webClientBuilder.build()
+                    .get()
+                    .uri(KAKAO_USER_INFO_URL)
+                    .header(org.springframework.http.HttpHeaders.AUTHORIZATION, "Bearer " + kakaoAccessToken)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+        } catch (WebClientResponseException e) {
+            log.error("Kakao user info retrieval failed: status={} body={}", e.getStatusCode(),
+                    e.getResponseBodyAsString());
+            throw new UnauthorizedException("카카오 사용자 정보 조회에 실패했습니다: " + e.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("Kakao user info retrieval unexpected error", e);
+            throw new CustomException("카카오 사용자 정보 조회 중 예상치 못한 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR,
+                    "KAKAO_USER_INFO_ERROR");
+        }
+
+        if (userInfo == null) {
+            log.error("Kakao user info response is null");
+            throw new UnauthorizedException("카카오 사용자 정보 조회에 실패했습니다.");
+        }
+
+        // 3. 사용자 정보 추출
+        Map<String, Object> kakaoAccount = (Map<String, Object>) userInfo.get("kakao_account");
+        Map<String, Object> profile = kakaoAccount != null ? (Map<String, Object>) kakaoAccount.get("profile")
+                : Collections.emptyMap();
+
+        String kakaoEmail = kakaoAccount != null
+                ? Optional.ofNullable(kakaoAccount.get("email")).map(Object::toString).map(String::trim).orElse(null)
+                : null;
+        String email = (kakaoEmail == null || kakaoEmail.isEmpty())
+                ? "kakao_" + userInfo.get("id").toString() + "@kakao.com"
+                : kakaoEmail;
+
+        String nickname = profile != null
+                ? Optional.ofNullable(profile.get("nickname")).map(Object::toString).map(String::trim).orElse("카카오사용자")
+                : "카카오사용자";
+
+        // 4. DB 사용자 조회/생성
+        User user = userRepository.findByEmailTrimmed(email)
+                .orElseGet(() -> createGoogleUser(email, nickname)); // 구글 사용자 생성 로직 재활용 (이름만 다름)
+
+        // 5. JWT 발급
+        String accessToken = jwtProvider.createAccessToken(user.getEmail(), user.getRole().name(), user.getId());
+        String refreshToken = jwtProvider.createRefreshToken(user.getEmail());
+
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(jwtProvider.getAccessValiditySeconds())
+                .user(toUserResponse(user))
+                .build();
+    }
 
     @Transactional
     public UserResponse signup(SignupRequest request) {
@@ -64,8 +181,10 @@ public class AuthService {
         User refetched = userRepository.findById(user.getId()).orElse(null);
         if (refetched != null && !passwordEncoder.matches(rawPassword, refetched.getPassword())) {
             log.error("회원가입 직후 비밀번호 검증 실패: DB 저장값과 불일치. id={} encodedLen={} refetchedLen={}",
-                    user.getId(), encodedPassword.length(), refetched.getPassword() != null ? refetched.getPassword().length() : 0);
-            throw new CustomException("비밀번호 저장에 실패했습니다. 다시 시도해 주세요.", HttpStatus.INTERNAL_SERVER_ERROR, "PASSWORD_SAVE_FAILED");
+                    user.getId(), encodedPassword.length(),
+                    refetched.getPassword() != null ? refetched.getPassword().length() : 0);
+            throw new CustomException("비밀번호 저장에 실패했습니다. 다시 시도해 주세요.", HttpStatus.INTERNAL_SERVER_ERROR,
+                    "PASSWORD_SAVE_FAILED");
         }
         return toUserResponse(user);
     }
@@ -77,8 +196,11 @@ public class AuthService {
         if (userRepository.existsByEmailTrimmed(email)) {
             throw new CustomException("이미 사용 중인 이메일입니다.", HttpStatus.CONFLICT, "EMAIL_EXISTS");
         }
-        String bizNo = request.getBusinessRegistrationNumber() != null ? request.getBusinessRegistrationNumber().trim().replaceAll("-", "") : null;
-        if (bizNo != null && !bizNo.isEmpty() && shelterRepository.findByBusinessRegistrationNumber(bizNo).isPresent()) {
+        String bizNo = request.getBusinessRegistrationNumber() != null
+                ? request.getBusinessRegistrationNumber().trim().replaceAll("-", "")
+                : null;
+        if (bizNo != null && !bizNo.isEmpty()
+                && shelterRepository.findByBusinessRegistrationNumber(bizNo).isPresent()) {
             throw new CustomException("이미 등록된 사업자등록번호입니다.", HttpStatus.CONFLICT, "BUSINESS_REG_EXISTS");
         }
         String encodedPassword = passwordEncoder.encode(rawPassword);
