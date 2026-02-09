@@ -377,6 +377,8 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1.5rem 2.5rem;
+  text-align: center;
+  width: 100%;
 }
 
 .landing-hero-slide-content .landing-hero-title {

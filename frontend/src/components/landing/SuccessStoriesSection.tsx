@@ -32,7 +32,9 @@ export default function SuccessStoriesSection() {
             <AnimatedText text="희망의 62가 ‘진짜 이야기’가 되는 순간" />
           </h2>
           <p className="landing-section-desc landing-section-desc--center">
-            숫자는 차갑지만, 선택은 따뜻합니다. 한 사람의 행동이 한 생명의 인생이 됩니다.
+            숫자는 차갑지만, 선택은 따뜻합니다.
+            <br />
+            한 사람의 행동이 한 생명의 인생이 됩니다.
           </p>
           <div className="landing-center-actions">
             <Link to="/boards?type=FREE" className="landing-btn landing-btn-secondary">

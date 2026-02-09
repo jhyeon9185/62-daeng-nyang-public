@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { boardApi } from '@/api';
 import type { Board, Comment } from '@/types/entities';
@@ -23,55 +23,48 @@ export default function BoardDetailPage() {
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // 현재 게시글이 실제 서버 데이터인지 여부
+  const isRealBoard = useRef(false);
+
   useEffect(() => {
     if (id) {
-      loadBoard();
-      loadComments();
+      loadData();
     }
   }, [id]);
 
-  const loadBoard = async () => {
+  const loadData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      // 목업 데이터 사용 (백엔드 연결 전)
-      const USE_MOCK = true;
-      
-      if (USE_MOCK) {
+      // 1. 실제 서버 데이터 조회 시도
+      try {
+        const data = await boardApi.getById(Number(id));
+        setBoard(data);
+        isRealBoard.current = true;
+
+        // 실제 댓글 목록 조회
+        const commentsData = await boardApi.getComments(Number(id));
+        setComments(commentsData);
+      } catch (apiErr) {
+        // 2. 실패 시 (404 등) Mock 데이터에서 찾기
+        // console.warn('Server fetch failed, falling back to mock:', apiErr);
+        isRealBoard.current = false;
+
         const foundBoard = mockBoards.find(b => b.id === Number(id));
         if (foundBoard) {
           setBoard(foundBoard);
+          const boardComments = mockComments[Number(id)] || [];
+          setComments(boardComments);
         } else {
-          alert('게시글을 찾을 수 없습니다.');
-          navigate('/boards');
+          // 둘 다 없으면 에러
+          throw new Error('Geust not found');
         }
-      } else {
-        const data = await boardApi.getById(Number(id));
-        setBoard(data);
       }
     } catch (err) {
       console.error(err);
-      alert('게시글을 불러오는데 실패했습니다.');
+      alert('게시글을 찾을 수 없습니다.');
       navigate('/boards');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadComments = async () => {
-    try {
-      // 목업 데이터 사용 (백엔드 연결 전)
-      const USE_MOCK = true;
-      
-      if (USE_MOCK) {
-        const boardComments = mockComments[Number(id)] || [];
-        setComments(boardComments);
-      } else {
-        const data = await boardApi.getComments(Number(id));
-        setComments(data);
-      }
-    } catch (err) {
-      console.error(err);
     }
   };
 
@@ -80,10 +73,27 @@ export default function BoardDetailPage() {
     if (!commentText.trim()) return;
 
     try {
-      setSubmitting(true);
-      await boardApi.addComment(Number(id), { content: commentText });
-      setCommentText('');
-      loadComments();
+      if (isRealBoard.current) {
+        setSubmitting(true);
+        await boardApi.addComment(Number(id), { content: commentText });
+        setCommentText('');
+        // 댓글 목록 갱신
+        const updatedComments = await boardApi.getComments(Number(id));
+        setComments(updatedComments);
+      } else {
+        alert('데모 게시글에는 댓글을 저장할 수 없습니다. (새로고침 시 사라짐)');
+        // Mock 환경에서의 시물레이션 (옵션)
+        const newComment: Comment = {
+          id: Date.now(),
+          boardId: Number(id),
+          userId: 0,
+          userName: '게스트',
+          content: commentText,
+          createdAt: new Date().toISOString(),
+        };
+        setComments(prev => [...prev, newComment]);
+        setCommentText('');
+      }
     } catch (err: any) {
       alert(err.response?.data?.message || '댓글 작성에 실패했습니다.');
     } finally {
@@ -123,6 +133,11 @@ export default function BoardDetailPage() {
                 {board.isPinned && (
                   <span className="px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 text-purple-700">
                     공지
+                  </span>
+                )}
+                {!isRealBoard.current && (
+                  <span className="px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-500">
+                    Demo
                   </span>
                 )}
               </div>

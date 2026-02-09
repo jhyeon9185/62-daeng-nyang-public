@@ -40,12 +40,14 @@ public class AnimalSyncService {
     private final AnimalRepository animalRepository;
     private final ShelterRepository shelterRepository;
 
-    /** 신규 추가용 기간 (1일) */
-    private static final int NEW_DAYS = 1;
+    /** 신규 추가용 기간 (7일) - 종료된 동물 삭제 누락 방지 */
+    private static final int NEW_DAYS = 7;
 
     /** addedCount: 신규 추가, updatedCount: 기존 수정, removedCount: 입양·만료 삭제 */
     public record SyncResult(int addedCount, int updatedCount, int removedCount) {
-        public int syncedCount() { return addedCount + updatedCount; }
+        public int syncedCount() {
+            return addedCount + updatedCount;
+        }
     }
 
     /**
@@ -64,11 +66,13 @@ public class AnimalSyncService {
         int added = 0, updated = 0;
         if (speciesFilter == null || "DOG".equalsIgnoreCase(speciesFilter)) {
             var c = syncByUpkind(DOG_CODE, startDate, endDate, maxPages);
-            added += c[0]; updated += c[1];
+            added += c[0];
+            updated += c[1];
         }
         if (speciesFilter == null || "CAT".equalsIgnoreCase(speciesFilter)) {
             var c = syncByUpkind(CAT_CODE, startDate, endDate, maxPages);
-            added += c[0]; updated += c[1];
+            added += c[0];
+            updated += c[1];
         }
 
         return new SyncResult(added, updated, 0);
@@ -86,9 +90,11 @@ public class AnimalSyncService {
 
         int added = 0, updated = 0;
         var dog = syncByUpkind(DOG_CODE, startDate, endDate, null);
-        added += dog[0]; updated += dog[1];
+        added += dog[0];
+        updated += dog[1];
         var cat = syncByUpkind(CAT_CODE, startDate, endDate, null);
-        added += cat[0]; updated += cat[1];
+        added += cat[0];
+        updated += cat[1];
 
         return new SyncResult(added, updated, 0);
     }
@@ -103,7 +109,7 @@ public class AnimalSyncService {
         LocalDate startDate = endDate.minusDays(days);
         int removed = 0;
 
-        for (String upkind : new String[]{DOG_CODE, CAT_CODE}) {
+        for (String upkind : new String[] { DOG_CODE, CAT_CODE }) {
             int pageNo = 1;
             while (true) {
                 List<AnimalItem> items;
@@ -114,12 +120,15 @@ public class AnimalSyncService {
                     log.warn("정리용 API 조회 실패 upkind={} page={}: {}", upkind, pageNo, e.getMessage());
                     break;
                 }
-                if (items == null || items.isEmpty()) break;
+                if (items == null || items.isEmpty())
+                    break;
 
                 for (AnimalItem item : items) {
-                    if (item.getDesertionNo() == null || item.getDesertionNo().isBlank()) continue;
+                    if (item.getDesertionNo() == null || item.getDesertionNo().isBlank())
+                        continue;
                     AnimalStatus status = mapStatus(item.getProcessState());
-                    if (status != null) continue; // 보호중/임보 → 스킵
+                    if (status != null)
+                        continue; // 보호중/임보 → 스킵
 
                     // 비보호 상태 → DB에 있으면 삭제
                     animalRepository.findByPublicApiAnimalId(item.getDesertionNo())
@@ -130,7 +139,8 @@ public class AnimalSyncService {
                             });
                     removed++;
                 }
-                if (items.size() < 100) break;
+                if (items.size() < 100)
+                    break;
                 pageNo++;
             }
         }
@@ -139,8 +149,9 @@ public class AnimalSyncService {
 
     /** 품종코드→품종명 매핑 로드 (동기화 시작 시 1회) */
     private void ensureKindMapLoaded() {
-        if (!kindCodeToName.isEmpty()) return;
-        for (String upkind : new String[]{DOG_CODE, CAT_CODE}) {
+        if (!kindCodeToName.isEmpty())
+            return;
+        for (String upkind : new String[] { DOG_CODE, CAT_CODE }) {
             publicApiService.getKindList(upkind).forEach(k -> {
                 if (k.getKindCd() != null && k.getKNm() != null && !k.getKNm().isBlank()) {
                     kindCodeToName.put(k.getKindCd().trim(), k.getKNm().trim());
@@ -159,7 +170,8 @@ public class AnimalSyncService {
         while (true) {
             List<AnimalItem> items = publicApiService.getAbandonedAnimals(
                     null, null, upkind, null, startDate, endDate, pageNo, numOfRows);
-            if (items == null || items.isEmpty()) break;
+            if (items == null || items.isEmpty())
+                break;
             for (AnimalItem item : items) {
                 if (item.getDesertionNo() == null || item.getDesertionNo().isBlank()) {
                     log.warn("desertionNo 없음, 스킵");
@@ -167,18 +179,22 @@ public class AnimalSyncService {
                 }
                 try {
                     Boolean result = upsertAnimal(item);
-                    if (result == null) { /* 입양·안락사 등 → 스킵/삭제 */ }
-                    else if (result) added++;
-                    else updated++;
+                    if (result == null) {
+                        /* 입양·안락사 등 → 스킵/삭제 */ } else if (result)
+                        added++;
+                    else
+                        updated++;
                 } catch (Exception e) {
                     log.warn("동물 upsert 실패 desertionNo={}: {}", item.getDesertionNo(), e.getMessage());
                 }
             }
-            if (items.size() < numOfRows) break;
-            if (maxPages != null && pageNo >= maxPages) break;
+            if (items.size() < numOfRows)
+                break;
+            if (maxPages != null && pageNo >= maxPages)
+                break;
             pageNo++;
         }
-        return new int[]{added, updated};
+        return new int[] { added, updated };
     }
 
     /** @return true = 신규 추가, false = 기존 수정, null = 입양·안락사 등으로 스킵/삭제 */
@@ -243,12 +259,18 @@ public class AnimalSyncService {
      */
     private String resolveImageUrl(AnimalItem item) {
         String raw = null;
-        if (item.getPopfile1() != null && !item.getPopfile1().isBlank()) raw = item.getPopfile1();
-        if (raw == null && item.getPopfile2() != null && !item.getPopfile2().isBlank()) raw = item.getPopfile2();
-        if (raw == null && item.getPopfile() != null && !item.getPopfile().isBlank()) raw = item.getPopfile();
-        if (raw == null && item.getFilename() != null && !item.getFilename().isBlank()) raw = item.getFilename();
-        if (raw == null || raw.isBlank()) return null;
-        if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+        if (item.getPopfile1() != null && !item.getPopfile1().isBlank())
+            raw = item.getPopfile1();
+        if (raw == null && item.getPopfile2() != null && !item.getPopfile2().isBlank())
+            raw = item.getPopfile2();
+        if (raw == null && item.getPopfile() != null && !item.getPopfile().isBlank())
+            raw = item.getPopfile();
+        if (raw == null && item.getFilename() != null && !item.getFilename().isBlank())
+            raw = item.getFilename();
+        if (raw == null || raw.isBlank())
+            return null;
+        if (raw.startsWith("http://") || raw.startsWith("https://"))
+            return raw;
         String relPath;
         if (raw.startsWith("/files/")) {
             relPath = raw;
@@ -275,23 +297,27 @@ public class AnimalSyncService {
             sb.append("[발견장소] ").append(item.getHappenPlace());
         }
         if (item.getSpecialMark() != null && !item.getSpecialMark().isBlank()) {
-            if (sb.length() > 0) sb.append(" ");
+            if (sb.length() > 0)
+                sb.append("\n\n");
             sb.append("[특징] ").append(item.getSpecialMark());
         }
-        if (sb.length() == 0) return null;
+        if (sb.length() == 0)
+            return null;
         return sb.length() > 2000 ? sb.substring(0, 2000) : sb.toString();
     }
 
     /** null/blank면 null, 아니면 trim 후 maxLen 자르기 (관할기관·담당자·담당자연락처용) */
     private static String nullToBlank(String s, int maxLen) {
-        if (s == null || s.isBlank()) return null;
+        if (s == null || s.isBlank())
+            return null;
         String t = s.trim();
         return t.length() > maxLen ? t.substring(0, maxLen) : t;
     }
 
     private Shelter findOrCreateShelter(AnimalItem item) {
         String careNm = item.getCareNm();
-        if (careNm == null || careNm.isBlank()) careNm = "미상";
+        if (careNm == null || careNm.isBlank())
+            careNm = "미상";
         return shelterRepository.findFirstByName(careNm)
                 .map(s -> {
                     if (s.getRegionSido() == null && s.getAddress() != null && !s.getAddress().isBlank()) {
@@ -324,10 +350,13 @@ public class AnimalSyncService {
 
     /** upKindCd(축종코드) 우선. 422400=고양이, 417000=개 */
     private Species mapSpecies(AnimalItem item) {
-        if (CAT_CODE.equals(item.getUpKindCd())) return Species.CAT;
-        if (DOG_CODE.equals(item.getUpKindCd())) return Species.DOG;
+        if (CAT_CODE.equals(item.getUpKindCd()))
+            return Species.CAT;
+        if (DOG_CODE.equals(item.getUpKindCd()))
+            return Species.DOG;
         String full = item.getKindFullNm();
-        if (full != null && (full.contains("고양이") || full.contains("[고양이]"))) return Species.CAT;
+        if (full != null && (full.contains("고양이") || full.contains("[고양이]")))
+            return Species.CAT;
         return Species.DOG;
     }
 
@@ -340,15 +369,19 @@ public class AnimalSyncService {
         String kindCd = item.getKindCd();
         String full = item.getKindFullNm();
         String s = full != null ? full.replaceAll("\\[.*?\\]\\s*", "").trim() : (kindCd != null ? kindCd : "");
-        if (s.isEmpty()) return "믹스";
+        if (s.isEmpty())
+            return "믹스";
         String name = kindCodeToName.get(s);
-        if (name != null) return name.length() > 50 ? name.substring(0, 50) : name;
-        if (s.matches("\\d{4,}")) return "믹스";
+        if (name != null)
+            return name.length() > 50 ? name.substring(0, 50) : name;
+        if (s.matches("\\d{4,}"))
+            return "믹스";
         return s.length() > 50 ? s.substring(0, 50) : s;
     }
 
     private Integer parseAge(String age) {
-        if (age == null || age.isBlank()) return null;
+        if (age == null || age.isBlank())
+            return null;
         try {
             String num = age.replaceAll("[^0-9]", "");
             if (num.length() >= 4) {
@@ -362,7 +395,8 @@ public class AnimalSyncService {
     }
 
     private Gender mapGender(String sexCd) {
-        if (sexCd == null) return null;
+        if (sexCd == null)
+            return null;
         return switch (sexCd.toUpperCase()) {
             case "M" -> Gender.MALE;
             case "F" -> Gender.FEMALE;
@@ -376,18 +410,23 @@ public class AnimalSyncService {
      * 입양·안락사·자연사·반환 등 → null (DB에 저장하지 않을 대상)
      */
     private AnimalStatus mapStatus(String processState) {
-        if (processState == null) return AnimalStatus.PROTECTED;
-        if (processState.contains("임시보호")) return AnimalStatus.FOSTERING;
-        if (processState.contains("보호") || processState.contains("공고")) return AnimalStatus.PROTECTED;
+        if (processState == null)
+            return AnimalStatus.PROTECTED;
+        if (processState.contains("임시보호"))
+            return AnimalStatus.FOSTERING;
+        if (processState.contains("보호") || processState.contains("공고"))
+            return AnimalStatus.PROTECTED;
         // 입양, 안락사, 자연사, 반환 등 → null (제거 대상)
         return null;
     }
 
     private BigDecimal parseWeight(String weight) {
-        if (weight == null || weight.isBlank()) return null;
+        if (weight == null || weight.isBlank())
+            return null;
         try {
             String num = weight.replaceAll("[^0-9.]", "");
-            if (num.isEmpty()) return null;
+            if (num.isEmpty())
+                return null;
             return new BigDecimal(num);
         } catch (Exception e) {
             return null;
@@ -395,12 +434,15 @@ public class AnimalSyncService {
     }
 
     private Size estimateSize(String weight) {
-        if (weight == null) return Size.MEDIUM;
+        if (weight == null)
+            return Size.MEDIUM;
         try {
             String num = weight.replaceAll("[^0-9.]", "");
             double w = Double.parseDouble(num.isEmpty() ? "0" : num);
-            if (w < 5) return Size.SMALL;
-            if (w < 15) return Size.MEDIUM;
+            if (w < 5)
+                return Size.SMALL;
+            if (w < 15)
+                return Size.MEDIUM;
             return Size.LARGE;
         } catch (Exception e) {
             return Size.MEDIUM;
@@ -408,7 +450,8 @@ public class AnimalSyncService {
     }
 
     private LocalDate parseDate(String dateStr) {
-        if (dateStr == null || dateStr.length() < 8) return null;
+        if (dateStr == null || dateStr.length() < 8)
+            return null;
         try {
             return LocalDate.parse(dateStr.substring(0, 8), API_DATE);
         } catch (Exception e) {

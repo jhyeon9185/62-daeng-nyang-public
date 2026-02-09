@@ -50,7 +50,7 @@ export default function Header() {
   const tickingRef = useRef(false);
 
   const handleLogout = () => {
-    authApi.logout().catch(() => {});
+    authApi.logout().catch(() => { });
     logout();
     setMenuOpen(false);
     navigate('/', { replace: true });
@@ -104,12 +104,12 @@ export default function Header() {
 
   return (
     <header className={clsx('toss-header', hidden && 'toss-header--hidden')}>
-      <div className="toss-header-inner">
+      <div className="toss-header-inner relative">
         <Link to="/" className="toss-logo" aria-label="62댕냥 홈">
           <img src="/logo-bk.webp" alt="62댕냥" className="toss-logo-img" width={180} height={48} />
         </Link>
 
-        <nav className="toss-nav hidden md:flex" aria-label="메인 메뉴">
+        <nav className="toss-nav hidden md:flex absolute left-1/2 -translate-x-1/2" aria-label="메인 메뉴">
           {navItems.map(({ to, label }) => (
             <Link key={to} to={to} className="toss-nav-link">
               {label}
@@ -171,64 +171,64 @@ export default function Header() {
             aria-hidden
           />
           <div className={clsx('toss-menu-drawer', menuOpen && 'toss-menu-drawer--open')}>
-        <nav className="toss-menu-nav" aria-label="모바일 메뉴">
-          {navItems.map(({ to, label }) => (
-            <Link
-              key={to}
-              to={to}
-              className="toss-menu-link"
-              onClick={closeMenu}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="toss-menu-actions">
-          {isAuthenticated ? (
-            <>
-              {(user?.role === 'SUPER_ADMIN' || user?.role === 'SHELTER_ADMIN') && (
+            <nav className="toss-menu-nav" aria-label="모바일 메뉴">
+              {navItems.map(({ to, label }) => (
                 <Link
-                  to="/admin"
-                  className="toss-menu-link toss-menu-link--admin"
+                  key={to}
+                  to={to}
+                  className="toss-menu-link"
                   onClick={closeMenu}
                 >
-                  관리자
+                  {label}
                 </Link>
+              ))}
+            </nav>
+            <div className="toss-menu-actions">
+              {isAuthenticated ? (
+                <>
+                  {(user?.role === 'SUPER_ADMIN' || user?.role === 'SHELTER_ADMIN') && (
+                    <Link
+                      to="/admin"
+                      className="toss-menu-link toss-menu-link--admin"
+                      onClick={closeMenu}
+                    >
+                      관리자
+                    </Link>
+                  )}
+                  <Link
+                    to="/mypage"
+                    className="toss-menu-link toss-menu-link--primary"
+                    onClick={closeMenu}
+                  >
+                    마이페이지
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="toss-menu-btn toss-menu-btn--logout"
+                  >
+                    로그아웃
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="toss-menu-link toss-menu-link--primary"
+                    onClick={closeMenu}
+                  >
+                    로그인
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="toss-menu-btn toss-menu-btn--signup"
+                    onClick={closeMenu}
+                  >
+                    회원가입
+                  </Link>
+                </>
               )}
-              <Link
-                to="/mypage"
-                className="toss-menu-link toss-menu-link--primary"
-                onClick={closeMenu}
-              >
-                마이페이지
-              </Link>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="toss-menu-btn toss-menu-btn--logout"
-              >
-                로그아웃
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="toss-menu-link toss-menu-link--primary"
-                onClick={closeMenu}
-              >
-                로그인
-              </Link>
-              <Link
-                to="/signup"
-                className="toss-menu-btn toss-menu-btn--signup"
-                onClick={closeMenu}
-              >
-                회원가입
-              </Link>
-            </>
-          )}
-        </div>
+            </div>
           </div>
         </>,
         document.body
