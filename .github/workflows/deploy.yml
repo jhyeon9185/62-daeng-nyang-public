@@ -47,7 +47,8 @@ jobs:
           mkdir -p deploy
           cp backend/build/libs/platform-0.0.1-SNAPSHOT.jar deploy/
           cp -r frontend/dist deploy/frontend-dist
-          cp docs/migrations/V5__add_sync_history.sql deploy/
+          cp -r backend/scripts/migrations/ deploy/migrations/
+          cp backend/scripts/migrations/V5__add_sync_history.sql deploy/
           tar -czvf deploy.tar.gz deploy/
 
       - name: Verify secrets (DB 연결용)
