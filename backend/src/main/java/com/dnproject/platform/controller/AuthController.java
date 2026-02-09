@@ -1,5 +1,6 @@
 package com.dnproject.platform.controller;
 
+import com.dnproject.platform.dto.request.GoogleLoginRequest;
 import com.dnproject.platform.dto.request.LoginRequest;
 import com.dnproject.platform.dto.request.ShelterSignupRequest;
 import com.dnproject.platform.dto.request.SignupRequest;
@@ -77,6 +78,13 @@ public class AuthController {
     @PostMapping("/login")
     public ApiResponse<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
         TokenResponse data = authService.login(request);
+        return ApiResponse.success("로그인 성공", data);
+    }
+
+    @Operation(summary = "구글 ID 토큰으로 로그인")
+    @PostMapping("/google")
+    public ApiResponse<TokenResponse> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        TokenResponse data = authService.googleLogin(request.getIdToken());
         return ApiResponse.success("로그인 성공", data);
     }
 

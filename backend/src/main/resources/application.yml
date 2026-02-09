@@ -34,7 +34,7 @@ server:
 
 # CORS (comma-separated origins)
 cors:
-  allowed-origins: http://localhost:5173,http://localhost:3000
+  allowed-origins: http://localhost:5173,http://localhost:5175,http://localhost:3000
 
 # 프론트엔드 URL (이메일 내 관리자 로그인 바로가기 링크 등)
 app:
@@ -43,7 +43,7 @@ app:
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET:your-256-bit-base64-encoded-secret-key-here-minimum-32-bytes}
-  access-token-validity: ${JWT_ACCESS_VALIDITY:86400}    # 24 hours (로그인 유지 개선)
+  access-token-validity: ${JWT_ACCESS_VALIDITY:86400} # 24 hours (로그인 유지 개선)
   refresh-token-validity: ${JWT_REFRESH_VALIDITY:2592000} # 30 days
 
 # Resend Email Configuration
@@ -65,7 +65,7 @@ public-api:
   base-url: ${PUBLIC_API_BASE_URL:https://apis.data.go.kr/1543061}
   # 스케줄 동기화: true 시 매일 지정 시간에 공공데이터 자동 수집 (일 1회 권장)
   sync-enabled: ${PUBLIC_API_SYNC_ENABLED:false}
-  sync-cron: ${PUBLIC_API_SYNC_CRON:0 0 2 * * *}   # 기본: 매일 새벽 2시 (초 분 시 일 월 요일)
+  sync-cron: ${PUBLIC_API_SYNC_CRON:0 0 2 * * *} # 기본: 매일 새벽 2시 (초 분 시 일 월 요일)
 
 # Swagger/OpenAPI Configuration
 springdoc:

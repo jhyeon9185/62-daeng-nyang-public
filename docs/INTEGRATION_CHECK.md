@@ -14,15 +14,30 @@
 
 ## 2. 백엔드 실행
 
-**터미널 1** – 프로젝트 루트(`DN_project01`)에서:
+**터미널 1** – 백엔드를 먼저 켜야 프론트에서 API 호출이 됩니다.
+
+**Linux/Mac** (프로젝트 루트):
 
 ```bash
 ./scripts/run-backend-dev.sh
 ```
 
-- `backend/.env` 가 로드되어 DB·공공 API 키가 적용됩니다.
-- 콘솔에 `Started DnPlatformApplication` 이 보이고, `http://localhost:8080` 이 떴으면 성공입니다.
-- Swagger: http://localhost:8080/swagger-ui.html
+**Windows (PowerShell)** (프로젝트 루트):
+
+```powershell
+cd backend
+.\gradlew.bat bootRun --args="--spring.profiles.active=dev"
+```
+
+- **DB 연결 오류 시**: `Access denied for user 'root'@'localhost' (using password: NO)` 가 나오면 **비밀번호가 전달되지 않은 것**입니다.
+  1. `backend\.env.example` 을 복사해 `backend\.env` 생성
+  2. `backend\.env` 에서 `DB_PASSWORD=실제_MySQL_root_비밀번호` 로 수정
+  3. 다시 `.\gradlew.bat bootRun ...` 실행  
+  (Spring이 `backend/.env` 를 로드해 `DB_USERNAME`, `DB_PASSWORD` 를 사용합니다.)
+- 또는 실행 전에 환경 변수로 비밀번호 지정:  
+  `$env:DB_PASSWORD="실제비밀번호"; .\gradlew.bat bootRun --args="--spring.profiles.active=dev"`
+- 콘솔에 `Started DnPlatformApplication` 이 보이고 `http://localhost:8080` 이 떴으면 성공입니다.
+- **연결 확인**: 브라우저에서 http://localhost:8080/swagger-ui.html 열리면 백엔드 정상.
 
 ---
 
@@ -36,10 +51,10 @@ npm install   # 최초 1회
 npm run dev
 ```
 
-- `frontend/.env` 의 `VITE_API_BASE_URL=http://localhost:8080/api` 로 백엔드와 통신합니다.
-- **기본 포트 5173** 에서 실행됩니다. (`vite.config.ts` 에 `port: 5173` 설정됨.)
-- **이미 5173에서 프론트가 실행 중이면** 그대로 사용하면 됩니다. 백엔드 CORS도 `http://localhost:5173` 으로 허용되어 있어 포트를 맞출 필요 없습니다.
-- 브라우저에서 http://localhost:5173 으로 접속합니다.
+- **백엔드 연결**: 개발 모드에서는 `VITE_API_BASE_URL`을 설정하지 않으면 **상대 경로 `/api`** 가 사용되어, Vite가 `localhost:8080`으로 프록시합니다. **반드시 터미널 1에서 백엔드를 먼저 실행해 두어야** 로그인·API가 동작합니다.
+- `.env`에 `VITE_API_BASE_URL=http://localhost:8080/api`를 넣어도 됩니다. 이 경우 CORS로 8080에 직접 요청합니다(백엔드 실행 필수).
+- **기본 포트 5173** 에서 실행됩니다. 브라우저에서 http://localhost:5173 접속.
+- 백엔드 CORS에 `http://localhost:5173` 이 포함되어 있어 포트를 맞출 필요 없습니다.
 
 ---
 

@@ -26,6 +26,10 @@ export const authApi = {
   login: (data: LoginRequest) =>
     axiosInstance.post<ApiResponse<TokenResponse>>('/auth/login', data),
 
+  /** 구글 ID 토큰으로 로그인 (백엔드에서 토큰 검증 후 JWT 발급) */
+  googleLogin: (idToken: string) =>
+    axiosInstance.post<ApiResponse<TokenResponse>>('/auth/google', { idToken }),
+
   logout: () =>
     axiosInstance.post<ApiResponse<null>>('/auth/logout'),
 

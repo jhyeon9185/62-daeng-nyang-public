@@ -457,6 +457,8 @@ body.toss-menu-open {
   font-size: 2rem;
   font-weight: var(--toss-font-bold);
   color: var(--toss-blue);
+  font-variant-numeric: tabular-nums;
+  color: var(--toss-blue);
   tabular-nums: 1;
 }
 

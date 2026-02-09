@@ -5,10 +5,10 @@
 
 :root {
   /* 버튼 컬러: Naver Green + Kakao Yellow */
-  --landing-cta: #03C75A; /* Naver */
-  --landing-cta-hover: #02B152;
-  --landing-kakao: #FEE500;
-  --landing-kakao-hover: #F6DC00;
+  --landing-cta: #03c75a; /* Naver */
+  --landing-cta-hover: #02b152;
+  --landing-kakao: #fee500;
+  --landing-kakao-hover: #f6dc00;
   --landing-black: var(--toss-black, #191f28);
   --landing-gray-800: var(--toss-gray-900, #333d4b);
   --landing-gray-600: var(--toss-gray-700, #4e5968);
@@ -20,7 +20,7 @@
   --landing-navy-light: var(--landing-gray-600);
 
   /* 타이포 - 지마켓산스 */
-  --landing-font: 'GmarketSans', 'Noto Sans KR', -apple-system, sans-serif;
+  --landing-font: "GmarketSans", "Noto Sans KR", -apple-system, sans-serif;
   --landing-display: clamp(2.25rem, 5vw, 3.5rem);
   --landing-title: clamp(1.5rem, 3vw, 2rem);
   --landing-body: 1.125rem;
@@ -34,7 +34,8 @@
   --landing-radius-lg: 1.25rem;
 
   /* 숫자 강조용 폰트(통계/퍼센트/핵심 숫자) */
-  --landing-number-font: 'Space Grotesk', 'GmarketSans', -apple-system, sans-serif;
+  --landing-number-font:
+    "Space Grotesk", "GmarketSans", -apple-system, sans-serif;
 }
 
 /* ========== 섹션 공통 - 색구분 없이 통일 배경 ========== */
@@ -58,7 +59,9 @@
 
 /* 스티키 스택에서 “빽빽함”만 살짝 풀어주는 최소 여유 */
 .landing-stack-stage {
-  min-height: calc(100vh - var(--landing-stack-top, var(--header-height, 56px)));
+  min-height: calc(
+    100vh - var(--landing-stack-top, var(--header-height, 56px))
+  );
   padding-bottom: clamp(1.25rem, 3vw, 2rem);
   touch-action: pan-y;
 }
@@ -92,11 +95,19 @@
     gap: 3rem;
   }
 
-  .landing-section--left .landing-section-content { order: 1; }
-  .landing-section--left .landing-section-visual { order: 2; }
+  .landing-section--left .landing-section-content {
+    order: 1;
+  }
+  .landing-section--left .landing-section-visual {
+    order: 2;
+  }
 
-  .landing-section--right .landing-section-content { order: 2; }
-  .landing-section--right .landing-section-visual { order: 1; }
+  .landing-section--right .landing-section-content {
+    order: 2;
+  }
+  .landing-section--right .landing-section-visual {
+    order: 1;
+  }
 }
 
 .landing-section-content {
@@ -112,7 +123,11 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   border-radius: var(--landing-radius-lg);
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0.04) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.02) 0%,
+    rgba(0, 0, 0, 0.04) 100%
+  );
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
@@ -147,7 +162,9 @@
 }
 
 /* 좌/우 섹션은 '정렬'이 아니라 '배치(컬럼 순서)'만 교체합니다. */
-.landing-section-title { text-align: left; }
+.landing-section-title {
+  text-align: left;
+}
 .landing-section-desc {
   font-size: var(--landing-body);
   color: var(--landing-gray-600);
@@ -156,9 +173,14 @@
   margin-bottom: 1.5rem;
   text-align: left;
 }
-.landing-section-desc { margin-left: 0; margin-right: auto; }
+.landing-section-desc {
+  margin-left: 0;
+  margin-right: auto;
+}
 /* 중앙 정렬용 (단일 컬럼 섹션) */
-.landing-section-title--center { text-align: center; }
+.landing-section-title--center {
+  text-align: center;
+}
 .landing-section-desc--center {
   text-align: center;
   margin-left: auto;
@@ -176,7 +198,9 @@
   border-radius: var(--landing-radius);
   padding: 0.875rem 1.75rem;
   text-decoration: none;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
   border: none;
   cursor: pointer;
 }
@@ -252,7 +276,10 @@
   cursor: pointer;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, border-color 0.2s, transform 0.12s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.12s;
   -webkit-tap-highlight-color: transparent;
 }
 .landing-hero-arrow:hover {
@@ -290,7 +317,9 @@
   display: flex;
   gap: var(--hero-gap);
   transition: transform 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
-  transform: translateX(calc(14vw - var(--hero-active-index, 0) * var(--hero-offset)));
+  transform: translateX(
+    calc(14vw - var(--hero-active-index, 0) * var(--hero-offset))
+  );
   cursor: grab;
   /* 세로 스크롤 허용(pan-y)으로 페이지 스크롤 방해 방지, 가로 스와이프는 JS에서 처리 */
   touch-action: pan-y;
@@ -312,7 +341,9 @@
   overflow: hidden;
   position: relative;
   cursor: pointer;
-  transition: transform 0.4s ease, opacity 0.4s ease;
+  transition:
+    transform 0.4s ease,
+    opacity 0.4s ease;
 }
 
 .landing-hero-slide:not(.is-active) {
@@ -381,7 +412,9 @@
 .landing-num {
   font-family: var(--landing-number-font);
   font-variant-numeric: tabular-nums lining-nums;
-  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  font-feature-settings:
+    "tnum" 1,
+    "lnum" 1;
   letter-spacing: -0.04em;
 }
 
@@ -390,17 +423,24 @@
   display: inline-block;
   font-family: var(--landing-number-font);
   font-variant-numeric: tabular-nums lining-nums;
-  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  font-feature-settings:
+    "tnum" 1,
+    "lnum" 1;
   letter-spacing: -0.05em;
   line-height: 0.95;
   padding: 0.06em 0.18em;
   margin: 0 -0.08em;
   border-radius: 0.35em;
-  background: linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.72) 40%, rgba(255,255,255,0.92) 100%);
-  color: rgba(0, 0, 0, 0.90);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.72) 40%,
+    rgba(255, 255, 255, 0.92) 100%
+  );
+  color: rgba(0, 0, 0, 0.9);
   box-shadow:
-    0 10px 30px rgba(0,0,0,0.25),
-    inset 0 1px 0 rgba(255,255,255,0.65);
+    0 10px 30px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 .landing-hero-sub {
@@ -427,27 +467,46 @@
 /* 히어로 슬라이드별 배경 이미지 (WebP, 가벼운 오버레이) */
 .landing-hero-bg--one {
   background-image:
-    linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.45) 100%),
-    url('/hero-one.webp');
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.15) 0%,
+      rgba(0, 0, 0, 0.25) 50%,
+      rgba(0, 0, 0, 0.45) 100%
+    ),
+    url("/hero-one.webp");
 }
 
 .landing-hero-bg--two {
   background-image:
-    linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.45) 100%),
-    url('/hero-two-hope-hearts.webp');
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.15) 0%,
+      rgba(0, 0, 0, 0.25) 50%,
+      rgba(0, 0, 0, 0.45) 100%
+    ),
+    url("/hero-two-hope-hearts.webp");
 }
 
 .landing-hero-bg--three {
   background-image:
-    linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.45) 100%),
-    url('/hero-three-left-behind.webp');
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.15) 0%,
+      rgba(0, 0, 0, 0.25) 50%,
+      rgba(0, 0, 0, 0.45) 100%
+    ),
+    url("/hero-three-left-behind.webp");
 }
 
 .landing-hero-overlay {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0.5) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.25) 0%,
+    rgba(0, 0, 0, 0.35) 35%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
 }
 
 .landing-hero-center {
@@ -456,7 +515,9 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
-  padding-top: calc(var(--header-height, 3.5rem) + 3rem); /* fixed header 여유 */
+  padding-top: calc(
+    var(--header-height, 3.5rem) + 3rem
+  ); /* fixed header 여유 */
   padding-bottom: 4rem;
   padding-left: 1.5rem;
   padding-right: 1.5rem;
@@ -507,7 +568,10 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.12s, background-color 0.2s, border-color 0.2s;
+  transition:
+    transform 0.12s,
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
 .landing-hero-play:hover {
@@ -536,7 +600,10 @@
   border: none;
   background: rgba(255, 255, 255, 0.36);
   cursor: pointer;
-  transition: transform 0.15s, background-color 0.2s, width 0.2s;
+  transition:
+    transform 0.15s,
+    background-color 0.2s,
+    width 0.2s;
 }
 
 .landing-hero-dot.is-active {
@@ -574,13 +641,15 @@
   color: var(--landing-black);
   font-weight: 600;
   font-size: 1rem;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .landing-quick-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
 }
 
 /* 이모지 제거로 미사용 */
@@ -608,13 +677,15 @@
   background: var(--landing-white);
   border-radius: var(--landing-radius-lg);
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .landing-pet-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
 }
 
 .landing-pet-card-img {
@@ -743,8 +814,8 @@
   background: var(--landing-white);
   border-radius: var(--landing-radius-lg);
   padding: 2rem;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .landing-involve-card h3 {
@@ -760,7 +831,6 @@
   line-height: var(--landing-line-body);
   margin-bottom: 1.25rem;
 }
-
 
 /* 성공 스토리 카드 */
 .landing-story-grid {
@@ -781,7 +851,7 @@
   background: var(--landing-white);
   border-radius: var(--landing-radius-lg);
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .landing-story-card-img {
@@ -936,10 +1006,16 @@
 .landing-stats-value {
   font-family: var(--landing-number-font);
   font-variant-numeric: tabular-nums lining-nums;
-  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  font-feature-settings:
+    "tnum" 1,
+    "lnum" 1;
   letter-spacing: -0.05em;
   font-size: clamp(2rem, 3.2vw, 2.75rem);
-  background: linear-gradient(180deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.72) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.92) 0%,
+    rgba(0, 0, 0, 0.72) 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -951,12 +1027,20 @@
 }
 
 .landing-stats-item::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -2px;
   background:
-    radial-gradient(320px 180px at 20% 20%, rgba(3, 199, 90, 0.16) 0%, transparent 55%),
-    radial-gradient(320px 180px at 80% 35%, rgba(254, 229, 0, 0.18) 0%, transparent 60%);
+    radial-gradient(
+      320px 180px at 20% 20%,
+      rgba(3, 199, 90, 0.16) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      320px 180px at 80% 35%,
+      rgba(254, 229, 0, 0.18) 0%,
+      transparent 60%
+    );
   opacity: 0.9;
   pointer-events: none;
 }

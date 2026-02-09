@@ -8,7 +8,7 @@
 
 | Secret | 용도 | 예시 값 |
 |--------|------|---------|
-| **FRONTEND_URL** | Resend 이메일 "관리자 로그인 바로가기" 링크, CORS | `http://3.39.187.182` |
+| **FRONTEND_URL** | CORS, 이메일 "관리자 로그인 바로가기" 링크. 구글 OAuth 원본과 동일해야 함 | `http://13.125.175.126.nip.io` |
 | **VITE_API_BASE_URL** | (빌드 시 자동 설정됨 - workflow에서 `/api` 고정) | - |
 
 ---
@@ -35,17 +35,25 @@
 
 ---
 
-## 3. 도메인/ nip.io 변경 시
+## 3. 현재 프로덕션 URL (nip.io)
 
-예: `http://62dn.3.39.187.182.nip.io` 사용 시
+구글 OAuth는 **IP 주소를 승인된 JavaScript 원본으로 등록할 수 없어** nip.io 사용:
 
-1. **GitHub Secrets** → `FRONTEND_URL` 값을 `http://62dn.3.39.187.182.nip.io`로 수정
+- **접속/프론트 URL**: `http://13.125.175.126.nip.io`
+- **GitHub Secret `FRONTEND_URL`**: `http://13.125.175.126.nip.io` (끝에 슬래시 없이)
+- **Google 콘솔** → 승인된 JavaScript 원본: `http://13.125.175.126.nip.io` 추가
+- **승인된 리디렉션 URI**: 등록 불필요 (ID 토큰 팝업 방식)
+
+다른 도메인으로 변경 시:
+
+1. **GitHub Secrets** → `FRONTEND_URL` 값을 새 URL로 수정
 2. **재배포**: `git push` 또는 `./deploy.sh`
-3. 이메일 "관리자 로그인 바로가기" 링크와 CORS가 새 URL로 자동 반영됨
+3. 이메일 링크와 CORS가 새 URL로 자동 반영
 
 ---
 
 ## 4. 체크리스트
 
-- [ ] GitHub Secrets `FRONTEND_URL` = `http://3.39.187.182` (또는 실제 운영 URL)
-- [ ] 배포 후 이메일 발송 테스트 → "관리자 로그인 바로가기" 클릭 시 올바른 주소로 이동하는지 확인
+- [ ] GitHub Secrets `FRONTEND_URL` = `http://13.125.175.126.nip.io`
+- [ ] Google 콘솔 승인된 JavaScript 원본에 `http://13.125.175.126.nip.io` 등록
+- [ ] 배포 후 `http://13.125.175.126.nip.io` 접속 → 구글 로그인 동작 확인
