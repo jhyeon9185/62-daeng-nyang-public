@@ -36,6 +36,9 @@ public class AnimalSyncService {
     /** 품종코드 → 품종명 캐시 (getKindList 결과) */
     private final Map<String, String> kindCodeToName = new ConcurrentHashMap<>();
 
+    private static final java.util.Set<String> observedProcessStates = java.util.concurrent.ConcurrentHashMap
+            .newKeySet();
+
     private final PublicApiService publicApiService;
     private final AnimalRepository animalRepository;
     private final ShelterRepository shelterRepository;
@@ -230,6 +233,43 @@ public class AnimalSyncService {
         }
         createAnimalFromApi(item);
         return SyncAction.ADDED;
+    }
+
+    private void updateAnimalFromApi(Animal animal, AnimalItem item) {
+        animal.setSpecies(mapSpecies(item));
+        animal.setBreed(extractBreed(item));
+        animal.setName(generateName(item));
+        animal.setImageUrl(resolveImageUrl(item));
+        animal.setStatus(mapStatus(item.getProcessState()));
+        animal.setDescription(buildDescription(item));
+        animal.setOrgName(nullToBlank(item.getOrgNm(), 100));
+        animal.setChargeName(nullToBlank(item.getChargeNm(), 50));
+        animal.setChargePhone(nullToBlank(item.getOfficetel(), 30));
+        animalRepository.save(animal);
+    }
+
+    private void createAnimalFromApi(AnimalItem item) {
+        Shelter shelter = findOrCreateShelter(item);
+        Animal animal = Animal.builder()
+                .publicApiAnimalId(item.getDesertionNo())
+                .shelter(shelter)
+                .species(mapSpecies(item))
+                .breed(extractBreed(item))
+                .name(generateName(item))
+                .age(parseAge(item.getAge()))
+                .gender(mapGender(item.getSexCd()))
+                .size(estimateSize(item.getWeight()))
+                .weight(parseWeight(item.getWeight()))
+                .description(buildDescription(item))
+                .neutered("Y".equalsIgnoreCase(item.getNeuterYn()))
+                .imageUrl(resolveImageUrl(item))
+                .status(mapStatus(item.getProcessState()))
+                .registerDate(parseDate(item.getHappenDt()))
+                .orgName(nullToBlank(item.getOrgNm(), 100))
+                .chargeName(nullToBlank(item.getChargeNm(), 50))
+                .chargePhone(nullToBlank(item.getOfficetel(), 30))
+                .build();
+        animalRepository.save(animal);
     }
 
     /**

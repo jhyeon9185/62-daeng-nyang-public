@@ -42,7 +42,7 @@ export default function AnimalsPage() {
   const [search, setSearch] = useState("");
   const [species, setSpecies] = useState<"DOG" | "CAT" | "">("");
   const [size, setSize] = useState<"SMALL" | "MEDIUM" | "LARGE" | "">("");
-  const [status, setStatus] = useState<"PROTECTED" | "FOSTERING" | "">("");
+  const [status, setStatus] = useState<"PROTECTED" | "FOSTERING" | "">("PROTECTED");
   const [region, setRegion] = useState<string>("");
   const [sigungu, setSigungu] = useState<string>("");
   const [page, setPage] = useState(0);
@@ -136,8 +136,8 @@ export default function AnimalsPage() {
         const ax =
           err && typeof err === "object" && "response" in err
             ? (err as {
-                response?: { status?: number; data?: { message?: string } };
-              })
+              response?: { status?: number; data?: { message?: string } };
+            })
             : null;
         const status = ax?.response?.status;
         const serverMessage = ax?.response?.data?.message;
@@ -224,22 +224,20 @@ export default function AnimalsPage() {
             <div className="flex justify-center gap-2 mb-6">
               <button
                 type="button"
-                className={`px-6 py-2 rounded-full font-semibold transition ${
-                  viewMode === "all"
-                    ? "bg-green-600 text-white"
-                    : "bg-white border border-gray-300 text-gray-700 hover:border-green-600 hover:text-green-600"
-                }`}
+                className={`px-6 py-2 rounded-full font-semibold transition ${viewMode === "all"
+                  ? "bg-green-600 text-white"
+                  : "bg-white border border-gray-300 text-gray-700 hover:border-green-600 hover:text-green-600"
+                  }`}
                 onClick={() => setViewMode("all")}
               >
                 전체
               </button>
               <button
                 type="button"
-                className={`px-6 py-2 rounded-full font-semibold transition ${
-                  viewMode === "recommended"
-                    ? "bg-green-600 text-white"
-                    : "bg-white border border-gray-300 text-gray-700 hover:border-green-600 hover:text-green-600"
-                }`}
+                className={`px-6 py-2 rounded-full font-semibold transition ${viewMode === "recommended"
+                  ? "bg-green-600 text-white"
+                  : "bg-white border border-gray-300 text-gray-700 hover:border-green-600 hover:text-green-600"
+                  }`}
                 onClick={() => {
                   if (!preference) {
                     setShowPreferenceModal(true);
@@ -299,19 +297,6 @@ export default function AnimalsPage() {
                       },
                     },
                     {
-                      label: "상태",
-                      options: [
-                        { value: "", label: "전체" },
-                        { value: "PROTECTED", label: "보호 중" },
-                        { value: "FOSTERING", label: "임시보호" },
-                      ],
-                      value: status,
-                      onChange: (v) => {
-                        setStatus(v as "PROTECTED" | "FOSTERING" | "");
-                        setPage(0);
-                      },
-                    },
-                    {
                       label: "시/도",
                       options: REGION_SIDO_OPTIONS,
                       value: region,
@@ -324,25 +309,25 @@ export default function AnimalsPage() {
                     // 시/도 선택 시 우측에 시/군/구 드롭다운 표시
                     ...(region
                       ? [
-                          {
-                            label: "시/군/구",
-                            options: SIGUNGU_BY_SIDO[region] ?? [
-                              { value: "", label: "전체" },
-                            ],
-                            value: sigungu,
-                            onChange: (v: string) => {
-                              setSigungu(v);
-                              setPage(0);
-                            },
+                        {
+                          label: "시/군/구",
+                          options: SIGUNGU_BY_SIDO[region] ?? [
+                            { value: "", label: "전체" },
+                          ],
+                          value: sigungu,
+                          onChange: (v: string) => {
+                            setSigungu(v);
+                            setPage(0);
                           },
-                        ]
+                        },
+                      ]
                       : []),
                   ]}
                   onReset={() => {
                     setSearch("");
                     setSpecies("");
                     setSize("");
-                    setStatus("");
+                    setStatus("PROTECTED");
                     setRegion("");
                     setSigungu("");
                     setPage(0);
@@ -361,7 +346,7 @@ export default function AnimalsPage() {
                     : "종류 무관"}{" "}
                   ·{" "}
                   {preference.minAge !== undefined ||
-                  preference.maxAge !== undefined
+                    preference.maxAge !== undefined
                     ? `${preference.minAge ?? 0}~${preference.maxAge ?? "제한없음"}세`
                     : "나이 무관"}{" "}
                   ·{" "}
@@ -397,7 +382,7 @@ export default function AnimalsPage() {
                         setSearch("");
                         setSpecies("");
                         setSize("");
-                        setStatus("");
+                        setStatus("PROTECTED");
                         setRegion("");
                         setSigungu("");
                         setPage(0);
@@ -436,10 +421,18 @@ export default function AnimalsPage() {
                               backgroundImage: animal.imageUrl
                                 ? `url(${animal.imageUrl})`
                                 : "none",
+                              backgroundColor: animal.imageUrl ? "transparent" : "#f3f4f6", // 회색 배경
                               backgroundSize: "cover",
                               backgroundPosition: "center",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
-                          />
+                          >
+                            {!animal.imageUrl && (
+                              <span className="text-gray-400 text-sm font-medium">이미지 없음</span>
+                            )}
+                          </div>
                           <div className="landing-pet-card-body">
                             <p className="landing-pet-card-name">
                               {animal.name}

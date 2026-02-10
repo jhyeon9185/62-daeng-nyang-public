@@ -489,6 +489,22 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleDeleteUser = async (userId: number, identifier: string) => {
+    if (!window.confirm(`'${identifier}' 회원을 정말로 탈퇴시키겠습니까?\n이 작업은 되돌릴 수 없으며, 작성한 게시글과 신청 내역이 모두 삭제됩니다.`)) {
+      return;
+    }
+    setUsersError('');
+    try {
+      await adminApi.deleteUser(userId);
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      alert('회원이 탈퇴 처리되었습니다.');
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      const msg = err.response?.data?.message ?? '회원 탈퇴 처리에 실패했습니다.';
+      alert(msg);
+    }
+  };
+
   const loadBoards = async () => {
     setBoardsError('');
     setBoardsLoading(true);
@@ -659,21 +675,33 @@ export default function AdminDashboardPage() {
                         <table className="admin-table">
                           <thead>
                             <tr>
-                              <th>ID</th>
-                              <th>이메일</th>
-                              <th>이름</th>
-                              <th>역할</th>
-                              <th>가입일</th>
+                              <th style={{ textAlign: 'center' }}>ID</th>
+                              <th style={{ textAlign: 'center' }}>이메일</th>
+                              <th style={{ textAlign: 'center' }}>이름</th>
+                              <th style={{ textAlign: 'center' }}>역할</th>
+                              <th style={{ textAlign: 'center' }}>가입일</th>
+                              <th style={{ textAlign: 'center' }}>관리</th>
                             </tr>
                           </thead>
                           <tbody>
                             {users.map((u) => (
                               <tr key={u.id}>
-                                <td>{u.id}</td>
-                                <td>{u.email}</td>
-                                <td>{u.name ?? '-'}</td>
-                                <td>{u.role === 'SUPER_ADMIN' ? '시스템 관리자' : u.role === 'SHELTER_ADMIN' ? '보호소 관리자' : '일반 회원'}</td>
-                                <td>{u.createdAt ? new Date(u.createdAt).toLocaleDateString('ko-KR') : '-'}</td>
+                                <td style={{ textAlign: 'center' }}>{u.id}</td>
+                                <td style={{ textAlign: 'center' }}>{u.email}</td>
+                                <td style={{ textAlign: 'center' }}>{u.name ?? '-'}</td>
+                                <td style={{ textAlign: 'center' }}>{u.role === 'SUPER_ADMIN' ? '시스템 관리자' : u.role === 'SHELTER_ADMIN' ? '보호소 관리자' : '일반 회원'}</td>
+                                <td style={{ textAlign: 'center' }}>{u.createdAt ? new Date(u.createdAt).toLocaleDateString('ko-KR') : '-'}</td>
+                                <td style={{ textAlign: 'center' }}>
+                                  {u.role !== 'SUPER_ADMIN' && (
+                                    <button
+                                      type="button"
+                                      className="admin-btn admin-btn-xs admin-btn-ghost text-red-500 hover:bg-red-50 hover:text-red-600"
+                                      onClick={() => handleDeleteUser(u.id, u.name || u.email)}
+                                    >
+                                      탈퇴
+                                    </button>
+                                  )}
+                                </td>
                               </tr>
                             ))}
                           </tbody>
@@ -742,25 +770,25 @@ export default function AdminDashboardPage() {
                         <table className="admin-table">
                           <thead>
                             <tr>
-                              <th>ID</th>
-                              <th>타입</th>
-                              <th>제목</th>
-                              <th>작성자</th>
-                              <th>고정</th>
-                              <th>작성일</th>
-                              <th>관리</th>
+                              <th style={{ textAlign: 'center' }}>ID</th>
+                              <th style={{ textAlign: 'center' }}>타입</th>
+                              <th style={{ textAlign: 'center' }}>제목</th>
+                              <th style={{ textAlign: 'center' }}>작성자</th>
+                              <th style={{ textAlign: 'center' }}>고정</th>
+                              <th style={{ textAlign: 'center' }}>작성일</th>
+                              <th style={{ textAlign: 'center' }}>관리</th>
                             </tr>
                           </thead>
                           <tbody>
                             {boards.map((b) => (
                               <tr key={b.id}>
-                                <td>{b.id}</td>
-                                <td>{b.type === 'NOTICE' ? '공지' : b.type === 'FAQ' ? 'FAQ' : '자유'}</td>
-                                <td>{b.title}</td>
-                                <td>{b.userName ?? '-'}</td>
-                                <td>{b.isPinned ? '고정' : '-'}</td>
-                                <td>{b.createdAt ? new Date(b.createdAt).toLocaleDateString('ko-KR') : '-'}</td>
-                                <td>
+                                <td style={{ textAlign: 'center' }}>{b.id}</td>
+                                <td style={{ textAlign: 'center' }}>{b.type === 'NOTICE' ? '공지' : b.type === 'FAQ' ? 'FAQ' : '자유'}</td>
+                                <td style={{ textAlign: 'left' }}>{b.title}</td>
+                                <td style={{ textAlign: 'center' }}>{b.userName ?? '-'}</td>
+                                <td style={{ textAlign: 'center' }}>{b.isPinned ? '고정' : '-'}</td>
+                                <td style={{ textAlign: 'center' }}>{b.createdAt ? new Date(b.createdAt).toLocaleDateString('ko-KR') : '-'}</td>
+                                <td style={{ textAlign: 'center' }}>
                                   <button type="button" className="admin-btn admin-btn-sm admin-btn-ghost" disabled={boardActionLoading === b.id}
                                     onClick={() => handleSetBoardPinned(b.id, !b.isPinned)}>
                                     {boardActionLoading === b.id ? '...' : b.isPinned ? '고정 해제' : '고정'}
@@ -866,10 +894,9 @@ export default function AdminDashboardPage() {
                           <span className="text-sm text-gray-500 shrink-0 w-36 sm:w-40">
                             {new Date(entry.item.createdAt).toLocaleString('ko-KR')}
                           </span>
-                          <span className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium ${
-                            entry.type === 'adoption' ? 'bg-blue-100 text-blue-700' :
+                          <span className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium ${entry.type === 'adoption' ? 'bg-blue-100 text-blue-700' :
                             entry.type === 'volunteer' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                          }`}>
+                            }`}>
                             {entry.type === 'adoption' ? '입양/임보' : entry.type === 'volunteer' ? '봉사' : '기부'}
                           </span>
                           <span className="font-medium text-gray-900 min-w-0 truncate flex-1">
@@ -961,24 +988,24 @@ export default function AdminDashboardPage() {
                       <>
                         <div className="overflow-x-auto rounded-lg border border-gray-200">
                           <table className="min-w-full text-sm">
-                            <thead className="bg-gray-100 text-left">
+                            <thead className="bg-gray-100">
                               <tr>
-                                <th className="px-3 py-2 font-semibold text-gray-700">실행 시각</th>
-                                <th className="px-3 py-2 font-semibold text-gray-700">구분</th>
-                                <th className="px-3 py-2 font-semibold text-gray-700 text-center">추가</th>
-                                <th className="px-3 py-2 font-semibold text-gray-700 text-center">수정</th>
-                                <th className="px-3 py-2 font-semibold text-gray-700 text-center">삭제</th>
-                                <th className="px-3 py-2 font-semibold text-gray-700 text-center">만료보정</th>
-                                <th className="px-3 py-2 font-semibold text-gray-700">비고</th>
+                                <th style={{ textAlign: 'center' }} className="px-3 py-2 font-semibold text-gray-700">실행 시각</th>
+                                <th style={{ textAlign: 'center' }} className="px-3 py-2 font-semibold text-gray-700">구분</th>
+                                <th style={{ textAlign: 'center' }} className="px-3 py-2 font-semibold text-gray-700">추가</th>
+                                <th style={{ textAlign: 'center' }} className="px-3 py-2 font-semibold text-gray-700">수정</th>
+                                <th style={{ textAlign: 'center' }} className="px-3 py-2 font-semibold text-gray-700">삭제</th>
+                                <th style={{ textAlign: 'center' }} className="px-3 py-2 font-semibold text-gray-700">만료보정</th>
+                                <th style={{ textAlign: 'center' }} className="px-3 py-2 font-semibold text-gray-700">비고</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                               {syncHistory.map((row) => (
                                 <tr key={row.id} className="hover:bg-gray-50">
-                                  <td className="px-3 py-2 text-gray-700 whitespace-nowrap">
+                                  <td style={{ textAlign: 'center' }} className="px-3 py-2 text-gray-700 whitespace-nowrap">
                                     {new Date(row.runAt).toLocaleString('ko-KR')}
                                   </td>
-                                  <td className="px-3 py-2">
+                                  <td style={{ textAlign: 'center' }} className="px-3 py-2">
                                     <span className={row.triggerType === 'AUTO' ? 'text-blue-600 font-medium' : 'text-gray-700'}>
                                       {row.triggerType === 'AUTO' ? '자동' : '수동'}
                                     </span>
@@ -986,11 +1013,11 @@ export default function AdminDashboardPage() {
                                       <span className="ml-1 text-gray-500 text-xs">({row.daysParam}일)</span>
                                     )}
                                   </td>
-                                  <td className="px-3 py-2 text-center">{row.addedCount}</td>
-                                  <td className="px-3 py-2 text-center">{row.updatedCount}</td>
-                                  <td className="px-3 py-2 text-center">{row.deletedCount}</td>
-                                  <td className="px-3 py-2 text-center">{row.correctedCount}</td>
-                                  <td className="px-3 py-2 text-gray-600 max-w-xs truncate" title={row.errorMessage ?? undefined}>
+                                  <td style={{ textAlign: 'center' }} className="px-3 py-2">{row.addedCount}</td>
+                                  <td style={{ textAlign: 'center' }} className="px-3 py-2">{row.updatedCount}</td>
+                                  <td style={{ textAlign: 'center' }} className="px-3 py-2">{row.deletedCount}</td>
+                                  <td style={{ textAlign: 'center' }} className="px-3 py-2">{row.correctedCount}</td>
+                                  <td style={{ textAlign: 'center' }} className="px-3 py-2 text-gray-600 max-w-xs truncate" title={row.errorMessage ?? undefined}>
                                     {row.errorMessage ? <span className="text-red-600">{row.errorMessage}</span> : '-'}
                                   </td>
                                 </tr>
@@ -1494,6 +1521,7 @@ function ShelterAnimalForm({
             <div className="toss-auth-field">
               <label className="admin-card-desc block mb-1 font-semibold text-gray-900">이미지 URL</label>
               <input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="toss-auth-input" placeholder="https://..." />
+              <p className="text-xs text-gray-500 mt-1">이미지 URL을 입력하지 않으면 목록에 기본 이미지가 표시됩니다.</p>
             </div>
           </div>
           <button type="submit" disabled={loading} className="admin-btn admin-btn-primary">{loading ? '등록 중...' : '등록'}</button>

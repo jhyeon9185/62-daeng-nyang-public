@@ -49,11 +49,12 @@ export default function BoardsPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // 실제 API 호출 (검색은 아직 백엔드 미지원으로 제외, 타입/페이징만 적용)
+        // 실제 API 호출 (검색 포함)
         const res = await boardApi.getAll({
           type,
           page,
           size: pageSize,
+          keyword: search || undefined, // 검색어 전달
         });
         setServerBoards(res.content);
         setServerTotalElements(res.totalElements);
@@ -64,8 +65,14 @@ export default function BoardsPage() {
       }
     };
 
-    fetchData();
-  }, [type, page, pageSize]);
+    // 검색어 변경 시 디바운싱 처리가 필요할 수 있으나, 여기서는 일단 search 변경 시 바로 호출
+    // (실제로는 ListSearch에서 Enter키나 버튼 클릭 시에만 상태를 업데이트하는 것이 좋음, 현재는 onChange에서 바로 업데이트 중)
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 300); // 간단한 디바운싱
+
+    return () => clearTimeout(timer);
+  }, [type, page, pageSize, search]);
 
   // Mock 데이터 필터링 (클라이언트 검색 지원)
   const filteredMocks = useMemo(() => {
@@ -122,7 +129,7 @@ export default function BoardsPage() {
                   setSearch(v);
                   setPage(0);
                 }}
-                placeholder="제목, 내용, 작성자로 검색 (Mock 데이터만 검색 가능)"
+                placeholder="제목, 내용, 작성자로 검색"
               />
               <FilterBar
                 groups={[

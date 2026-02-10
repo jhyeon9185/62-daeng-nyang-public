@@ -14,21 +14,38 @@ const typeLabels: Record<string, string> = {
   DONATION: '물품 후원',
 };
 
+import { useAuthStore } from '@/store/authStore';
+
 export default function BoardDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuthStore();
   const [board, setBoard] = useState<Board | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // 댓글 수정 상태
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editCommentText, setEditCommentText] = useState('');
+
   // 현재 게시글이 실제 서버 데이터인지 여부
   const isRealBoard = useRef(false);
+
+  // 조회수 증가 요청 여부 (중복 방지)
+  const viewCountRequested = useRef(false);
 
   useEffect(() => {
     if (id) {
       loadData();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (id && !viewCountRequested.current) {
+      viewCountRequested.current = true;
+      boardApi.increaseViewCount(Number(id)).catch(console.error);
     }
   }, [id]);
 
@@ -68,6 +85,17 @@ export default function BoardDetailPage() {
     }
   };
 
+  const handleBoardDelete = async () => {
+    if (!window.confirm('정말 삭제하시겠습니까?')) return;
+    try {
+      await boardApi.delete(Number(id));
+      alert('게시글이 삭제되었습니다.');
+      navigate('/boards');
+    } catch (err: any) {
+      alert(err.response?.data?.message || '게시글 삭제에 실패했습니다.');
+    }
+  };
+
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim()) return;
@@ -101,6 +129,32 @@ export default function BoardDetailPage() {
     }
   };
 
+  const handleCommentUpdate = async (commentId: number) => {
+    if (!editCommentText.trim()) return;
+    try {
+      await boardApi.updateComment(commentId, editCommentText);
+      setEditingCommentId(null);
+      setEditCommentText('');
+      // 댓글 목록 갱신
+      const updatedComments = await boardApi.getComments(Number(id));
+      setComments(updatedComments);
+    } catch (err: any) {
+      alert(err.response?.data?.message || '댓글 수정에 실패했습니다.');
+    }
+  };
+
+  const handleCommentDelete = async (commentId: number) => {
+    if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
+    try {
+      await boardApi.deleteComment(commentId);
+      // 댓글 목록 갱신
+      const updatedComments = await boardApi.getComments(Number(id));
+      setComments(updatedComments);
+    } catch (err: any) {
+      alert(err.response?.data?.message || '댓글 삭제에 실패했습니다.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -126,19 +180,38 @@ export default function BoardDetailPage() {
             </Link>
 
             <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
-              <div className="flex gap-2 mb-4">
-                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">
-                  {typeLabels[board.type]}
-                </span>
-                {board.isPinned && (
-                  <span className="px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 text-purple-700">
-                    공지
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex gap-2">
+                  <span className="px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">
+                    {typeLabels[board.type]}
                   </span>
-                )}
-                {!isRealBoard.current && (
-                  <span className="px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-500">
-                    Demo
-                  </span>
+                  {board.isPinned && (
+                    <span className="px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 text-purple-700">
+                      공지
+                    </span>
+                  )}
+                  {!isRealBoard.current && (
+                    <span className="px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-500">
+                      Demo
+                    </span>
+                  )}
+                </div>
+                {/* 게시글 수정/삭제 버튼 (본인일 경우) */}
+                {currentUser?.id === board.userId && isRealBoard.current && (
+                  <div className="flex gap-2 text-sm">
+                    <button
+                      onClick={() => navigate(`/boards/${id}/edit`)}
+                      className="text-gray-500 hover:text-blue-600 underline"
+                    >
+                      수정
+                    </button>
+                    <button
+                      onClick={handleBoardDelete}
+                      className="text-gray-500 hover:text-red-600 underline"
+                    >
+                      삭제
+                    </button>
+                  </div>
                 )}
               </div>
               <h1 className="text-3xl font-bold mb-4">{board.title}</h1>
@@ -183,13 +256,64 @@ export default function BoardDetailPage() {
                 ) : (
                   comments.map((comment) => (
                     <div key={comment.id} className="border-b pb-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="font-semibold">{comment.userName || '익명'}</span>
-                        <span className="text-sm text-gray-500">
-                          {new Date(comment.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                      <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                      {editingCommentId === comment.id ? (
+                        // 댓글 수정 모드
+                        <div className="mb-2">
+                          <textarea
+                            className="w-full border border-gray-300 rounded-lg p-2 mb-2"
+                            rows={3}
+                            value={editCommentText}
+                            onChange={(e) => setEditCommentText(e.target.value)}
+                          />
+                          <div className="flex gap-2 justify-end text-sm">
+                            <button
+                              onClick={() => handleCommentUpdate(comment.id)}
+                              className="text-blue-600 hover:underline"
+                            >
+                              저장
+                            </button>
+                            <button
+                              onClick={() => setEditingCommentId(null)}
+                              className="text-gray-500 hover:underline"
+                            >
+                              취소
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        // 댓글 일반 모드
+                        <>
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{comment.userName || '익명'}</span>
+                              <span className="text-sm text-gray-500">
+                                {new Date(comment.createdAt).toLocaleString()}
+                              </span>
+                            </div>
+                            {/* 댓글 수정/삭제 버튼 (본인일 경우) */}
+                            {currentUser?.id === comment.userId && isRealBoard.current && (
+                              <div className="flex gap-2 text-xs">
+                                <button
+                                  onClick={() => {
+                                    setEditingCommentId(comment.id);
+                                    setEditCommentText(comment.content);
+                                  }}
+                                  className="text-gray-400 hover:text-blue-600"
+                                >
+                                  수정
+                                </button>
+                                <button
+                                  onClick={() => handleCommentDelete(comment.id)}
+                                  className="text-gray-400 hover:text-red-600"
+                                >
+                                  삭제
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                        </>
+                      )}
                     </div>
                   ))
                 )}

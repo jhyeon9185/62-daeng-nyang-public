@@ -27,12 +27,12 @@ public class AdminBoardController {
 
     @Operation(summary = "게시글 목록 (관리자)")
     @GetMapping
-    public ApiResponse<PageResponse<BoardResponse>> list(
+    public ApiResponse<PageResponse<BoardResponse>> getAll(
             @RequestParam(required = false) BoardType type,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        PageResponse<BoardResponse> data = boardService.findAll(type,
-                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "isPinned").and(Sort.by(Sort.Direction.DESC, "createdAt"))));
+            @RequestParam(defaultValue = "10") int size) {
+        PageResponse<BoardResponse> data = boardService.findAll(type, null,
+                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return ApiResponse.success("조회 성공", data);
     }
 
