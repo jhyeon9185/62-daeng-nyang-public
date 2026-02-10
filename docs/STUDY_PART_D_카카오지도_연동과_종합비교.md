@@ -7,19 +7,68 @@
 
 ---
 
+## 관련 문서 바로가기
+
+| 문서 | 설명 |
+|------|------|
+| [파트 A: REST API 기반구조](./STUDY_PART_A_REST_API_기반구조.md) | CORS, Security, JWT, ApiResponse |
+| [파트 B: 실전 API 개발](./STUDY_PART_B_실전_API_개발.md) | RESTful 설계, Entity→DTO→Controller |
+| [파트 C: 외부 API 연동](./STUDY_PART_C_외부_API_연동.md) | 공공데이터 API, WebClient, 동기화 |
+| [파트 E: Terraform 인프라](./STUDY_PART_E_Terraform_인프라_생성.md) | AWS 인프라 코드(IaC) |
+| [파트 F: CI/CD와 환경변수](./STUDY_PART_F_CICD와_환경변수.md) | GitHub Actions, 배포 자동화 |
+| [파트 G: 안정화와 트러블슈팅](./STUDY_PART_G_안정화와_트러블슈팅.md) | 운영 중 문제 해결 |
+| [카카오맵 설정 가이드](./KAKAO_MAP_DEV_SETUP.md) | 카카오 개발자 콘솔 설정, 도메인 등록 |
+| [DB 스키마](./DATABASE.md) | shelters 테이블 (위도/경도 컬럼) |
+
+---
+
+## 이 문서를 읽기 전에: 파트 C와 파트 D의 관계
+
+파트 C에서는 **백엔드가 외부 API를 호출**하는 패턴을 배웠다 (공공데이터포털). 파트 D에서는 **프론트엔드가 외부 API를 호출**하는 패턴을 배운다 (카카오지도). 같은 "외부 API 연동"인데 왜 호출 주체가 다른지, 어떤 기준으로 결정하는지가 이 문서의 핵심이다.
+
+```
+파트 C (백엔드 호출):   [우리 백엔드] ──→ [공공데이터포털]  (서버→서버, API 키 숨김)
+파트 D (프론트 호출):   [사용자 브라우저] ──→ [카카오 서버]   (브라우저→서버, 도메인 인증)
+```
+
+> **소스코드 바로가기** (이 문서에서 다루는 핵심 파일들)
+>
+> | 분류 | 파일 | 경로 |
+> |------|------|------|
+> | 지도 컴포넌트 | `KakaoMap.tsx` | [`frontend/src/components/map/KakaoMap.tsx`](../frontend/src/components/map/KakaoMap.tsx) |
+> | 상세 페이지 | `AnimalDetailPage.tsx` | [`frontend/src/pages/animals/AnimalDetailPage.tsx`](../frontend/src/pages/animals/AnimalDetailPage.tsx) |
+> | 보호소 Entity | `Shelter.java` | [`backend/.../domain/Shelter.java`](../backend/src/main/java/com/dnproject/platform/domain/Shelter.java) |
+> | 동물 응답 DTO | `AnimalResponse.java` | [`backend/.../dto/response/AnimalResponse.java`](../backend/src/main/java/com/dnproject/platform/dto/response/AnimalResponse.java) |
+> | Service 변환 | `AnimalService.java` | [`backend/.../service/AnimalService.java`](../backend/src/main/java/com/dnproject/platform/service/AnimalService.java) |
+> | CORS 설정 | `CorsConfig.java` | [`backend/.../config/CorsConfig.java`](../backend/src/main/java/com/dnproject/platform/config/CorsConfig.java) |
+> | Axios 설정 | `axios.ts` | [`frontend/src/lib/axios.ts`](../frontend/src/lib/axios.ts) |
+> | 프론트 엔티티 타입 | `entities.ts` | [`frontend/src/types/entities.ts`](../frontend/src/types/entities.ts) |
+
+---
+
 ## 목차
 
-| 장 | 제목 | 핵심 키워드 |
-|---|------|------------|
-| 7장 | 카카오지도 API — 백엔드 vs 프론트엔드 역할 분담 | JavaScript SDK, 도메인 기반 인증, 좌표 전달 |
-| 8장 | 프론트엔드 카카오지도 구현 (백엔드 관점에서 이해) | KakaoMap.tsx, Geocoding, 마커 |
-| 9장 | 두 가지 외부 API 패턴 비교 | 백엔드 호출 vs 프론트 호출, 판단 기준 |
-| 10장 | 종합 아키텍처 정리 | 3가지 API 연결, 전체 데이터 흐름도 |
-| 11장 | 실전 트러블슈팅 모음 | API 키 인코딩, 타임아웃, CORS, JWT 만료 |
+| 장 | 제목 | 핵심 키워드 | 관련 소스코드 |
+|---|------|------------|-------------|
+| [7장](#7장-카카오지도-api--백엔드-vs-프론트엔드-역할-분담) | 카카오지도 API — 백엔드 vs 프론트엔드 역할 분담 | JavaScript SDK, 도메인 기반 인증, 좌표 전달 | Shelter.java, AnimalResponse.java |
+| [8장](#8장-프론트엔드-카카오지도-구현-백엔드-관점에서-이해) | 프론트엔드 카카오지도 구현 (백엔드 관점에서 이해) | KakaoMap.tsx, Geocoding, 마커 | KakaoMap.tsx, AnimalDetailPage.tsx |
+| [9장](#9장-두-가지-외부-api-패턴-비교) | 두 가지 외부 API 패턴 비교 | 백엔드 호출 vs 프론트 호출, 판단 기준 | 전체 아키텍처 |
+| [10장](#10장-종합-아키텍처-정리) | 종합 아키텍처 정리 | 3가지 API 연결, 전체 데이터 흐름도 | 모든 파일 |
+| [11장](#11장-실전-트러블슈팅-모음) | 실전 트러블슈팅 모음 | API 키 인코딩, 타임아웃, CORS, JWT 만료 | CorsConfig.java, axios.ts |
 
 ---
 
 # 7장. 카카오지도 API — 백엔드 vs 프론트엔드 역할 분담
+
+> **이 장에서 배우는 것**: 같은 "외부 API"인데 왜 카카오지도는 프론트엔드에서 호출하는지, 백엔드와 프론트엔드가 각각 어떤 역할을 맡는지 이해한다.
+>
+> **관련 소스코드**:
+> [`Shelter.java`](../backend/src/main/java/com/dnproject/platform/domain/Shelter.java) ·
+> [`AnimalResponse.java`](../backend/src/main/java/com/dnproject/platform/dto/response/AnimalResponse.java) ·
+> [`AnimalService.java`](../backend/src/main/java/com/dnproject/platform/service/AnimalService.java) ·
+> [`KakaoMap.tsx`](../frontend/src/components/map/KakaoMap.tsx)
+
+> 💡 **초보자를 위한 비유**: 파트 C는 **도서관 사서(백엔드)가 다른 도서관에 전화해서 책을 주문**하는 것이었다. 파트 D는 **방문자(브라우저)가 직접 벽에 걸린 지도를 보는** 것이다. 사서가 지도를 대신 볼 수 없듯이, 지도 UI는 브라우저에서만 그릴 수 있다.
 
 ## Why — 왜 카카오지도는 프론트엔드에서 호출하는가
 
@@ -226,9 +275,32 @@ VITE_MAP_API_KEY=발급받은_카카오_JavaScript_키
 > - Vite 환경 변수: `VITE_` 접두사가 붙은 변수만 프론트엔드 번들에 포함됨
 > - `BigDecimal` vs `Double`: 금융 데이터는 `BigDecimal` 필수, 좌표 정도의 정밀도는 `Double`로 충분
 
+<details>
+<summary><strong>✅ 초보자 체크리스트 — 7장 완료 확인</strong></summary>
+
+- [ ] 카카오지도를 프론트엔드에서 호출하는 3가지 이유를 설명할 수 있다 (DOM, SDK, 도메인 인증)
+- [ ] 백엔드의 역할이 "좌표 데이터 준비"임을 이해했다
+- [ ] `Shelter.java`에서 `latitude`, `longitude` 필드를 찾았다
+- [ ] `AnimalResponse.java`에서 `shelterLatitude`, `shelterLongitude` 필드를 찾았다
+- [ ] `BigDecimal` → `Double` 변환 이유를 설명할 수 있다
+- [ ] 카카오 JavaScript 키와 공공데이터 서비스 키의 보안 차이를 설명할 수 있다
+- [ ] 카카오 개발자 콘솔에서 도메인 등록이 필요한 이유를 안다
+
+</details>
+
 ---
 
 # 8장. 프론트엔드 카카오지도 구현 (백엔드 관점에서 이해)
+
+> **이 장에서 배우는 것**: KakaoMap.tsx 컴포넌트가 백엔드 데이터를 어떻게 사용하는지 분석하고, 백엔드가 어떤 데이터를 제공해야 하는지 이해한다.
+>
+> **관련 소스코드**:
+> [`KakaoMap.tsx`](../frontend/src/components/map/KakaoMap.tsx) ·
+> [`AnimalDetailPage.tsx`](../frontend/src/pages/animals/AnimalDetailPage.tsx) ·
+> [`entities.ts`](../frontend/src/types/entities.ts) ·
+> [`AnimalResponse.java`](../backend/src/main/java/com/dnproject/platform/dto/response/AnimalResponse.java)
+
+> 💡 **초보자를 위한 비유**: 백엔드는 **택배 기사**이고, 프론트엔드는 **집 인테리어 업자**다. 택배 기사가 "경기도 수원시 37.26, 127.03"이라는 주소와 좌표를 정확히 전달해야, 인테리어 업자가 그 위치에 깃발(마커)을 꽂을 수 있다. 주소도 좌표도 없으면 깃발을 꽂을 곳이 없다.
 
 ## Why — 백엔드 개발자가 프론트 코드를 알아야 하는 이유
 
@@ -464,9 +536,44 @@ export interface Animal {
 > - 카카오 Link API: `map.kakao.com/link/` 패턴으로 카카오맵 앱/웹을 바로 열 수 있다
 > - React `useEffect` cleanup: `cancelled` 플래그로 언마운트 시 상태 업데이트 방지
 
+> 💡 **초보자 핵심 포인트: "좌표 우선, 주소 Fallback" 전략**
+>
+> ```
+> 백엔드가 보내는 데이터         프론트엔드의 동작
+> ─────────────────────    ──────────────────────────
+> lat=37.26, lng=127.03  → 바로 지도에 마커 (빠름, API 호출 0회)
+> address="수원시..."     → Geocoding으로 좌표 변환 후 마커 (느림, API 호출 1회)
+> 둘 다 null              → "표시할 주소가 없습니다" 에러
+> ```
+>
+> **결론**: 백엔드가 좌표를 같이 보내면 성능이 좋아진다. 최소한 주소는 보내야 한다.
+
+<details>
+<summary><strong>✅ 초보자 체크리스트 — 8장 완료 확인</strong></summary>
+
+- [ ] `KakaoMapProps` 인터페이스에서 `address`, `latitude`, `longitude`의 역할을 안다
+- [ ] 좌표 우선 → 주소 Fallback 전략의 흐름도를 이해했다
+- [ ] `loadKakaoScript()`의 중복 로드 방지 로직을 이해했다
+- [ ] `AnimalDetailPage.tsx`에서 KakaoMap 컴포넌트를 어떻게 사용하는지 확인했다
+- [ ] 백엔드 `AnimalResponse`와 프론트 `Animal` 인터페이스의 필드명이 일치하는 이유를 안다
+- [ ] `encodeURIComponent`가 왜 필요한지 설명할 수 있다
+- [ ] Geocoding API의 호출 횟수 제한을 알고, 좌표를 DB에 저장하는 것이 더 효율적임을 이해했다
+
+</details>
+
 ---
 
 # 9장. 두 가지 외부 API 패턴 비교
+
+> **이 장에서 배우는 것**: 백엔드 호출 vs 프론트엔드 호출, 두 가지 외부 API 패턴을 체계적으로 비교하고, 새 API 연동 시 어디에서 호출할지 판단하는 기준을 배운다.
+>
+> **관련 소스코드**: 파트 C 전체 + 파트 D 전체 (두 패턴의 종합 비교)
+
+> 💡 **초보자를 위한 비유**: 외부 API 호출 위치를 정하는 것은 **물건을 주문하는 방식**과 같다.
+> - **백엔드 호출** = 회사 구매팀이 대량으로 주문해서 창고에 쌓아둔다 (공공데이터 동기화)
+> - **프론트 호출** = 고객이 매장에서 직접 키오스크를 조작한다 (카카오지도 렌더링)
+>
+> 어떤 방식이 맞는지는 **보안, 데이터 양, SDK 존재 여부, CORS** 4가지로 판단한다.
 
 ## Why — 왜 비교가 중요한가
 
@@ -693,9 +800,41 @@ CORS 미허용 → 백엔드에서 호출 (서버간 통신에는 CORS 없음)
 > - **API Gateway**: 여러 외부 API를 하나의 진입점으로 통합 (Spring Cloud Gateway)
 > - **서버 프록시**: CORS 미허용 API를 프론트에서 사용해야 할 때 백엔드가 중계
 
+> 💡 **초보자 핵심 포인트: 판단 기준 4가지 요약**
+>
+> | 질문 | 백엔드 호출 | 프론트 호출 |
+> |------|-----------|-----------|
+> | API 키 노출 시 위험한가? | YES → 백엔드 | NO (도메인 제한) |
+> | 대량 배치 데이터인가? | YES → 백엔드+DB | NO (실시간 UI) |
+> | 브라우저 SDK가 있는가? | 없음 | YES → 프론트 |
+> | CORS를 허용하는가? | 미허용 → 백엔드 | 허용 (또는 SDK) |
+>
+> **이 프로젝트 적용**: 공공데이터(키 위험+대량+SDK없음) → 백엔드 / 카카오지도(도메인제한+UI+SDK있음) → 프론트
+
+<details>
+<summary><strong>✅ 초보자 체크리스트 — 9장 완료 확인</strong></summary>
+
+- [ ] 공공데이터포털과 카카오지도의 호출 주체가 다른 이유를 설명할 수 있다
+- [ ] 데이터 흐름의 차이를 그림으로 그릴 수 있다 (4단계 vs 3단계)
+- [ ] 인증 보안 모델의 차이 (서버 환경변수 vs 도메인 화이트리스트)를 설명할 수 있다
+- [ ] 에러 핸들링 방식의 차이 (서버 로그+DB vs 브라우저 콘솔+UI)를 이해했다
+- [ ] 판단 기준 4가지 (키 보안, 데이터 특성, SDK, CORS)를 외울 수 있다
+- [ ] 판단 플로차트를 따라 새로운 API의 호출 위치를 결정할 수 있다
+
+</details>
+
 ---
 
 # 10장. 종합 아키텍처 정리
+
+> **이 장에서 배우는 것**: 프로젝트 전체의 3가지 API 연결을 조감도로 이해하고, 사용자 시나리오별 데이터 흐름을 추적한다. 면접에서 "프로젝트 아키텍처를 설명해주세요"에 답할 수 있게 된다.
+>
+> **관련 소스코드**: 모든 파일 — 이 장은 전체 프로젝트의 조감도
+
+> 💡 **초보자를 위한 비유**: 이 프로젝트는 **3개의 도로**가 연결된 도시와 같다.
+> - **도로 ①** (프론트↔백엔드): 시내 도로 — 주민(사용자)과 시청(백엔드) 사이의 양방향 도로 (JWT 통행증 필요)
+> - **도로 ②** (백엔드→공공API): 고속도로 — 시청이 중앙정부에서 데이터를 가져오는 단방향 도로 (서비스 키 필요)
+> - **도로 ③** (프론트→카카오): 전용 터널 — 주민이 직접 지도 서비스에 접속하는 단방향 도로 (동네 주민만 통과 가능)
 
 ## Why — 전체 그림을 보는 것이 중요하다
 
@@ -884,9 +1023,40 @@ CORS 미허용 → 백엔드에서 호출 (서버간 통신에는 CORS 없음)
 > - **Spring Profiles**: `application-dev.yml`, `application-prod.yml`로 환경별 설정 분리
 > - **Vite 환경 변수 모드**: `.env.development`, `.env.production`으로 환경별 분리
 
+> 💡 **초보자 핵심 포인트: 3가지 연결의 핵심 차이**
+>
+> ```
+> 연결 ①  프론트 ↔ 백엔드     양방향   JWT Bearer Token     우리가 만든 API
+> 연결 ②  백엔드 → 공공API    단방향   서비스 키 (숨김)       남이 만든 API (서버에서 호출)
+> 연결 ③  프론트 → 카카오      단방향   JS 키 (도메인 제한)    남이 만든 API (브라우저에서 호출)
+> ```
+>
+> **면접 답변 포인트**: "이 프로젝트는 3가지 API 연결이 있고, 각각 인증 방식과 호출 방향이 다릅니다."
+
+<details>
+<summary><strong>✅ 초보자 체크리스트 — 10장 완료 확인</strong></summary>
+
+- [ ] 3가지 API 연결 (①②③)의 프로토콜, 인증, 방향을 각각 설명할 수 있다
+- [ ] 상세 아키텍처 다이어그램에서 각 컴포넌트의 위치를 이해했다
+- [ ] 4가지 사용자 시나리오의 데이터 흐름을 따라갈 수 있다
+- [ ] 환경 변수 5개의 위치와 용도를 설명할 수 있다
+- [ ] 보안 체크리스트 5가지를 확인할 수 있다
+- [ ] "프로젝트 아키텍처를 설명해주세요"에 30초 안에 답할 수 있다
+
+</details>
+
 ---
 
 # 11장. 실전 트러블슈팅 모음
+
+> **이 장에서 배우는 것**: 외부 API 연동에서 가장 자주 발생하는 6가지 문제의 원인과 해결법을 미리 익히고, 체계적인 디버깅 순서를 배운다.
+>
+> **관련 소스코드**:
+> [`CorsConfig.java`](../backend/src/main/java/com/dnproject/platform/config/CorsConfig.java) ·
+> [`axios.ts`](../frontend/src/lib/axios.ts) ·
+> [`KakaoMap.tsx`](../frontend/src/components/map/KakaoMap.tsx)
+
+> 💡 **초보자를 위한 비유**: 트러블슈팅은 **병원 진단**과 같다. 환자가 "아파요"라고 하면, 의사는 **어디가 아픈지 범위를 좁히고**, **증상에 맞는 검사**를 한다. "동물 목록이 안 보여요"라는 증상도 마찬가지로, DB 문제인지 → API 문제인지 → CORS 문제인지 → 인증 문제인지 순서대로 범위를 좁혀야 한다.
 
 ## Why — 미리 알면 시간을 절약한다
 
@@ -1204,3 +1374,93 @@ jwt:
 > - Sentry / LogRocket: 프론트엔드 에러 추적 도구
 > - Spring Boot Admin: 서버 관리 UI
 > - Postman / Insomnia: API 테스트 도구 (CORS 없이 직접 호출 가능)
+
+> 💡 **초보자 핵심 포인트: 디버깅 3단계 원칙**
+>
+> ```
+> 1단계: 어디서 에러가 났는가?     → 브라우저 콘솔 vs 서버 로그
+> 2단계: 에러 메시지를 정확히 읽는다 → 90%의 해결책이 메시지에 있다
+> 3단계: 원인을 분리한다           → 외부 API 문제인가? 우리 코드 문제인가?
+> ```
+>
+> **가장 흔한 실수**: 에러 메시지를 읽지 않고 코드부터 고치려 한다!
+
+<details>
+<summary><strong>✅ 초보자 체크리스트 — 11장 완료 확인</strong></summary>
+
+- [ ] 6가지 트러블슈팅 문제를 각각 한 줄로 요약할 수 있다
+- [ ] API 키 인코딩 이슈의 원인과 해결법을 안다
+- [ ] WebClient 타임아웃 설정 방법을 안다
+- [ ] 카카오 SDK 로드 실패 시 확인해야 할 5가지를 안다
+- [ ] CORS 에러 디버깅 순서를 따라갈 수 있다
+- [ ] JWT 토큰 갱신 흐름 (401 → refresh → 재시도)을 이해했다
+- [ ] 종합 결정 트리를 따라 문제의 범위를 좁힐 수 있다
+
+</details>
+
+---
+
+## 파트 D 종합 정리
+
+### 장별 핵심 요약
+
+| 장 | 핵심 한 줄 요약 | 기억할 키워드 |
+|---|----------------|-------------|
+| 7장 | 카카오지도는 브라우저 전용 SDK → 프론트에서 호출, 백엔드는 좌표만 준비 | DOM, JavaScript SDK, 도메인 인증 |
+| 8장 | KakaoMap.tsx는 좌표 우선/주소 Fallback 전략, 백엔드는 최소 주소를 제공해야 함 | Props, Geocoding, `autoload=false` |
+| 9장 | 외부 API 호출 위치는 키 보안·데이터 특성·SDK·CORS 4가지로 판단 | 판단 플로차트, 두 패턴 공존 |
+| 10장 | 프로젝트는 3가지 API 연결로 구성: REST+JWT, WebClient+서비스키, SDK+도메인키 | 3가지 연결, 환경 변수 분리 |
+| 11장 | 트러블슈팅은 에러 범위를 좁히는 것이 핵심, 결정 트리를 따라 진단 | 인코딩, 타임아웃, CORS, JWT |
+
+### 파트 C→D 학습 흐름 정리
+
+```
+파트 C (백엔드 중심 외부 API)              파트 D (프론트 중심 외부 API + 종합)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━              ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1장. 외부 API 개념                         7장. 카카오지도 — 프론트에서 호출하는 이유
+2장. API 키와 환경 변수                     8장. KakaoMap.tsx 구현 분석
+3장. WebClient로 API 호출                  9장. 두 패턴 비교 (C vs D)
+4장. 동기화와 Upsert                       10장. 종합 아키텍처 (3가지 API 연결)
+5장. 스케줄링 (@Scheduled)                 11장. 실전 트러블슈팅
+6장. 관리자 수동 동기화
+```
+
+### 이 프로젝트의 외부 API 연동 전체 그림
+
+```
+                     ┌─── 연결 ② ───┐
+                     │  WebClient    │
+                     │  서비스 키     │
+                     ▼               │
+              [공공데이터포털]    [Spring Boot 백엔드]
+                                     │
+                              연결 ①  │  REST API + JWT
+                                     │
+                              [React 프론트엔드]
+                                     │
+                              연결 ③  │  JavaScript SDK
+                                     │       + 도메인 키
+                                     ▼
+                              [카카오지도 서버]
+```
+
+---
+
+## 관련 문서 바로가기
+
+| 이전 문서 | 현재 문서 | 다음 문서 |
+|----------|----------|----------|
+| [← 파트 C: 외부 API 연동](./STUDY_PART_C_외부_API_연동.md) | **파트 D: 카카오지도 연동과 종합 비교** | [파트 E: Terraform 인프라 →](./STUDY_PART_E_Terraform_인프라_생성.md) |
+
+| 문서 | 설명 |
+|------|------|
+| [파트 A: REST API 기반구조](./STUDY_PART_A_REST_API_기반구조.md) | CORS, Security, JWT, ApiResponse |
+| [파트 B: 실전 API 개발](./STUDY_PART_B_실전_API_개발.md) | RESTful 설계, Entity→DTO→Controller |
+| [파트 C: 외부 API 연동](./STUDY_PART_C_외부_API_연동.md) | 공공데이터 API, WebClient, 동기화 |
+| [파트 E: Terraform 인프라](./STUDY_PART_E_Terraform_인프라_생성.md) | AWS 인프라 코드(IaC) |
+| [파트 F: CI/CD와 환경변수](./STUDY_PART_F_CICD와_환경변수.md) | GitHub Actions, 배포 자동화 |
+| [파트 G: 안정화와 트러블슈팅](./STUDY_PART_G_안정화와_트러블슈팅.md) | 운영 중 문제 해결 |
+| [카카오맵 설정 가이드](./KAKAO_MAP_DEV_SETUP.md) | 카카오 개발자 콘솔 설정, 도메인 등록 |
+| [DB 스키마](./DATABASE.md) | shelters 테이블 (위도/경도 컬럼) |
+
+> **학습 추천 순서**: A(기반구조) → B(실전 API) → C(외부 API 백엔드) → **D(외부 API 프론트 + 종합)** → E(인프라) → F(CI/CD) → G(트러블슈팅)

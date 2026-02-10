@@ -303,20 +303,30 @@ public class AuthService {
         String email = request.getEmail() != null ? request.getEmail().trim() : "";
         String rawPassword = request.getPassword() != null ? request.getPassword().trim() : "";
         log.debug("로그인 시도 email={} rawPasswordLen={}", email, rawPassword != null ? rawPassword.length() : 0);
+
+        // 1. 이메일로 사용자 조회
         User user = userRepository.findByEmailTrimmed(email)
                 .orElseThrow(() -> {
                     log.warn("로그인 실패: 이메일 없음 email={}", email);
                     return new UnauthorizedException("이메일 또는 비밀번호가 올바르지 않습니다.");
                 });
+
+        // 2. 비밀번호 검증 (BCryptPasswordEncoder 사용)
+        // - 입력받은 비밀번호(raw)와 DB에 저장된 해시값(stored)을 비교합니다.
         String storedPassword = user.getPassword();
         if (storedPassword == null || !passwordEncoder.matches(rawPassword, storedPassword)) {
             log.warn("로그인 실패: 비밀번호 불일치 email={} storedHashLength={}",
                     email, storedPassword != null ? storedPassword.length() : 0);
             throw new UnauthorizedException("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
+
+        // 3. 인증 성공 시 토큰 발급 (Access Token + Refresh Token)
         String accessToken = jwtProvider.createAccessToken(user.getEmail(), user.getRole().name(), user.getId());
         String refreshToken = jwtProvider.createRefreshToken(user.getEmail());
+
         UserResponse userResponse = toUserResponse(user);
+
+        // 4. 응답 DTO 생성 및 반환
         return TokenResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
