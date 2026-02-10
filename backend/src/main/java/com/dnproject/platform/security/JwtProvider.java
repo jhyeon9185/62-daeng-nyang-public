@@ -22,12 +22,20 @@ public class JwtProvider {
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-token-validity:3600}") long accessValiditySeconds,
             @Value("${jwt.refresh-token-validity:604800}") long refreshValiditySeconds) {
+
+        // 🔐 JWT 서명을 위한 비밀 키 생성
+        // - HMAC-SHA256 알고리즘을 사용하려면 최소 32바이트 이상의 키가 필요합니다.
+        // - 제공된 secret 문자열을 바이트 배열로 변환하고, 길이가 부족하면 패딩을 추가하여 안전한 키를 만듭니다.
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         if (keyBytes.length < 32) {
-            keyBytes = java.util.Arrays.copyOf(keyBytes, 32);
+            keyBytes = java.util.Arrays.copyOf(keyBytes, 32); // 부족하면 0으로 채움
         }
+
+        // Access Token과 Refresh Token 서명에 동일한 키를 사용합니다. (보안 강화를 위해 분리할 수도 있음)
         this.accessKey = Keys.hmacShaKeyFor(keyBytes);
         this.refreshKey = Keys.hmacShaKeyFor(keyBytes);
+
+        // 만료 시간 설정 (초 단위 → 밀리초 단위 변환)
         this.accessValidityMs = accessValiditySeconds * 1000L;
         this.refreshValidityMs = refreshValiditySeconds * 1000L;
     }
