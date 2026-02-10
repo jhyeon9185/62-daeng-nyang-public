@@ -957,22 +957,26 @@ export default function AdminDashboardPage() {
                       {syncResult && <span className="text-sm text-gray-700">{syncResult}</span>}
                     </div>
                   </div>
-                  <div className="p-6 rounded-lg bg-red-50 border border-red-200 max-w-2xl mt-4">
-                    <h3 className="font-semibold text-gray-800 mb-2">비보호 동물 정리</h3>
+                  <div className="p-6 rounded-lg bg-gray-50 border border-gray-200 max-w-2xl mt-6">
+                    <h3 className="font-semibold text-gray-800 mb-2">데이터 만료 보정 (Clean-up)</h3>
                     <p className="text-sm text-gray-600 mb-4">
-                      공공API에서 최신 상태를 조회하여 입양·반환·안락사 등 비보호 상태 동물을 DB에서 삭제합니다.<br />
-                      (동기화 30일치 실행 → 비보호 상태 삭제 → 잔여 ADOPTED/NULL 정리)
+                      동기화 누락이나 오류로 인해 남아있는 '종료된 동물(입양/안락사 등)' 데이터를 정리합니다.<br />
+                      최근 30일치 데이터를 재검증하며, 입양 완료(ADOPTED) 상태의 동물도 일괄 삭제됩니다.
                     </p>
-                    <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-3">
                       <button
                         type="button"
-                        className="admin-btn admin-btn-danger"
-                        disabled={cleanupLoading}
                         onClick={handleCleanupInvalid}
+                        disabled={cleanupLoading}
+                        className="admin-btn admin-btn-danger"
                       >
-                        {cleanupLoading ? '동기화 + 정리 중...' : '비보호 동물 정리'}
+                        {cleanupLoading ? '보정 중...' : '만료 보정 실행'}
                       </button>
-                      {cleanupResult && <span className="text-sm text-gray-700">{cleanupResult}</span>}
+                      {cleanupResult && (
+                        <span className="text-sm font-medium text-blue-600 animate-fade-in">
+                          {cleanupResult}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="mt-6">
