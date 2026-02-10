@@ -41,6 +41,10 @@ export const adminApi = {
       params: { page, size, ...(role ? { role } : {}) },
     }),
 
+  /** 회원 강제 탈퇴 (슈퍼관리자) */
+  deleteUser: (userId: number) =>
+    axiosInstance.delete<ApiResponse<null>>(`/admin/users/${userId}`),
+
   /** 게시판 목록 (관리자) - type 빈 문자열이면 서버에 보내지 않음 */
   getBoards: (page = 0, size = 20, type?: string) =>
     axiosInstance.get<ApiResponse<PageResponse<BoardResponse>>>('/admin/boards', {

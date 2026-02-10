@@ -25,31 +25,38 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminUserController {
 
-    private final UserRepository userRepository;
-    private final AuthService authService;
+        private final UserRepository userRepository;
+        private final AuthService authService;
 
-    @Operation(summary = "회원 목록 조회 (페이지, 역할 필터)")
-    @GetMapping
-    public ApiResponse<PageResponse<UserResponse>> list(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) Role role) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        var userPage = role != null
-                ? userRepository.findByRoleOrderByCreatedAtDesc(role, pageable)
-                : userRepository.findAll(pageable);
-        List<UserResponse> content = userPage.getContent().stream()
-                .map(authService::toUserResponse)
-                .toList();
-        PageResponse<UserResponse> data = PageResponse.<UserResponse>builder()
-                .content(content)
-                .page(userPage.getNumber())
-                .size(userPage.getSize())
-                .totalElements(userPage.getTotalElements())
-                .totalPages(userPage.getTotalPages())
-                .first(userPage.isFirst())
-                .last(userPage.isLast())
-                .build();
-        return ApiResponse.success("조회 성공", data);
-    }
+        @Operation(summary = "회원 목록 조회 (페이지, 역할 필터)")
+        @GetMapping
+        public ApiResponse<PageResponse<UserResponse>> list(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "20") int size,
+                        @RequestParam(required = false) Role role) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+                var userPage = role != null
+                                ? userRepository.findByRoleOrderByCreatedAtDesc(role, pageable)
+                                : userRepository.findAll(pageable);
+                List<UserResponse> content = userPage.getContent().stream()
+                                .map(authService::toUserResponse)
+                                .toList();
+                PageResponse<UserResponse> data = PageResponse.<UserResponse>builder()
+                                .content(content)
+                                .page(userPage.getNumber())
+                                .size(userPage.getSize())
+                                .totalElements(userPage.getTotalElements())
+                                .totalPages(userPage.getTotalPages())
+                                .first(userPage.isFirst())
+                                .last(userPage.isLast())
+                                .build();
+                return ApiResponse.success("조회 성공", data);
+        }
+
+        @Operation(summary = "회원 강제 탈퇴 (슈퍼관리자)")
+        @DeleteMapping("/{userId}")
+        public ApiResponse<Void> deleteUser(@PathVariable Long userId) {
+                userRepository.deleteById(userId);
+                return ApiResponse.success("회원이 성공적으로 탈퇴 처리되었습니다.", null);
+        }
 }

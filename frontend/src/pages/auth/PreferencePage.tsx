@@ -74,7 +74,8 @@ export default function PreferencePage() {
       if (size === 'SMALL' || size === 'MEDIUM' || size === 'LARGE') payload.size = size;
       if (regions.length > 0) payload.regions = regions.filter((r) => r.trim());
       await preferenceApi.update(payload);
-      setSuccess(true);
+      alert('저장되었습니다.');
+      navigate('/mypage');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg ?? '선호도 저장에 실패했습니다.');
@@ -103,7 +104,7 @@ export default function PreferencePage() {
           <div className="toss-auth-head">
             <h1 className="toss-auth-title">선호도 설정</h1>
             <p className="toss-auth-desc">
-              입양 시 맞춤 추천을 위해 선호하는 조건을 선택해 주세요. (선택 사항)
+              입양 시 맞춤 추천을 위해 선호하는 조건을 선택해 주세요.<br />(선택 사항)
             </p>
           </div>
 
@@ -200,9 +201,8 @@ export default function PreferencePage() {
                   return (
                     <label
                       key={value}
-                      className={`flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer text-sm ${
-                        selected ? 'bg-green-50 text-green-700' : 'hover:bg-gray-50'
-                      }`}
+                      className={`flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer text-sm ${selected ? 'bg-green-50 text-green-700' : 'hover:bg-gray-50'
+                        }`}
                     >
                       <input
                         type="checkbox"

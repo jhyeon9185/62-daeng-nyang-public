@@ -43,6 +43,12 @@
   box-shadow: 0 0 0 3px rgba(3, 199, 90, 0.12);
 }
 
+/* 브라우저 기본 검색 취소 버튼 숨김 */
+.list-search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  display: none;
+}
+
 .list-search-clear {
   position: absolute;
   right: 0.75rem;
