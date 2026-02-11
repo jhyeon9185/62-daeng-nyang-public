@@ -219,7 +219,7 @@ jobs:
           PUBLIC_API_SYNC_ENABLED: ${{ secrets.PUBLIC_API_SYNC_ENABLED }}
           PUBLIC_API_SYNC_CRON: ${{ secrets.PUBLIC_API_SYNC_CRON }}
           KAKAO_CLIENT_ID: ${{ secrets.VITE_KAKAO_CLIENT_ID }}
-          KAKAO_CLIENT_SECRET: ${{ secrets.VITE_KAKAO_CLIENT_SECRET }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
           KAKAO_REDIRECT_URI: ${{ secrets.VITE_KAKAO_REDIRECT_URI }}
           GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
           GOOGLE_REDIRECT_URI: ${{ secrets.VITE_GOOGLE_REDIRECT_URI }}
