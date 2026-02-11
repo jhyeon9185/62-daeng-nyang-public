@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>62DN - 입양/임시보호 기능 강의</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/theme/night.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/plugin/highlight/monokai.css"
+    />
+    <style>
+      :root {
+        --r-heading-font: "Pretendard", sans-serif;
+        --r-main-font: "Pretendard", sans-serif;
+      }
+      @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+      .reveal {
+        font-family: "Pretendard", sans-serif;
+      }
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        font-family: "Pretendard", sans-serif;
+      }
+      .reveal h1 {
+        font-size: 2.2em;
+      }
+      .reveal h2 {
+        font-size: 1.5em;
+      }
+      .reveal h3 {
+        font-size: 1.1em;
+      }
+      .reveal .slides section {
+        text-align: left;
+      }
+      .reveal table {
+        font-size: 0.65em;
+        margin: 0 auto;
+      }
+      .reveal table th {
+        background: #2d6a4f;
+        color: white;
+        padding: 8px 12px;
+      }
+      .reveal table td {
+        padding: 6px 12px;
+        border-bottom: 1px solid #444;
+      }
+      .reveal pre {
+        font-size: 0.55em;
+        width: 100%;
+      }
+      .reveal code {
+        font-family: "JetBrains Mono", "Fira Code", monospace;
+      }
+      .slide-title {
+        text-align: center !important;
+      }
+      .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7em;
+        font-weight: 600;
+        margin: 2px;
+      }
+      .badge-green {
+        background: #2d6a4f;
+        color: white;
+      }
+      .badge-blue {
+        background: #1d3557;
+        color: white;
+      }
+      .badge-red {
+        background: #9b2226;
+        color: white;
+      }
+      .badge-yellow {
+        background: #e9c46a;
+        color: #333;
+      }
+      .badge-gray {
+        background: #555;
+        color: white;
+      }
+      .highlight-box {
+        background: rgba(45, 106, 79, 0.2);
+        border-left: 4px solid #2d6a4f;
+        padding: 12px 16px;
+        border-radius: 4px;
+        margin: 12px 0;
+      }
+      .warn-box {
+        background: rgba(155, 34, 38, 0.2);
+        border-left: 4px solid #9b2226;
+        padding: 12px 16px;
+        border-radius: 4px;
+        margin: 12px 0;
+      }
+      .info-box {
+        background: rgba(29, 53, 87, 0.2);
+        border-left: 4px solid #457b9d;
+        padding: 12px 16px;
+        border-radius: 4px;
+        margin: 12px 0;
+      }
+      .analogy-box {
+        background: rgba(233, 196, 106, 0.15);
+        border-left: 4px solid #e9c46a;
+        padding: 12px 16px;
+        border-radius: 4px;
+        margin: 12px 0;
+      }
+      .flow-arrow {
+        color: #2d6a4f;
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .small {
+        font-size: 0.75em;
+      }
+      .reveal ul {
+        font-size: 0.85em;
+      }
+      .reveal ol {
+        font-size: 0.85em;
+      }
+      .section-divider {
+        text-align: center !important;
+      }
+      .section-divider h2 {
+        font-size: 2em !important;
+      }
+      .emoji-icon {
+        font-size: 1.5em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!-- ==================== 슬라이드 1: 타이틀 ==================== -->
+        <section
+          class="slide-title"
+          data-background-gradient="linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)"
+        >
+          <h1 style="margin-bottom: 0.2em">🐾 입양/임시보호 기능 개요</h1>
+          <h3 style="color: #52b788; margin-top: 0">62DN (62댕냥) 프로젝트</h3>
+          <p
+            style="
+              text-align: center;
+              color: #aaa;
+              font-size: 0.7em;
+              margin-top: 2em;
+            "
+          >
+            유기동물 입양·보호 플랫폼 — 기능 설계부터 코드까지
+          </p>
+          <p style="text-align: center; color: #666; font-size: 0.6em">
+            2026.02 · 약 30분 강의
+          </p>
+        </section>
+
+        <!-- ==================== 슬라이드 2: 프로젝트 소개 ==================== -->
+        <section>
+          <h2>🏠 62댕냥이란?</h2>
+          <ul>
+            <li>
+              <strong>유기동물 입양·보호 플랫폼</strong> — 보호소의 동물 정보를
+              한곳에 모아 입양 연결
+            </li>
+            <li>
+              공공 API 데이터(유기동물 정보)를 자동 수집 → 사용자에게 제공
+            </li>
+            <li>
+              사용자가 입양/임시보호를 <strong>온라인으로 신청</strong>하고,
+              관리자가 승인/거절
+            </li>
+          </ul>
+          <div class="two-col" style="margin-top: 20px">
+            <div>
+              <h3 style="color: #52b788">백엔드</h3>
+              <ul class="small">
+                <li>Java 17 + Spring Boot 3</li>
+                <li>JPA/Hibernate + PostgreSQL</li>
+              </ul>
+            </div>
+            <div>
+              <h3 style="color: #90e0ef">프론트엔드</h3>
+              <ul class="small">
+                <li>React + TypeScript</li>
+                <li>Vite + TailwindCSS</li>
+              </ul>
+            </div>
+          </div>
+          <div class="analogy-box small">
+            💡 <strong>비유:</strong> 62댕냥 = "동물을 위한 직방" — 집 대신
+            동물의 새 가족을 찾아주는 플랫폼
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 3: 입양 vs 임시보호 ==================== -->
+        <section>
+          <h2>🐕 입양 vs 임시보호 — 무엇이 다를까?</h2>
+          <div class="two-col">
+            <div>
+              <h3 style="color: #52b788">🏡 입양 (Adoption)</h3>
+              <ul>
+                <li>동물의 <strong>영구적인 새 가족</strong>이 되는 것</li>
+                <li>법적 소유권 이전</li>
+                <li>평생 책임</li>
+              </ul>
+            </div>
+            <div>
+              <h3 style="color: #457b9d">🏘️ 임시보호 (Fostering)</h3>
+              <ul>
+                <li><strong>일정 기간</strong> 동물을 돌봐주는 것</li>
+                <li>보호소 과밀 해소 목적</li>
+                <li>기간 종료 후 반환 또는 입양 전환</li>
+              </ul>
+            </div>
+          </div>
+          <div class="highlight-box small" style="margin-top: 20px">
+            <strong>설계 포인트:</strong> 코드에서는
+            <code>AdoptionType</code> Enum 하나로 통합 관리 → 테이블도 하나!
+            (코드 중복 ↓)
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 4: 전체 아키텍처 ==================== -->
+        <section>
+          <h2>🏗️ 전체 아키텍처 — 3층 건물</h2>
+          <div style="text-align: center; font-size: 0.95em; line-height: 2.5">
+            <span
+              class="badge badge-blue"
+              style="font-size: 1.1em; padding: 6px 18px"
+            >
+              🖥️ React 프론트엔드 (1층: 안내 데스크)
+            </span>
+            <br />
+            <span class="flow-arrow">↕ HTTP 요청/응답</span>
+            <br />
+            <span
+              class="badge badge-green"
+              style="font-size: 1.1em; padding: 6px 18px"
+            >
+              ⚙️ Spring Boot REST API (2층: 담당 직원)
+            </span>
+            <br />
+            <span class="flow-arrow">↕ JPA/SQL</span>
+            <br />
+            <span
+              class="badge badge-gray"
+              style="font-size: 1.1em; padding: 6px 18px"
+            >
+              🗄️ PostgreSQL DB (3층: 서류 보관함)
+            </span>
+          </div>
+          <div class="analogy-box small" style="margin-top: 16px">
+            💡 <strong>비유:</strong> 구청 민원실과 같아요. 1층 안내
+            데스크(프론트)에서 서류 접수 → 2층 담당 직원(서비스)이 처리 → 3층
+            서류 보관함(DB)에 저장
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 5: 데이터 모델 ==================== -->
+        <section>
+          <h2>🗄️ 데이터 모델 — Adoption Entity</h2>
+          <p class="small" style="color: #b7e4c7">
+            DB의 <code>adoptions</code> 테이블 = "입양 신청서 양식"
+          </p>
+          <table style="width: 100%">
+            <tr>
+              <th>필드</th>
+              <th>타입</th>
+              <th>비유</th>
+            </tr>
+            <tr>
+              <td>id</td>
+              <td>Long (자동 증가)</td>
+              <td>접수번호</td>
+            </tr>
+            <tr>
+              <td>user</td>
+              <td>User (다대일)</td>
+              <td>신청자 이름</td>
+            </tr>
+            <tr>
+              <td>animal</td>
+              <td>Animal (다대일)</td>
+              <td>어떤 동물인지</td>
+            </tr>
+            <tr>
+              <td>type</td>
+              <td>Enum: ADOPTION / FOSTERING</td>
+              <td>입양 or 임시보호</td>
+            </tr>
+            <tr>
+              <td>status</td>
+              <td>Enum: PENDING / APPROVED / …</td>
+              <td>처리 상태 도장</td>
+            </tr>
+            <tr>
+              <td>reason</td>
+              <td>String</td>
+              <td>"왜 입양하고 싶은가요?"</td>
+            </tr>
+            <tr>
+              <td>familyAgreement</td>
+              <td>Boolean</td>
+              <td>가족 동의 여부 체크란</td>
+            </tr>
+          </table>
+          <div class="analogy-box small">
+            💡 <strong>Entity</strong> = 종이 서류 양식,
+            <strong>Repository</strong> = 서류 보관함,
+            <strong>Service</strong> = 담당 직원
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 6: 상태 머신 ==================== -->
+        <section>
+          <h2>🔄 상태 머신 — 신청서의 생애주기</h2>
+          <div style="text-align: center; font-size: 1.1em; line-height: 3.2">
+            <span
+              class="badge badge-yellow"
+              style="font-size: 1.3em; padding: 8px 24px"
+            >
+              PENDING (대기)
+            </span>
+            <br />
+            <span class="flow-arrow">↙</span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="flow-arrow">↓</span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="flow-arrow">↘</span>
+            <br />
+            <span class="badge badge-green">APPROVED<br />(승인)</span>
+            &nbsp;&nbsp;&nbsp;
+            <span class="badge badge-red">REJECTED<br />(거절)</span>
+            &nbsp;&nbsp;&nbsp;
+            <span class="badge badge-gray">CANCELLED<br />(취소)</span>
+          </div>
+          <div class="warn-box small" style="margin-top: 16px">
+            <strong>핵심 규칙:</strong> APPROVED / REJECTED / CANCELLED는 모두
+            <strong>최종 상태</strong> (되돌릴 수 없음)
+          </div>
+          <div class="analogy-box small">
+            💡 이미 도장 찍힌 서류는 수정할 수 없는 것처럼, 한번 처리된 신청은
+            상태를 되돌릴 수 없습니다.
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 7: API 설계 ==================== -->
+        <section>
+          <h2>📡 API 설계 — 6개 엔드포인트</h2>
+          <table style="width: 100%">
+            <tr>
+              <th>HTTP 메서드</th>
+              <th>경로</th>
+              <th>설명</th>
+              <th>누가?</th>
+            </tr>
+            <tr>
+              <td><span class="badge badge-green">POST</span></td>
+              <td>/api/adoptions</td>
+              <td>입양/임보 신청</td>
+              <td>로그인 사용자</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-blue">GET</span></td>
+              <td>/api/adoptions/my</td>
+              <td>내 신청 목록</td>
+              <td>로그인 사용자</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-yellow">PUT</span></td>
+              <td>/api/adoptions/{id}/cancel</td>
+              <td>신청 취소</td>
+              <td>본인만</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-blue">GET</span></td>
+              <td>/api/adoptions/shelter/pending</td>
+              <td>보호소 대기 목록</td>
+              <td>보호소 관리자</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-yellow">PUT</span></td>
+              <td>/api/adoptions/{id}/approve</td>
+              <td>승인</td>
+              <td>관리자</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-yellow">PUT</span></td>
+              <td>/api/adoptions/{id}/reject</td>
+              <td>거절</td>
+              <td>관리자</td>
+            </tr>
+          </table>
+          <div class="info-box small">
+            모든 API는 <code>/api/adoptions</code> 하위 · JWT Bearer 토큰 필수
+            (로그인 필요!)
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 8: 신청 프로세스 (사용자 관점) ==================== -->
+        <section>
+          <h2>📝 신청 프로세스 — 사용자 관점</h2>
+          <ol>
+            <li>동물 목록에서 마음에 드는 동물 클릭</li>
+            <li>상세 페이지에서 <strong>"입양 절차 안내"</strong> 버튼 클릭</li>
+            <li>입양 가이드 6단계 확인 (교육 이수 → 상담 → 만남 → 계약)</li>
+            <li>보호소 전화번호 확인 후 직접 연락 또는 온라인 신청</li>
+            <li>신청 접수 → 이메일로 <strong>접수 확인 알림</strong> 수신</li>
+          </ol>
+          <div style="text-align: center; margin-top: 16px; font-size: 0.85em">
+            <span class="badge badge-blue">동물 검색</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-blue">상세 페이지</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-green">절차 안내</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-green">신청 접수</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-yellow">대기</span>
+          </div>
+          <div class="analogy-box small" style="margin-top: 12px">
+            💡 온라인 쇼핑처럼 — 상품 탐색 → 상세 보기 → 주문(신청) → 주문 확인
+            이메일 수신
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 9: 신청 프로세스 (코드 관점) ==================== -->
+        <section>
+          <h2>⚙️ 신청 프로세스 — 코드 관점</h2>
+          <p class="small" style="color: #b7e4c7">
+            AdoptionService.apply() — 가장 핵심 메서드
+          </p>
+          <pre><code class="language-java">@Transactional
+public AdoptionResponse apply(Long userId, AdoptionRequest request) {
+    // 1️⃣ 사용자 & 동물 조회 (없으면 404 에러)
+    User user = userRepository.findById(userId).orElseThrow(...);
+    Animal animal = animalRepository.findById(request.getAnimalId()).orElseThrow(...);
+
+    // 2️⃣ 신청서(Entity) 작성 — 상태는 항상 PENDING으로 시작
+    Adoption adoption = Adoption.builder()
+        .user(user).animal(animal)
+        .type(request.getType())    // ADOPTION 또는 FOSTERING
+        .status(AdoptionStatus.PENDING)
+        .build();
+
+    // 3️⃣ DB에 저장 (서류 보관함에 넣기)
+    adoption = adoptionRepository.save(adoption);
+
+    // 4️⃣ 이메일 발송 + 관리자 알림 (부수 효과)
+    emailService.sendApplicationReceivedEmail(...);
+    notifyAndEmailAdmin(adoption, ...);
+
+    return toResponse(adoption);
+}</code></pre>
+        </section>
+
+        <!-- ==================== 슬라이드 10: 관리자 승인/거절 ==================== -->
+        <section>
+          <h2>👨‍💼 관리자 승인/거절 프로세스</h2>
+          <div class="two-col">
+            <div>
+              <h3 style="color: #52b788">✅ approve() — 승인</h3>
+              <pre><code class="language-java">// PENDING 상태 확인
+adoption.setStatus(APPROVED);
+adoption.setProcessedAt(now());
+// 📧 승인 이메일 발송
+emailService.sendApprovalEmail(...);</code></pre>
+            </div>
+            <div>
+              <h3 style="color: #e76f51">❌ reject() — 거절</h3>
+              <pre><code class="language-java">// PENDING 상태 확인
+adoption.setStatus(REJECTED);
+adoption.setRejectReason(reason);
+adoption.setProcessedAt(now());
+// 📧 거절 이메일 (사유 포함)
+emailService.sendRejectionEmail(...);</code></pre>
+            </div>
+          </div>
+          <div class="warn-box small" style="margin-top: 16px">
+            <strong>공통점:</strong> 둘 다 PENDING 상태에서만 가능 · processedAt
+            기록 · 이메일 발송<br />
+            <strong>차이점:</strong> 거절 시 rejectReason을 반드시 저장
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 11: 알림 시스템 연동 ==================== -->
+        <section>
+          <h2>🔔 알림 시스템 연동</h2>
+          <div style="font-size: 0.85em">
+            <h3>발송되는 알림 4가지</h3>
+            <table style="width: 100%">
+              <tr>
+                <th>시점</th>
+                <th>받는 사람</th>
+                <th>방식</th>
+                <th>내용</th>
+              </tr>
+              <tr>
+                <td>신청 접수</td>
+                <td>신청자</td>
+                <td>📧 이메일</td>
+                <td>"접수 확인" 안내</td>
+              </tr>
+              <tr>
+                <td>신청 접수</td>
+                <td>보호소 관리자</td>
+                <td>📧 이메일 + 🔔 인앱</td>
+                <td>"새 신청이 들어왔습니다"</td>
+              </tr>
+              <tr>
+                <td>승인</td>
+                <td>신청자</td>
+                <td>📧 이메일</td>
+                <td>"승인되었습니다" 축하</td>
+              </tr>
+              <tr>
+                <td>거절</td>
+                <td>신청자</td>
+                <td>📧 이메일</td>
+                <td>"거절되었습니다" + 사유</td>
+              </tr>
+            </table>
+          </div>
+          <div class="info-box small" style="margin-top: 12px">
+            <strong>EmailService</strong> → Resend API로 이메일 발송
+            &nbsp;|&nbsp; <strong>NotificationService</strong> → DB에 인앱 알림
+            저장 (타입: ADOPTION_APPLICATION)
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 12: 프론트엔드 — API 모듈 ==================== -->
+        <section>
+          <h2>🔌 프론트엔드 — API 모듈 (adoption.ts)</h2>
+          <pre><code class="language-typescript">export const adoptionApi = {
+  // 📝 입양/임보 신청
+  apply: (data: AdoptionRequest) =>
+    axiosInstance.post('/adoptions', data),
+
+  // 📋 내 신청 목록 (페이징)
+  getMyList: (page = 0, size = 10) =>
+    axiosInstance.get('/adoptions/my', { params: { page, size } }),
+
+  // ❌ 신청 취소
+  cancel: (id: number) =>
+    axiosInstance.patch(`/adoptions/${id}/cancel`),
+
+  // ✅ 승인 (관리자)
+  approve: (id: number) =>
+    axiosInstance.put(`/adoptions/${id}/approve`),
+
+  // 🚫 거절 (관리자)
+  reject: (id: number, rejectReason?: string) =>
+    axiosInstance.put(`/adoptions/${id}/reject`, { rejectReason }),
+};</code></pre>
+          <div class="analogy-box small">
+            💡 <strong>비유:</strong> adoption.ts = "전화기" — 프론트엔드가
+            백엔드에 전화 걸 때 쓰는 번호부
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 13: 프론트엔드 — 입양 가이드 페이지 ==================== -->
+        <section>
+          <h2>📖 입양 가이드 페이지 — 6단계 안내</h2>
+          <p class="small" style="color: #b7e4c7">GuideAdoptionPage.tsx</p>
+          <div style="text-align: center; font-size: 0.8em; line-height: 2.5">
+            <span class="badge badge-green">1️⃣ 필수교육 이수</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-green">2️⃣ 대기동물 확인</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-green">3️⃣ 상담 예약</span>
+            <br />
+            <span class="badge badge-blue">4️⃣ 동물 만남</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-blue">5️⃣ 계약·확정</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-blue">6️⃣ 사후 관리</span>
+          </div>
+          <ul class="small" style="margin-top: 16px">
+            <li>
+              <code>animalId</code> 쿼리 파라미터로 특정 동물 정보 자동 로드
+            </li>
+            <li>
+              <strong>GuideCallBlock</strong> 컴포넌트로 보호소 전화번호 표시 +
+              예시 문구 복사 기능
+            </li>
+            <li>입양 = 🟢 녹색, 임시보호 = 🔵 파란색 테마</li>
+          </ul>
+        </section>
+
+        <!-- ==================== 슬라이드 14: 프론트엔드 — 임보 가이드 페이지 ==================== -->
+        <section>
+          <h2>📖 임시보호 가이드 페이지 — 4단계 안내</h2>
+          <p class="small" style="color: #90e0ef">GuideFosterPage.tsx</p>
+          <div style="text-align: center; font-size: 0.9em; line-height: 2.8">
+            <span class="badge badge-blue">1️⃣ 신청서 작성</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-blue">2️⃣ 가정환경 점검</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-blue">3️⃣ 계약서 작성</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-blue">4️⃣ 동물 인수</span>
+          </div>
+          <ul style="margin-top: 20px">
+            <li>구조·디자인은 입양 가이드와 동일 (파란색 테마)</li>
+            <li>
+              <strong>GuideCallBlock</strong> 컴포넌트를 재사용 — 코드 중복
+              최소화
+            </li>
+            <li>입양 가이드(6단계)보다 간소한 절차</li>
+          </ul>
+        </section>
+
+        <!-- ==================== 슬라이드 15: GuideCallBlock 컴포넌트 ==================== -->
+        <section>
+          <h2>📞 GuideCallBlock — 공용 전화연결 컴포넌트</h2>
+          <ul>
+            <li>
+              입양 가이드 + 임보 가이드 페이지 <strong>모두에서 재사용</strong>
+            </li>
+            <li>동물의 유기번호 / 보호소명 / 담당자 전화번호 표시</li>
+            <li>
+              <strong>"예시 문구 복사"</strong> 기능 — 클립보드에 전화할 때 쓸
+              멘트 복사
+            </li>
+            <li>
+              입양 = 🟢 <code>green</code> 스타일 / 임보 = 🔵
+              <code>blue</code> 스타일로 분기
+            </li>
+          </ul>
+          <div class="highlight-box small" style="margin-top: 16px">
+            <strong>재사용 컴포넌트 설계:</strong> 하나의 컴포넌트를 만들어 여러
+            페이지에서 재사용 → 유지보수 용이. 마치 같은 전화기를 녹색
+            케이스(입양)와 파란색 케이스(임보)로 바꿔 쓰는 것!
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 16: 검증 & 에러 핸들링 ==================== -->
+        <section>
+          <h2>🛡️ 검증 & 에러 핸들링</h2>
+          <div class="two-col">
+            <div>
+              <h3 style="color: #52b788">입력 검증 (@Valid)</h3>
+              <ul class="small">
+                <li>animalId — <code>@NotNull</code> 필수</li>
+                <li>type — <code>@NotNull</code> 필수</li>
+                <li>familyAgreement — <code>@NotNull</code> 필수</li>
+              </ul>
+            </div>
+            <div>
+              <h3 style="color: #e76f51">비즈니스 검증</h3>
+              <ul class="small">
+                <li>본인 신청만 취소 가능 → <strong>403</strong></li>
+                <li>PENDING 상태에서만 취소 → <strong>400</strong></li>
+                <li>존재하지 않는 신청 → <strong>404</strong></li>
+              </ul>
+            </div>
+          </div>
+          <pre
+            style="margin-top: 12px"
+          ><code class="language-java">// cancel() 메서드의 2중 검증
+if (!adoption.getUser().getId().equals(userId))
+    throw new CustomException("본인의 신청만 취소", FORBIDDEN);  // 403
+
+if (adoption.getStatus() != PENDING)
+    throw new CustomException("대기 중인 신청만 취소", BAD_REQUEST);  // 400</code></pre>
+          <div class="analogy-box small">
+            💡 식당 예약 취소와 같아요 — "본인 예약만 취소", "아직 방문 전인
+            예약만 취소 가능"
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 17: 통합 설계 — 왜 하나의 테이블? ==================== -->
+        <section>
+          <h2>🔗 입양 vs 임시보호 — 왜 하나의 테이블?</h2>
+          <div class="two-col">
+            <div>
+              <h3 style="color: #e76f51">❌ 분리 설계 (비추)</h3>
+              <ul class="small">
+                <li>adoption_table + fostering_table</li>
+                <li>거의 같은 컬럼 중복</li>
+                <li>Controller도 2개, Service도 2개</li>
+                <li>수정 시 양쪽 다 고쳐야 함</li>
+              </ul>
+            </div>
+            <div>
+              <h3 style="color: #52b788">✅ 통합 설계 (채택)</h3>
+              <ul class="small">
+                <li>adoptions 테이블 1개</li>
+                <li><code>AdoptionType</code> Enum으로 구분</li>
+                <li>Controller 1개, Service 1개</li>
+                <li>수정 시 한 곳만 고치면 됨!</li>
+              </ul>
+            </div>
+          </div>
+          <div class="analogy-box small" style="margin-top: 16px">
+            💡 <strong>비유:</strong> 병원에서 "외래 접수증"과 "입원 접수증"을
+            따로 만들 필요 없이,<br />
+            하나의 접수증 양식에 "외래/입원"을 체크하는 칸만 추가하면 되는 것과
+            같습니다.
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 18: 전체 시퀀스 다이어그램 ==================== -->
+        <section>
+          <h2>🔄 전체 시퀀스 — 신청부터 승인까지</h2>
+          <div style="font-size: 0.75em; line-height: 2.3; text-align: center">
+            <strong style="color: #90e0ef">1. 사용자 신청</strong><br />
+            <span class="badge badge-blue">Browser</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-blue">adoption.ts</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-green">Controller</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-green">Service</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-gray">DB 저장</span>
+            <br />
+            <span style="color: #888"
+              >　　　　　　　　　　　　↳ 📧 신청자 이메일 + 🔔 관리자 알림</span
+            >
+            <br /><br />
+            <strong style="color: #52b788">2. 관리자 처리</strong><br />
+            <span class="badge badge-yellow">Admin 대시보드</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-green">approve() / reject()</span>
+            <span class="flow-arrow"> → </span>
+            <span class="badge badge-gray">상태 변경</span>
+            <br />
+            <span style="color: #888"
+              >　　　　　　　　　　　　↳ 📧 승인/거절 이메일 발송</span
+            >
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 19: 정리 & 핵심 포인트 ==================== -->
+        <section>
+          <h2>📌 정리 — 오늘 배운 핵심 5가지</h2>
+          <ol>
+            <li>
+              <strong>3-Layer 아키텍처:</strong> React → Spring Boot →
+              PostgreSQL
+            </li>
+            <li>
+              <strong>통합 설계:</strong> 입양 + 임시보호를
+              <code>AdoptionType</code> Enum으로 하나의 테이블에 관리
+            </li>
+            <li>
+              <strong>상태 머신:</strong> PENDING → APPROVED / REJECTED /
+              CANCELLED (최종 상태 = 되돌릴 수 없음)
+            </li>
+            <li>
+              <strong>알림 자동화:</strong> 신청/승인/거절 시 이메일 + 인앱 알림
+              자동 발송
+            </li>
+            <li>
+              <strong>방어적 프로그래밍:</strong> 2중 검증 (권한 + 상태) →
+              잘못된 요청 차단
+            </li>
+          </ol>
+          <div class="highlight-box small" style="margin-top: 16px">
+            <strong>기억할 비유:</strong>
+            Entity = 서류 양식 &nbsp;|&nbsp; Repository = 서류 보관함
+            &nbsp;|&nbsp; Service = 담당 직원 &nbsp;|&nbsp; Controller = 접수
+            창구
+          </div>
+        </section>
+
+        <!-- ==================== 슬라이드 20: Q&A ==================== -->
+        <section
+          class="slide-title"
+          data-background-gradient="linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)"
+        >
+          <h1>❓ Q & A</h1>
+          <p
+            style="
+              text-align: center;
+              color: #aaa;
+              font-size: 0.8em;
+              margin-top: 1em;
+            "
+          >
+            질문 있으시면 편하게 해주세요!
+          </p>
+          <p
+            style="
+              text-align: center;
+              color: #52b788;
+              font-size: 0.7em;
+              margin-top: 2em;
+            "
+          >
+            62DN (62댕냥) — 입양/임시보호 기능 강의
+          </p>
+          <p
+            style="
+              text-align: center;
+              color: #666;
+              font-size: 0.55em;
+              margin-top: 1em;
+            "
+          >
+            감사합니다 🐾
+          </p>
+        </section>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/plugin/highlight/highlight.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        slideNumber: "c/t",
+        width: 1280,
+        height: 720,
+        margin: 0.08,
+        plugins: [RevealHighlight],
+        transition: "slide",
+        transitionSpeed: "default",
+      });
+    </script>
+  </body>
+</html>
