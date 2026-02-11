@@ -14,9 +14,9 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
+          java-version: "21"
+          distribution: "temurin"
+          cache: "gradle"
 
       - name: Build Backend
         run: |
@@ -27,8 +27,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: Build Frontend
@@ -36,6 +36,9 @@ jobs:
           VITE_API_BASE_URL: /api
           VITE_MAP_API_KEY: ${{ secrets.VITE_MAP_API_KEY }}
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          VITE_GOOGLE_REDIRECT_URI: ${{ secrets.VITE_GOOGLE_REDIRECT_URI }}
+          VITE_KAKAO_CLIENT_ID: ${{ secrets.VITE_KAKAO_CLIENT_ID }}
+          VITE_KAKAO_REDIRECT_URI: ${{ secrets.VITE_KAKAO_REDIRECT_URI }}
         run: |
           cd frontend
           npm ci
@@ -81,7 +84,7 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 5m
-          envs: RDS_ENDPOINT,RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,JWT_ACCESS_VALIDITY,JWT_REFRESH_VALIDITY,RESEND_API_KEY,RESEND_FROM_EMAIL,DATA_API_KEY,FRONTEND_URL,PUBLIC_API_SYNC_ENABLED,PUBLIC_API_SYNC_CRON
+          envs: RDS_ENDPOINT,RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,JWT_ACCESS_VALIDITY,JWT_REFRESH_VALIDITY,RESEND_API_KEY,RESEND_FROM_EMAIL,DATA_API_KEY,FRONTEND_URL,PUBLIC_API_SYNC_ENABLED,PUBLIC_API_SYNC_CRON,KAKAO_CLIENT_ID,KAKAO_CLIENT_SECRET,KAKAO_REDIRECT_URI,GOOGLE_CLIENT_ID,GOOGLE_REDIRECT_URI
           script: |
             set -e
             cd /home/ec2-user
@@ -159,7 +162,12 @@ jobs:
               --public-api.sync-enabled="${PUBLIC_API_SYNC_ENABLED:-false}" \
               --public-api.sync-cron="${PUBLIC_API_SYNC_CRON:-0 0 17 * * *}" \
               --app.frontend-url="${FRONTEND_URL}" \
-              --cors.allowed-origins="${CORS_ORIGINS}"
+              --cors.allowed-origins="${CORS_ORIGINS}" \
+              --KAKAO_CLIENT_ID="${KAKAO_CLIENT_ID}" \
+              --KAKAO_CLIENT_SECRET="${KAKAO_CLIENT_SECRET}" \
+              --KAKAO_REDIRECT_URI="${KAKAO_REDIRECT_URI}" \
+              --GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}" \
+              --GOOGLE_REDIRECT_URI="${GOOGLE_REDIRECT_URI}"
             START
             sed -i 's/^[[:space:]]*//' app/start.sh
             chmod +x app/start.sh
@@ -210,3 +218,8 @@ jobs:
           FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
           PUBLIC_API_SYNC_ENABLED: ${{ secrets.PUBLIC_API_SYNC_ENABLED }}
           PUBLIC_API_SYNC_CRON: ${{ secrets.PUBLIC_API_SYNC_CRON }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
