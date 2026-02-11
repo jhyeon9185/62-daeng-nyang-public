@@ -789,7 +789,8 @@ body.toss-menu-open {
   gap: 0;
   border-bottom: 2px solid var(--toss-gray-300);
   margin-bottom: var(--toss-space-6);
-  overflow-x: auto;
+  flex-wrap: wrap;
+  /* 스크롤 대신 줄바꿈 */
 }
 
 .admin-tab {

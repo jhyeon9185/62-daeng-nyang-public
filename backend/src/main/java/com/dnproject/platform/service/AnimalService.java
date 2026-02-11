@@ -31,21 +31,25 @@ public class AnimalService {
     private final PreferenceService preferenceService;
 
     @Transactional(readOnly = true)
-    public PageResponse<AnimalResponse> findAll(Species species, AnimalStatus status, Size size, String region, String sigungu, String search, Pageable pageable) {
+    public PageResponse<AnimalResponse> findAll(Species species, AnimalStatus status, Size size, String region,
+            String sigungu, String search, Pageable pageable) {
         String regionParam = (region != null && !region.isBlank()) ? region.trim() : null;
         String sigunguParam = (sigungu != null && !sigungu.isBlank()) ? sigungu.trim() : null;
         String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
-        Page<Animal> page = animalRepository.findWithFilters(species, status, size, regionParam, sigunguParam, searchParam, pageable);
+        Page<Animal> page = animalRepository.findWithFilters(species, status, size, regionParam, sigunguParam,
+                searchParam, pageable);
         return toPageResponse(page);
     }
 
     /** 필터 동일 + 랜덤 정렬 (많은 아이들이 골고루 노출되도록) */
     @Transactional(readOnly = true)
-    public PageResponse<AnimalResponse> findAllRandom(Species species, AnimalStatus status, Size size, String region, String sigungu, String search, Pageable pageable) {
+    public PageResponse<AnimalResponse> findAllRandom(Species species, AnimalStatus status, Size size, String region,
+            String sigungu, String search, Pageable pageable) {
         String regionParam = (region != null && !region.isBlank()) ? region.trim() : null;
         String sigunguParam = (sigungu != null && !sigungu.isBlank()) ? sigungu.trim() : null;
         String searchParam = (search != null && !search.isBlank()) ? search.trim() : null;
-        Page<Animal> page = animalRepository.findWithFiltersRandom(species, status, size, regionParam, sigunguParam, searchParam, pageable);
+        Page<Animal> page = animalRepository.findWithFiltersRandom(species, status, size, regionParam, sigunguParam,
+                searchParam, pageable);
         return toPageResponse(page);
     }
 
@@ -99,17 +103,28 @@ public class AnimalService {
                     .orElseThrow(() -> new NotFoundException("보호소를 찾을 수 없습니다."));
             animal.setShelter(shelter);
         }
-        if (request.getSpecies() != null) animal.setSpecies(request.getSpecies());
-        if (request.getBreed() != null) animal.setBreed(request.getBreed());
-        if (request.getName() != null) animal.setName(request.getName());
-        if (request.getAge() != null) animal.setAge(request.getAge());
-        if (request.getGender() != null) animal.setGender(request.getGender());
-        if (request.getSize() != null) animal.setSize(request.getSize());
-        if (request.getDescription() != null) animal.setDescription(request.getDescription());
-        if (request.getImageUrl() != null) animal.setImageUrl(request.getImageUrl());
-        if (request.getNeutered() != null) animal.setNeutered(request.getNeutered());
-        if (request.getVaccinated() != null) animal.setVaccinated(request.getVaccinated());
-        if (request.getStatus() != null) animal.setStatus(request.getStatus());
+        if (request.getSpecies() != null)
+            animal.setSpecies(request.getSpecies());
+        if (request.getBreed() != null)
+            animal.setBreed(request.getBreed());
+        if (request.getName() != null)
+            animal.setName(request.getName());
+        if (request.getAge() != null)
+            animal.setAge(request.getAge());
+        if (request.getGender() != null)
+            animal.setGender(request.getGender());
+        if (request.getSize() != null)
+            animal.setSize(request.getSize());
+        if (request.getDescription() != null)
+            animal.setDescription(request.getDescription());
+        if (request.getImageUrl() != null)
+            animal.setImageUrl(request.getImageUrl());
+        if (request.getNeutered() != null)
+            animal.setNeutered(request.getNeutered());
+        if (request.getVaccinated() != null)
+            animal.setVaccinated(request.getVaccinated());
+        if (request.getStatus() != null)
+            animal.setStatus(request.getStatus());
         animal = animalRepository.save(animal);
         return toResponse(animal);
     }
@@ -124,8 +139,9 @@ public class AnimalService {
 
     /**
      * 공공데이터포털 유기동물 API → DB 동기화
-     * @param days 최근 N일 데이터
-     * @param maxPages 최대 페이지 수 (null이면 전부)
+     * 
+     * @param days          최근 N일 데이터
+     * @param maxPages      최대 페이지 수 (null이면 전부)
      * @param speciesFilter DOG, CAT 또는 null(전체)
      */
     @Transactional
@@ -157,8 +173,9 @@ public class AnimalService {
         List<String> regions = (pref.getRegions() != null && !pref.getRegions().isEmpty())
                 ? pref.getRegions().stream().map(String::trim).filter(s -> !s.isBlank()).toList()
                 : null;
-        List<AnimalStatus> statuses = List.of(AnimalStatus.PROTECTED, AnimalStatus.FOSTERING);
-        Page<Animal> page = animalRepository.findRecommended(statuses, species, minAge, maxAge, size, regions, pageable);
+        List<AnimalStatus> statuses = List.of(AnimalStatus.PROTECTED);
+        Page<Animal> page = animalRepository.findRecommended(statuses, species, minAge, maxAge, size, regions,
+                pageable);
         return PageResponse.<AnimalResponse>builder()
                 .content(page.getContent().stream().map(this::toResponse).toList())
                 .page(page.getNumber())
@@ -172,6 +189,7 @@ public class AnimalService {
 
     /**
      * 기존 DB에 쌓인 ADOPTED 및 status=NULL 동물 일괄 정리.
+     * 
      * @return [adoptedDeleted, nullDeleted]
      */
     @Transactional
@@ -182,7 +200,7 @@ public class AnimalService {
         var nullAnimals = animalRepository.findAllByStatusIsNull();
         animalRepository.deleteAll(nullAnimals);
 
-        return new int[]{(int) adoptedCount, nullAnimals.size()};
+        return new int[] { (int) adoptedCount, nullAnimals.size() };
     }
 
     /** 다른 서비스에서 Animal -> AnimalResponse 변환 시 사용 */
@@ -195,8 +213,10 @@ public class AnimalService {
         String shelterName = shelter != null ? shelter.getName() : null;
         String shelterAddress = shelter != null ? shelter.getAddress() : null;
         String shelterPhone = shelter != null ? shelter.getPhone() : null;
-        Double shelterLat = shelter != null && shelter.getLatitude() != null ? shelter.getLatitude().doubleValue() : null;
-        Double shelterLng = shelter != null && shelter.getLongitude() != null ? shelter.getLongitude().doubleValue() : null;
+        Double shelterLat = shelter != null && shelter.getLatitude() != null ? shelter.getLatitude().doubleValue()
+                : null;
+        Double shelterLng = shelter != null && shelter.getLongitude() != null ? shelter.getLongitude().doubleValue()
+                : null;
         return AnimalResponse.builder()
                 .id(a.getId())
                 .publicApiAnimalId(a.getPublicApiAnimalId())
