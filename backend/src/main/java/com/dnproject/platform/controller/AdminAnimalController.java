@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * 관리자 전용 - 동물 공공API 동기화 및 동기화 이력 // TODO: 관리자 전용 API
+ * 관리자 전용 - 동물 공공API 동기화 및 동기화 이력 //
  */
 @Tag(name = "Admin - Animal", description = "관리자 동물 API")
 @RestController
