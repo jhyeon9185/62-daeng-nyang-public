@@ -60,3 +60,4 @@ terraform/terraform.tfvars
 *.seed
 *.pid.lock
 .antigravityrules
+.notes
