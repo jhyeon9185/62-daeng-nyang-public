@@ -23,6 +23,39 @@
 
 ---
 
+## 📖 영어 약자 용어집 (Glossary)
+
+| 약자 | 풀네임 (Full Name) | 한국어 설명 |
+|:---:|---|---|
+| **API** | Application Programming Interface | 애플리케이션 간 통신을 위한 인터페이스 |
+| **REST** | Representational State Transfer | 리소스 기반의 아키텍처 스타일 |
+| **CORS** | Cross-Origin Resource Sharing | 교차 출처 리소스 공유 (브라우저 보안 정책) |
+| **JWT** | JSON Web Token | JSON 기반의 인증 토큰 |
+| **SPA** | Single Page Application | 단일 페이지 애플리케이션 |
+| **SSR** | Server-Side Rendering | 서버 측 렌더링 |
+| **CSRF** | Cross-Site Request Forgery | 사이트 간 요청 위조 공격 |
+| **HTTP** | HyperText Transfer Protocol | 웹 통신 프로토콜 |
+| **JSON** | JavaScript Object Notation | 경량 데이터 교환 형식 |
+| **URL** | Uniform Resource Locator | 웹 리소스 주소 |
+| **HTML** | HyperText Markup Language | 웹 페이지 마크업 언어 |
+| **JSP** | JavaServer Pages | Java 기반 서버 측 웹 페이지 기술 |
+| **SEO** | Search Engine Optimization | 검색 엔진 최적화 |
+| **CRUD** | Create, Read, Update, Delete | 생성, 조회, 수정, 삭제 (기본 데이터 조작) |
+| **DTO** | Data Transfer Object | 계층 간 데이터 전달 객체 |
+| **JPA** | Java Persistence API | Java 객체-관계 매핑 표준 |
+| **DB** | Database | 데이터베이스 |
+| **HMAC** | Hash-based Message Authentication Code | 해시 기반 메시지 인증 코드 |
+| **SHA** | Secure Hash Algorithm | 보안 해시 알고리즘 |
+| **XSS** | Cross-Site Scripting | 사이트 간 스크립팅 공격 |
+| **ISO** | International Organization for Standardization | 국제 표준화 기구 |
+| **AWS** | Amazon Web Services | 아마존 클라우드 서비스 |
+| **CI/CD** | Continuous Integration / Continuous Deployment | 지속적 통합 / 지속적 배포 |
+| **IaC** | Infrastructure as Code | 코드로 관리하는 인프라 |
+| **BCrypt** | Blowfish Crypt | Blowfish 기반 비밀번호 해싱 알고리즘 |
+| **OWASP** | Open Web Application Security Project | 웹 애플리케이션 보안 오픈 프로젝트 |
+
+---
+
 ## 🗺️ 이 문서의 전체 흐름 미리보기
 
 ```mermaid
@@ -356,6 +389,8 @@ public class CorsConfig {
 
 ### `application.yml`에서 CORS Origin 설정
 
+> 👉 **코드 보기**: [`application.yml`](../backend/src/main/resources/application.yml) (메인 설정 파일)
+
 ```yaml
 # CORS (쉼표로 구분된 Origin 목록)
 cors:
@@ -389,20 +424,56 @@ public class SecurityConfig {
 > **왜 SecurityConfig에서도 CORS를 설정하나?**
 > Spring Security는 자체적으로 요청을 필터링한다. `CorsConfig`만 있으면 Spring MVC 레벨에서만 CORS가 적용되고, Security 필터에서 먼저 차단당할 수 있다. Security에 명시적으로 CORS 설정을 전달해야 **Security 필터 체인에서도 CORS 응답 헤더가 올바르게 추가**된다.
 
-### 운영 환경세팅: 실제 배포 시
+### 운영 환경세팅: 실제 배포 시 (이 프로젝트의 방식)
 
-운영(Production) 서버에서는 `application-prod.yml`을 통해 **실제 서비스 도메인**을 허용해야 합니다.
+> 👉 **코드 보기**: [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) (CI/CD 배포 스크립트)
 
-```yaml
-# application-prod.yml
-cors:
-  allowed-origins: https://www.62dangnyang.com,https://admin.62dangnyang.com
+이 프로젝트에서는 `application-prod.yml`에 CORS를 직접 적는 대신, **GitHub Actions 배포 스크립트(`deploy.yml`)에서 동적으로 CORS를 주입**합니다.
+
+#### 1단계: GitHub Secrets에 프론트엔드 URL 등록
+
+GitHub 저장소 → **Settings → Secrets and variables → Actions**에서 `FRONTEND_URL`을 등록합니다:
+
+```text
+FRONTEND_URL = http://13.125.175.126
 ```
 
-또는 배포 시 환경 변수로 주입합니다:
+> 도메인을 연결한 경우: `FRONTEND_URL = https://www.62dangnyang.com`
+
+#### 2단계: deploy.yml에서 CORS Origin 동적 구성
+
+배포 스크립트가 EC2 서버에서 실행될 때, `FRONTEND_URL` 값을 로컬 개발 Origin과 합쳐서 CORS 허용 목록을 만듭니다:
 
 ```bash
-export CORS_ALLOWED_ORIGINS="https://www.62dangnyang.com,https://admin.62dangnyang.com"
+# .github/workflows/deploy.yml (144~148라인)
+if [ -n "${FRONTEND_URL}" ]; then
+  CORS_ORIGINS="http://localhost:5173,http://localhost:3000,${FRONTEND_URL}"
+else
+  CORS_ORIGINS="http://localhost:5173,http://localhost:3000"
+fi
+```
+
+#### 3단계: Java 실행 시 명령줄 인자로 주입
+
+구성된 `CORS_ORIGINS` 값을 Spring Boot 실행 인자(`--cors.allowed-origins`)로 전달합니다:
+
+```bash
+# .github/workflows/deploy.yml (152, 165라인)
+exec java -jar -Dspring.profiles.active=prod platform-0.0.1-SNAPSHOT.jar \
+  --cors.allowed-origins="${CORS_ORIGINS}" \
+  ...
+```
+
+> **왜 이 방식이 동작하는가?**
+>
+> Spring Boot의 설정 우선순위에 따라, **명령줄 인자(`--key=value`)** 는 `application.yml`이나 `application-prod.yml`의 값보다 **더 높은 우선순위**를 가집니다. 따라서 `application.yml`에 `localhost`만 적혀 있어도, 실제 서버에서는 배포 스크립트가 주입한 실제 도메인이 적용됩니다.
+
+```text
+설정 우선순위 (높음 → 낮음):
+1. 명령줄 인자 (--cors.allowed-origins=...)   ← deploy.yml이 여기서 주입
+2. 환경 변수 (CORS_ALLOWED_ORIGINS)
+3. application-prod.yml
+4. application.yml                              ← 로컬 개발용 기본값
 ```
 
 > **핵심 정리**
@@ -606,6 +677,8 @@ public class SecurityConfig {
 ```
 
 ### 규칙 순서가 왜 중요한가 — 구체적인 예시
+
+> 👉 **코드 보기**: [`SecurityConfig.java`](../backend/src/main/java/com/dnproject/platform/config/SecurityConfig.java) (접근 제어 규칙 순서 확인)
 
 ```
 요청: GET /api/animals/recommendations
@@ -1134,6 +1207,8 @@ axiosInstance.interceptors.response.use(
 
 ### `_retry` 플래그의 역할
 
+> 👉 **코드 보기**: [`axios.ts`](../frontend/src/lib/axios.ts) (Response Interceptor에서 `_retry` 사용부분)
+
 ```
 [만약 _retry가 없다면]
 요청 실패(401) → 갱신 시도 → 갱신도 401 → 갱신 시도 → 갱신도 401 → ... 무한 루프!
@@ -1145,6 +1220,8 @@ axiosInstance.interceptors.response.use(
 ```
 
 ### 토큰 갱신 시 왜 `axiosInstance`가 아닌 일반 `axios`를 사용하나?
+
+> 👉 **코드 보기**: [`axios.ts`](../frontend/src/lib/axios.ts) (토큰 갱신 로직)
 
 ```typescript
 // ❌ 이렇게 하면: axiosInstance의 interceptor가 다시 동작 → 무한 루프 위험
@@ -1312,6 +1389,8 @@ public class ApiResponse<T> {
 ```
 
 **사용 예시 (컨트롤러):**
+
+> 👉 **코드 보기**: [`AnimalController.java`](../backend/src/main/java/com/dnproject/platform/controller/AnimalController.java) | [`AuthController.java`](../backend/src/main/java/com/dnproject/platform/controller/AuthController.java)
 
 ```java
 // 목록 조회 → 200
@@ -1486,6 +1565,8 @@ public class PageResponse<T> {
 
 **컨트롤러에서 사용 예시:**
 
+> 👉 **코드 보기**: [`AnimalController.java`](../backend/src/main/java/com/dnproject/platform/controller/AnimalController.java) (페이지네이션 적용 예시)
+
 ```java
 @GetMapping("/api/animals")
 public ApiResponse<PageResponse<AnimalResponse>> getAnimals(
@@ -1509,6 +1590,8 @@ public ApiResponse<PageResponse<AnimalResponse>> getAnimals(
 ```
 
 ### 프론트엔드에서 응답 처리 패턴
+
+> 👉 **코드 보기**: [`axios.ts`](../frontend/src/lib/axios.ts) (Axios 인스턴스) | [`animal.ts`](../frontend/src/api/animal.ts) (동물 API 호출) | [`auth.ts`](../frontend/src/api/auth.ts) (인증 API 호출)
 
 ```typescript
 import { axiosInstance } from '@/lib/axios';

@@ -52,7 +52,7 @@ public class SecurityConfig {
                                 // - Security 필터 체인 앞단에서 CORS 처리 (브라우저 preflight 요청 허용 등)
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
 
-                                // 2. CSRF 비활성화 (JWT 사용이므로)
+                                // 2. CSRF(Cross-Site Request Forgery: 사이트간 요청 위조) 비활성화 (JWT 사용이므로)
                                 // - CSRF는 세션/쿠키 기반 인증에서 발생하는 취약점입니다.
                                 // - JWT는 Authorization 헤더에 토큰을 담아 보내므로 CSRF 보호가 불필요합니다.
                                 .csrf(AbstractHttpConfigurer::disable)
@@ -80,11 +80,10 @@ public class SecurityConfig {
 
                                                 // ④ SUPER_ADMIN 전용
                                                 // - 특정 관리자 기능은 SUPER_ADMIN 권한을 가진 사용자만 접근 가능합니다.
-                                                .requestMatchers("/api/admin/users", "/api/admin/users/**",
-                                                                "/api/admin/boards", "/api/admin/boards/**")
-                                                .hasRole("SUPER_ADMIN")
-                                                .requestMatchers("/api/admin/applications",
-                                                                "/api/admin/applications/**")
+                                                // 한 줄로 깔끔하게!
+                                                .requestMatchers("/api/admin/users/**", // 사용자 관리
+                                                                "/api/admin/boards/**", // 게시판 관리
+                                                                "/api/admin/applications/**") // 신청 관리
                                                 .hasRole("SUPER_ADMIN")
 
                                                 // ⑤ SUPER_ADMIN 또는 SHELTER_ADMIN
