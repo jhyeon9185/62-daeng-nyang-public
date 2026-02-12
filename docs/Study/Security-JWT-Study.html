@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security & JWT 인증 시스템 스터디</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 4px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #2980b9;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 5px solid #3498db;
+        }
+        
+        h3 {
+            color: #34495e;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        h4 {
+            color: #7f8c8d;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+        }
+        
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e74c3c;
+        }
+        
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        pre code {
+            background: none;
+            color: #ecf0f1;
+            padding: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background: #3498db;
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .box {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        
+        .danger {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .flow {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .badge-blue {
+            background: #3498db;
+            color: white;
+        }
+        
+        .badge-green {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .badge-red {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .badge-yellow {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .toc a {
+            color: #2980b9;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Security & JWT 인증 시스템 스터디</h1>
+        
+        <div class="toc">
+            <h3>📑 목차</h3>
+            <ul>
+                <li><a href="#q1">1. Spring Security 단독 vs JWT 토큰</a></li>
+                <li><a href="#q2">2. HMAC-SHA 알고리즘과 JWT_SECRET</a></li>
+                <li><a href="#q3">3. JWT Filter 검증 시점</a></li>
+                <li><a href="#q4">4. 일반 회원가입과 Refresh Token</a></li>
+                <li><a href="#study">5. 스터디 추천 주제 상세</a></li>
+            </ul>
+        </div>
+
+        <h2 id="q1">1️⃣ Spring Security 단독 vs JWT 토큰</h2>
+        
+        <h3>Spring Security 단독 사용 (세션 기반)</h3>
+        <div class="flow">
+로그인 → 서버에 세션 생성 → JSESSIONID 쿠키 발급 → 매 요청마다 쿠키로 세션 확인
+        </div>
+        
+        <div class="box">
+            <strong>특징:</strong>
+            <ul>
+                <li>서버 메모리에 세션 저장 (Stateful)</li>
+                <li>쿠키에 세션 ID만 저장</li>
+                <li>서버가 세션을 직접 관리 (로그아웃 시 즉시 무효화 가능)</li>
+                <li>서버 증설 시 세션 공유 필요 (Redis 등)</li>
+            </ul>
+        </div>
+
+        <h3>JWT 토큰 방식</h3>
+        <div class="flow">
+로그인 → JWT 발급 → 클라이언트가 토큰 저장 → 매 요청마다 토큰 전송
+        </div>
+        
+        <div class="box">
+            <strong>특징:</strong>
+            <ul>
+                <li>서버에 상태 저장 안 함 (Stateless)</li>
+                <li>토큰 자체에 사용자 정보 포함</li>
+                <li>서버는 서명만 검증</li>
+                <li>서버 증설 자유로움</li>
+            </ul>
+        </div>
+
+        <h3>비교표</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>구분</th>
+                    <th>세션 (Spring Security 단독)</th>
+                    <th>JWT</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>저장 위치</strong></td>
+                    <td>서버 메모리/Redis</td>
+                    <td>클라이언트 (LocalStorage/Cookie)</td>
+                </tr>
+                <tr>
+                    <td><strong>상태 관리</strong></td>
+                    <td>Stateful</td>
+                    <td>Stateless</td>
+                </tr>
+                <tr>
+                    <td><strong>확장성</strong></td>
+                    <td>서버 증설 시 세션 공유 필요</td>
+                    <td>서버 증설 자유로움</td>
+                </tr>
+                <tr>
+                    <td><strong>로그아웃</strong></td>
+                    <td>즉시 무효화 가능</td>
+                    <td>만료까지 유효 (블랙리스트 필요)</td>
+                </tr>
+                <tr>
+                    <td><strong>보안 취약점</strong></td>
+                    <td>CSRF 공격</td>
+                    <td>XSS 공격</td>
+                </tr>
+                <tr>
+                    <td><strong>서버 부하</strong></td>
+                    <td>매 요청마다 세션 조회</td>
+                    <td>서명 검증만 (DB 조회 없음)</td>
+                </tr>
+                <tr>
+                    <td><strong>모바일 앱</strong></td>
+                    <td>쿠키 관리 어려움</td>
+                    <td>토큰 관리 쉬움</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>어떤 게 더 나은가?</h3>
+        
+        <div class="box success">
+            <strong>✅ JWT가 유리한 경우 (현재 프로젝트):</strong>
+            <ul>
+                <li>MSA (마이크로서비스) 아키텍처</li>
+                <li>모바일 앱 + 웹 동시 지원</li>
+                <li>서버 확장이 자주 필요한 경우</li>
+                <li>API 서버 (프론트엔드 분리)</li>
+                <li>REST API 중심</li>
+            </ul>
+        </div>
+
+        <div class="box">
+            <strong>세션이 유리한 경우:</strong>
+            <ul>
+                <li>즉시 로그아웃 필요 (보안 매우 중요)</li>
+                <li>단일 서버 환경</li>
+                <li>전통적인 웹 애플리케이션 (SSR)</li>
+            </ul>
+        </div>
+
+        <div class="box warning">
+            <strong>⭐ 현재 트렌드:</strong> JWT가 대세! 특히 REST API, SPA, 모바일 앱에서는 거의 표준입니다.
+        </div>
+
+
+        <h2 id="q2">2️⃣ HMAC-SHA 알고리즘과 JWT_SECRET</h2>
+        
+        <h3>HMAC-SHA란?</h3>
+        <div class="box">
+            <p><strong>HMAC</strong> = Hash-based Message Authentication Code</p>
+            <p><strong>SHA</strong> = Secure Hash Algorithm</p>
+        </div>
+
+        <div class="flow">
+JWT 서명 = HMAC-SHA256(Header + Payload, Secret Key)
+        </div>
+
+        <h3>동작 원리</h3>
+        
+        <h4>1. JWT 생성</h4>
+        <pre><code>// Header
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+// Payload
+{
+  "sub": "user@example.com",
+  "role": "USER",
+  "userId": 123,
+  "exp": 1735689600
+}
+
+// Signature 생성
+signature = HMAC_SHA256(
+  base64(header) + "." + base64(payload),
+  "my-secret-key-12345"
+)
+
+// 최종 JWT
+eyJhbGc... . eyJzdWI... . a8f3d9e...</code></pre>
+
+        <h4>2. JWT 검증</h4>
+        <pre><code>// 받은 JWT를 . 으로 분리
+[header, payload, signature] = jwt.split('.')
+
+// 같은 방식으로 서명 재생성
+newSignature = HMAC_SHA256(
+  header + "." + payload,
+  "my-secret-key-12345"
+)
+
+// 비교
+if (newSignature === signature) {
+  // 검증 성공 (위변조 없음)
+} else {
+  // 검증 실패 (위변조됨)
+}</code></pre>
+
+        <h3>JWT_SECRET vs OAuth Secret Key</h3>
+        
+        <div class="box danger">
+            <strong>⚠️ 완전히 다릅니다!</strong>
+        </div>
+
+        <h4>JWT_SECRET (현재 프로젝트)</h4>
+        <pre><code># application.yml
+jwt:
+  secret: your-256-bit-secret-key  # 내가 만든 비밀 키</code></pre>
+
+        <ul>
+            <li><span class="badge badge-blue">용도</span> JWT 서명/검증에 사용</li>
+            <li><span class="badge badge-green">관리</span> 내 서버에서만 사용</li>
+            <li><span class="badge badge-yellow">생성</span> 내가 직접 랜덤 문자열 생성</li>
+            <li><span class="badge badge-red">생성 방법</span> <code>openssl rand -base64 32</code></li>
+        </ul>
+
+        <h4>OAuth Secret Key (구글/카카오)</h4>
+        <pre><code># application.yml
+KAKAO_CLIENT_SECRET: abc123...  # 카카오가 발급한 키
+GOOGLE_CLIENT_SECRET: xyz789... # 구글이 발급한 키</code></pre>
+
+        <ul>
+            <li><span class="badge badge-blue">용도</span> OAuth 인증 시 카카오/구글 서버와 통신</li>
+            <li><span class="badge badge-green">관리</span> 카카오/구글 개발자 콘솔에서 발급</li>
+            <li><span class="badge badge-yellow">생성</span> 카카오/구글이 발급</li>
+        </ul>
+
+        <h3>전체 흐름 비교</h3>
+        
+        <h4>일반 로그인</h4>
+        <div class="flow">
+1. 사용자: 이메일/비밀번호 입력
+2. 서버: 비밀번호 검증
+3. 서버: JWT 발급 (JWT_SECRET 사용) ← 여기!
+4. 클라이언트: JWT 저장
+        </div>
+
+        <h4>OAuth 로그인 (카카오)</h4>
+        <div class="flow">
+1. 사용자: 카카오 로그인 클릭
+2. 카카오: 로그인 페이지 표시
+3. 사용자: 카카오 로그인
+4. 카카오: Authorization Code 발급
+5. 내 서버: Code로 Access Token 요청 (KAKAO_CLIENT_SECRET 사용)
+6. 카카오: Access Token 발급
+7. 내 서버: Access Token으로 사용자 정보 요청
+8. 카카오: 사용자 정보 반환
+9. 내 서버: JWT 발급 (JWT_SECRET 사용) ← 여기!
+10. 클라이언트: JWT 저장
+        </div>
+
+        <div class="box success">
+            <strong>핵심:</strong>
+            <ul>
+                <li>OAuth Secret은 카카오/구글과 통신할 때만 사용</li>
+                <li>JWT_SECRET은 내 서버의 JWT를 만들 때만 사용</li>
+                <li>둘은 완전히 별개!</li>
+            </ul>
+        </div>
+
+        <h2 id="q3">3️⃣ JWT Filter 검증 시점</h2>
+        
+        <div class="box warning">
+            <strong>⚠️ 중요:</strong> 모든 HTTP 요청마다 검증합니다!<br>
+            화면 이동이 아니라 <strong>API 호출마다</strong>!
+        </div>
+
+        <h3>예시 시나리오</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>사용자 행동</th>
+                    <th>API 호출</th>
+                    <th>JWT Filter 실행</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>로그인</td>
+                    <td>POST /api/auth/login</td>
+                    <td>❌ (Public Path)</td>
+                </tr>
+                <tr>
+                    <td>메인 페이지 접속 (화면 이동)</td>
+                    <td>없음 (React Router)</td>
+                    <td>❌</td>
+                </tr>
+                <tr>
+                    <td>동물 목록 조회</td>
+                    <td>GET /api/animals</td>
+                    <td>✅ (검증하지만 Public)</td>
+                </tr>
+                <tr>
+                    <td>동물 상세 클릭 (화면 이동)</td>
+                    <td>없음</td>
+                    <td>❌</td>
+                </tr>
+                <tr>
+                    <td>동물 상세 정보 조회</td>
+                    <td>GET /api/animals/123</td>
+                    <td>✅ (검증하지만 Public)</td>
+                </tr>
+                <tr>
+                    <td>입양 신청 버튼 클릭</td>
+                    <td>POST /api/adoptions</td>
+                    <td>✅ (검증 필수, Protected)</td>
+                </tr>
+                <tr>
+                    <td>내 정보 페이지 이동 (화면 이동)</td>
+                    <td>없음</td>
+                    <td>❌</td>
+                </tr>
+                <tr>
+                    <td>내 정보 조회</td>
+                    <td>GET /api/users/me</td>
+                    <td>✅ (검증 필수, Protected)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="box">
+            <strong>핵심:</strong>
+            <ul>
+                <li>화면 이동 ≠ API 호출</li>
+                <li>JWT Filter는 API 호출할 때만 실행</li>
+                <li>프론트엔드 라우팅은 백엔드와 무관</li>
+            </ul>
+        </div>
+
+        <h3>JWT Filter 동작 과정</h3>
+        <pre><code>// JwtAuthenticationFilter.java
+protected void doFilterInternal(
+    HttpServletRequest request,
+    HttpServletResponse response,
+    FilterChain filterChain) {
+    
+    try {
+        // 1. Authorization 헤더에서 토큰 추출
+        String token = resolveToken(request);
+        // "Authorization: Bearer eyJhbGc..." → "eyJhbGc..."
+        
+        // 2. 토큰이 있고 유효한지 확인
+        if (StringUtils.hasText(token) && 
+            jwtProvider.validateAccessToken(token)) {
+            
+            // 3. 토큰에서 정보 추출
+            Claims claims = jwtProvider.parseAccessToken(token);
+            String email = claims.getSubject();
+            String role = claims.get("role", String.class);
+            Long userId = claims.get("userId", Long.class);
+            
+            // 4. Spring Security 인증 객체 생성
+            Authentication authentication = 
+                new UsernamePasswordAuthenticationToken(
+                    email, null, 
+                    Collections.singletonList(
+                        new SimpleGrantedAuthority("ROLE_" + role)
+                    )
+                );
+            
+            // 5. SecurityContext에 저장
+            SecurityContextHolder.getContext()
+                .setAuthentication(authentication);
+            
+            // 6. request에 userId 저장
+            request.setAttribute("userId", userId);
+        }
+    } catch (Exception ignored) {
+        // 토큰 무효 → 인증 없이 진행
+    }
+    
+    // 7. 다음 필터로 진행
+    filterChain.doFilter(request, response);
+}</code></pre>
+
+        <h3>Public Path vs Protected Path</h3>
+        <pre><code>// SecurityConfig.java
+private static final String[] PUBLIC_PATHS = {
+    "/api/auth/signup",      // 회원가입
+    "/api/auth/login",       // 로그인
+    "/api/animals",          // 동물 목록 (공개)
+    "/api/boards",           // 게시판 (공개)
+};
+
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    http.authorizeHttpRequests(auth -> auth
+        .requestMatchers(PUBLIC_PATHS).permitAll()  // 인증 불필요
+        .requestMatchers("/api/**").authenticated() // 인증 필요
+    );
+}</code></pre>
+
+        <div class="box">
+            <ul>
+                <li><strong>Public Path:</strong> JWT 없어도 접근 가능 (하지만 Filter는 실행됨)</li>
+                <li><strong>Protected Path:</strong> JWT 필수, 없으면 401 Error</li>
+            </ul>
+        </div>
+
+
+        <h2 id="q4">4️⃣ 일반 회원가입과 Refresh Token</h2>
+        
+        <h3>모든 로그인 방식의 최종 목표: JWT 발급</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>방식</th>
+                    <th>과정</th>
+                    <th>JWT 발급</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>일반 회원가입</strong></td>
+                    <td>User 생성 → 회원가입 완료</td>
+                    <td>❌ (이후 로그인 필요)</td>
+                </tr>
+                <tr>
+                    <td><strong>일반 로그인</strong></td>
+                    <td>비밀번호 검증 → JWT 발급</td>
+                    <td>✅</td>
+                </tr>
+                <tr>
+                    <td><strong>구글 로그인</strong></td>
+                    <td>구글 토큰 검증 → User 조회/생성 → JWT 발급</td>
+                    <td>✅</td>
+                </tr>
+                <tr>
+                    <td><strong>카카오 로그인</strong></td>
+                    <td>카카오 토큰 검증 → User 조회/생성 → JWT 발급</td>
+                    <td>✅</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>회원가입 vs 로그인</h3>
+        
+        <h4>일반 회원가입 (JWT 발급 안 함)</h4>
+        <pre><code>// AuthService.java
+public UserResponse signup(SignupRequest request) {
+    // 1. 이메일 중복 체크
+    if (userRepository.existsByEmail(email)) {
+        throw new CustomException("이미 사용 중인 이메일");
+    }
+    
+    // 2. 비밀번호 해싱
+    String encodedPassword = passwordEncoder.encode(password);
+    
+    // 3. User 생성
+    User user = User.builder()
+        .email(email)
+        .password(encodedPassword)
+        .name(name)
+        .role(Role.USER)
+        .build();
+    
+    // 4. DB 저장
+    userRepository.save(user);
+    
+    // 5. UserResponse 반환 (JWT 발급 안 함!)
+    return toUserResponse(user);
+}</code></pre>
+
+        <h4>일반 로그인 (JWT 발급)</h4>
+        <pre><code>// AuthService.java
+public TokenResponse login(LoginRequest request) {
+    // 1. 사용자 조회
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new UnauthorizedException("이메일 또는 비밀번호 오류"));
+    
+    // 2. 비밀번호 검증
+    if (!passwordEncoder.matches(password, user.getPassword())) {
+        throw new UnauthorizedException("이메일 또는 비밀번호 오류");
+    }
+    
+    // 3. JWT 발급
+    String accessToken = jwtProvider.createAccessToken(
+        user.getEmail(), 
+        user.getRole().name(), 
+        user.getId()
+    );
+    String refreshToken = jwtProvider.createRefreshToken(user.getEmail());
+    
+    // 4. TokenResponse 반환
+    return TokenResponse.builder()
+        .accessToken(accessToken)
+        .refreshToken(refreshToken)
+        .tokenType("Bearer")
+        .expiresIn(86400) // 24시간
+        .user(toUserResponse(user))
+        .build();
+}</code></pre>
+
+        <div class="box">
+            <strong>차이점:</strong>
+            <ul>
+                <li><strong>회원가입:</strong> User만 생성, JWT 발급 안 함</li>
+                <li><strong>로그인:</strong> JWT 발급 (일반/구글/카카오 모두 동일)</li>
+            </ul>
+        </div>
+
+        <h3>Refresh Token의 역할</h3>
+        
+        <div class="box warning">
+            <strong>문제 상황:</strong><br>
+            Access Token 만료 시간: 24시간<br>
+            → 24시간마다 다시 로그인? 불편함!
+        </div>
+
+        <div class="box success">
+            <strong>해결책:</strong><br>
+            Refresh Token 만료 시간: 30일<br>
+            → Access Token 만료되면 Refresh Token으로 재발급
+        </div>
+
+        <h3>Refresh Token 동작 코드</h3>
+        <pre><code>// AuthService.java
+public TokenResponse refreshToken(String refreshToken) {
+    // 1. Refresh Token 검증
+    if (!jwtProvider.validateRefreshToken(refreshToken)) {
+        throw new UnauthorizedException("유효하지 않은 갱신 토큰");
+    }
+    
+    // 2. 토큰에서 이메일 추출
+    Claims claims = jwtProvider.parseRefreshToken(refreshToken);
+    String email = claims.getSubject();
+    
+    // 3. 사용자 조회
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new UnauthorizedException("사용자 없음"));
+    
+    // 4. 새로운 토큰 발급
+    String newAccessToken = jwtProvider.createAccessToken(
+        user.getEmail(), 
+        user.getRole().name(), 
+        user.getId()
+    );
+    String newRefreshToken = jwtProvider.createRefreshToken(user.getEmail());
+    
+    // 5. 반환
+    return TokenResponse.builder()
+        .accessToken(newAccessToken)
+        .refreshToken(newRefreshToken)
+        .build();
+}</code></pre>
+
+        <h3>실제 사용 흐름</h3>
+        <div class="flow">
+<strong>Day 1</strong>
+로그인 → Access Token (24h) + Refresh Token (30d)
+
+<strong>Day 2 - Access Token 만료</strong>
+API 호출 → 401 Error
+→ 프론트엔드가 자동으로 Refresh Token으로 재발급 요청
+→ POST /api/auth/refresh
+→ 새 Access Token + Refresh Token 받음
+→ 원래 API 재시도
+
+<strong>Day 31 - Refresh Token도 만료</strong>
+→ 다시 로그인 필요
+        </div>
+
+        <h3>Refresh Token 보안</h3>
+        
+        <div class="box danger">
+            <strong>⚠️ 현재 프로젝트의 한계:</strong>
+            <ul>
+                <li>Refresh Token을 DB에 저장 안 함!</li>
+                <li>→ 탈취되면 만료까지 막을 방법 없음</li>
+            </ul>
+        </div>
+
+        <div class="box success">
+            <strong>✅ 개선 방안:</strong>
+            <pre><code>// Redis에 Refresh Token 저장
+redis.set("refresh:user123", refreshToken, 30일);
+
+// 로그아웃 시
+redis.delete("refresh:user123");  // 즉시 무효화!
+
+// 재발급 시
+if (!redis.exists("refresh:user123")) {
+    throw new UnauthorizedException("로그아웃된 토큰");
+}</code></pre>
+        </div>
+
+        <h2 id="study">5️⃣ 스터디 추천 주제 상세</h2>
+        
+        <h3>1. JWT 심화</h3>
+        
+        <h4>JWT 구조</h4>
+        <pre><code>// Header (알고리즘 정보)
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+// Payload (실제 데이터)
+{
+  "sub": "user@example.com",
+  "role": "USER",
+  "userId": 123,
+  "exp": 1735689600
+}
+
+// Signature (서명)
+HMACSHA256(
+  base64UrlEncode(header) + "." + base64UrlEncode(payload),
+  secret
+)
+
+// 최종 JWT
+eyJhbGc...  (Header)
+.
+eyJzdWI...  (Payload)
+.
+a8f3d9e...  (Signature)</code></pre>
+
+        <h4>HS256 vs RS256</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>구분</th>
+                    <th>HS256 (현재 프로젝트)</th>
+                    <th>RS256</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>알고리즘</strong></td>
+                    <td>HMAC + SHA256 (대칭키)</td>
+                    <td>RSA + SHA256 (비대칭키)</td>
+                </tr>
+                <tr>
+                    <td><strong>키</strong></td>
+                    <td>Secret Key 1개</td>
+                    <td>Private Key + Public Key</td>
+                </tr>
+                <tr>
+                    <td><strong>서명</strong></td>
+                    <td>Secret Key로 서명</td>
+                    <td>Private Key로 서명</td>
+                </tr>
+                <tr>
+                    <td><strong>검증</strong></td>
+                    <td>Secret Key로 검증</td>
+                    <td>Public Key로 검증</td>
+                </tr>
+                <tr>
+                    <td><strong>속도</strong></td>
+                    <td>빠름</td>
+                    <td>느림</td>
+                </tr>
+                <tr>
+                    <td><strong>보안</strong></td>
+                    <td>Secret Key 유출 시 위험</td>
+                    <td>Private Key만 안전하게 보관</td>
+                </tr>
+                <tr>
+                    <td><strong>사용처</strong></td>
+                    <td>단일 서버</td>
+                    <td>MSA (여러 서버)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>2. 암호화</h3>
+        
+        <h4>BCrypt vs Argon2 vs PBKDF2</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>알고리즘</th>
+                    <th>특징</th>
+                    <th>속도</th>
+                    <th>보안</th>
+                    <th>사용처</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>BCrypt</strong></td>
+                    <td>Salt 자동 생성</td>
+                    <td>느림</td>
+                    <td>높음</td>
+                    <td>현재 프로젝트</td>
+                </tr>
+                <tr>
+                    <td><strong>Argon2</strong></td>
+                    <td>메모리 하드</td>
+                    <td>매우 느림</td>
+                    <td>최고</td>
+                    <td>최신 프로젝트</td>
+                </tr>
+                <tr>
+                    <td><strong>PBKDF2</strong></td>
+                    <td>표준 알고리즘</td>
+                    <td>중간</td>
+                    <td>중간</td>
+                    <td>레거시</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Salt와 Pepper</h4>
+        <div class="box">
+            <strong>Salt:</strong> DB에 저장 (사용자마다 다름)
+            <pre><code>password123 + salt1 → hash → abc123def456
+password123 + salt2 → hash → xyz789ghi012 (다름!)</code></pre>
+        </div>
+
+        <div class="box">
+            <strong>Pepper:</strong> 환경변수에 저장 (모든 사용자 공통)
+            <pre><code>최종 해시 = BCrypt(password + pepper, salt)</code></pre>
+        </div>
+
+        <h4>Rainbow Table 공격</h4>
+        <div class="box danger">
+            <strong>Rainbow Table:</strong> 미리 계산된 해시 테이블
+            <pre><code>password123 → abc123def456
+qwerty → xyz789ghi012
+...수백만 개</code></pre>
+        </div>
+
+        <div class="box success">
+            <strong>방어:</strong> Salt 사용 → Rainbow Table 무용지물<br>
+            (같은 비밀번호도 다른 해시)
+        </div>
+
+
+        <h3>3. OAuth 2.0</h3>
+        
+        <h4>Authorization Code Flow (현재 프로젝트)</h4>
+        <div class="flow">
+1. 사용자: 카카오 로그인 클릭
+2. 클라이언트: 카카오 인가 서버로 리다이렉트
+3. 카카오: 로그인 페이지 표시
+4. 사용자: 카카오 로그인
+5. 카카오: Authorization Code 발급
+6. 클라이언트: Code를 백엔드로 전달
+7. 백엔드: Code로 Access Token 요청 (Client Secret 사용)
+8. 카카오: Access Token 발급
+9. 백엔드: Access Token으로 사용자 정보 요청
+10. 카카오: 사용자 정보 반환
+11. 백엔드: JWT 발급
+12. 클라이언트: JWT 저장
+        </div>
+
+        <h4>Access Token vs ID Token</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>구분</th>
+                    <th>Access Token</th>
+                    <th>ID Token</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>용도</strong></td>
+                    <td>API 호출 권한</td>
+                    <td>사용자 인증</td>
+                </tr>
+                <tr>
+                    <td><strong>포함 정보</strong></td>
+                    <td>권한 범위</td>
+                    <td>사용자 정보</td>
+                </tr>
+                <tr>
+                    <td><strong>형식</strong></td>
+                    <td>불투명 문자열</td>
+                    <td>JWT</td>
+                </tr>
+                <tr>
+                    <td><strong>검증</strong></td>
+                    <td>Resource Server</td>
+                    <td>Client</td>
+                </tr>
+                <tr>
+                    <td><strong>예시</strong></td>
+                    <td>카카오 API 호출</td>
+                    <td>구글 로그인</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="box">
+            <strong>현재 프로젝트:</strong>
+            <ul>
+                <li>구글: ID Token 사용 (사용자 정보 포함)</li>
+                <li>카카오: Access Token으로 사용자 정보 조회</li>
+            </ul>
+        </div>
+
+        <h3>4. Spring Security</h3>
+        
+        <h4>Filter Chain 동작 원리</h4>
+        <div class="flow">
+Request
+  ↓
+SecurityContextPersistenceFilter (SecurityContext 로드/저장)
+  ↓
+LogoutFilter (로그아웃 처리)
+  ↓
+UsernamePasswordAuthenticationFilter (폼 로그인)
+  ↓
+JwtAuthenticationFilter (JWT 검증 - 커스텀)
+  ↓
+ExceptionTranslationFilter (인증/인가 예외 처리)
+  ↓
+FilterSecurityInterceptor (최종 권한 확인)
+  ↓
+Controller
+        </div>
+
+        <h4>SecurityContext와 ThreadLocal</h4>
+        <pre><code>// SecurityContext: 현재 인증 정보 저장소
+SecurityContext context = SecurityContextHolder.getContext();
+Authentication auth = context.getAuthentication();
+
+// ThreadLocal: 스레드마다 독립적인 저장소
+// → 요청마다 다른 스레드 → 다른 SecurityContext
+
+Request 1 (Thread 1) → SecurityContext 1 (user1)
+Request 2 (Thread 2) → SecurityContext 2 (user2)
+→ 서로 간섭 없음!</code></pre>
+
+        <h4>@PreAuthorize vs @Secured</h4>
+        <pre><code>// @PreAuthorize (SpEL 사용 가능)
+@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+@PreAuthorize("#userId == authentication.principal.userId")
+
+// @Secured (단순)
+@Secured("ROLE_ADMIN")
+@Secured({"ROLE_ADMIN", "ROLE_USER"})</code></pre>
+
+        <h3>5. 보안 패턴</h3>
+        
+        <h4>CSRF vs XSS</h4>
+        
+        <div class="box danger">
+            <strong>CSRF (Cross-Site Request Forgery):</strong>
+            <pre><code>공격자 사이트 → 내 사이트로 요청 위조
+예: &lt;img src="https://bank.com/transfer?to=hacker&amount=1000"&gt;</code></pre>
+            
+            <strong>방어:</strong>
+            <ul>
+                <li>CSRF Token 사용</li>
+                <li>쿠키 + 폼에 토큰 포함</li>
+                <li>둘이 일치해야 요청 처리</li>
+            </ul>
+        </div>
+
+        <div class="box warning">
+            <strong>REST API는 왜 CSRF 방어 불필요?</strong>
+            <ul>
+                <li>쿠키 사용 안 함 (JWT는 Header로 전송)</li>
+                <li>Same-Origin Policy로 차단</li>
+                <li>CORS로 허용된 출처만 접근</li>
+            </ul>
+        </div>
+
+        <div class="box danger">
+            <strong>XSS (Cross-Site Scripting):</strong>
+            <pre><code>악성 스크립트 삽입
+예: &lt;script&gt;alert(document.cookie)&lt;/script&gt;</code></pre>
+            
+            <strong>방어:</strong>
+            <ul>
+                <li>입력값 검증 (Validation)</li>
+                <li>출력 시 이스케이프 (&lt;script&gt; → &amp;lt;script&amp;gt;)</li>
+                <li>Content Security Policy (CSP)</li>
+                <li>HttpOnly 쿠키 (JS 접근 차단)</li>
+            </ul>
+        </div>
+
+        <h4>CORS 동작 원리</h4>
+        <div class="flow">
+<strong>Preflight Request (사전 요청):</strong>
+Browser → API: OPTIONS /api/users
+API → Browser: Access-Control-Allow-Origin: localhost:5173
+
+<strong>실제 요청:</strong>
+Browser → API: GET /api/users
+API → Browser: 200 OK + 데이터
+        </div>
+
+        <div class="box">
+            <strong>Preflight Request:</strong> 브라우저가 자동으로 보내는 사전 요청<br>
+            → 서버가 허용하는지 확인<br>
+            → 허용하면 실제 요청 전송
+        </div>
+
+        <h4>Refresh Token Rotation (RTR)</h4>
+        
+        <div class="box danger">
+            <strong>기존 방식 (현재 프로젝트):</strong>
+            <ul>
+                <li>Refresh Token 재사용 가능</li>
+                <li>→ 탈취되면 만료까지 계속 사용 가능</li>
+            </ul>
+        </div>
+
+        <div class="box success">
+            <strong>RTR 방식:</strong>
+            <ul>
+                <li>Refresh Token 사용 시마다 새로 발급</li>
+                <li>→ 이전 Refresh Token 무효화</li>
+                <li>→ 탈취된 토큰 사용 시 감지 가능</li>
+            </ul>
+        </div>
+
+        <pre><code>// RTR 구현
+public TokenResponse refreshToken(String oldRefreshToken) {
+    // 1. 검증
+    validateRefreshToken(oldRefreshToken);
+    
+    // 2. 새 토큰 발급
+    String newAccessToken = createAccessToken(...);
+    String newRefreshToken = createRefreshToken(...);
+    
+    // 3. 이전 Refresh Token 블랙리스트 등록
+    redis.set("blacklist:" + oldRefreshToken, "used", 30일);
+    
+    // 4. 새 Refresh Token 저장
+    redis.set("refresh:user123", newRefreshToken, 30일);
+    
+    return new TokenResponse(newAccessToken, newRefreshToken);
+}</code></pre>
+
+        <h3>6. 추가 보안 개념</h3>
+        
+        <h4>Rate Limiting</h4>
+        <pre><code>// 1분에 10번만 로그인 시도 허용
+@RateLimiter(name = "login", fallbackMethod = "loginFallback")
+public TokenResponse login(LoginRequest request) {
+    // ...
+}</code></pre>
+
+        <h4>IP Whitelist</h4>
+        <pre><code>// 관리자 API는 특정 IP만 허용
+@PreAuthorize("hasIpAddress('192.168.1.0/24')")
+public void adminAction() {
+    // ...
+}</code></pre>
+
+        <h4>2FA (Two-Factor Authentication)</h4>
+        <div class="flow">
+1. 비밀번호 입력
+2. SMS/이메일로 인증 코드 전송
+3. 인증 코드 입력
+4. 로그인 완료
+        </div>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid #ddd;">
+
+        <div class="box success">
+            <h3>📚 핵심 요약</h3>
+            <ul>
+                <li><strong>JWT vs 세션:</strong> JWT는 Stateless, 확장성 좋음, 현재 트렌드</li>
+                <li><strong>HMAC-SHA:</strong> JWT 서명 알고리즘, Secret Key로 위변조 방지</li>
+                <li><strong>JWT_SECRET:</strong> 내 서버의 JWT 생성용, OAuth Secret과 별개</li>
+                <li><strong>JWT Filter:</strong> 모든 API 호출마다 검증 (화면 이동 아님)</li>
+                <li><strong>회원가입:</strong> JWT 발급 안 함, 로그인 시에만 발급</li>
+                <li><strong>Refresh Token:</strong> Access Token 재발급용, 30일 유효</li>
+                <li><strong>보안:</strong> BCrypt 해싱, CSRF/XSS 방어, CORS 설정</li>
+            </ul>
+        </div>
+
+        <div class="box warning">
+            <h3>⚠️ 주의사항</h3>
+            <ul>
+                <li>JWT_SECRET은 절대 코드에 하드코딩 금지</li>
+                <li>Refresh Token은 DB/Redis에 저장 권장</li>
+                <li>로그아웃 시 블랙리스트 구현 필요</li>
+                <li>XSS 방어를 위해 입력값 검증 필수</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 50px; padding: 20px; background: #f8f9fa; border-radius: 5px;">
+            <p style="color: #7f8c8d; font-size: 0.9em;">
+                작성일: 2024년<br>
+                프로젝트: DN Platform - 동물 보호 플랫폼<br>
+                스택: Spring Boot + Spring Security + JWT
+            </p>
+        </div>
+    </div>
+</body>
+</html>
