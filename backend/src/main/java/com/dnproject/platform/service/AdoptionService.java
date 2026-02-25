@@ -8,6 +8,7 @@ import com.dnproject.platform.dto.request.AdoptionRequest;
 import com.dnproject.platform.dto.response.AdoptionResponse;
 import com.dnproject.platform.dto.response.PageResponse;
 import com.dnproject.platform.exception.CustomException;
+import com.dnproject.platform.mapper.AdoptionMapper;
 import com.dnproject.platform.exception.NotFoundException;
 import com.dnproject.platform.repository.AdoptionRepository;
 import com.dnproject.platform.repository.AnimalRepository;
@@ -34,6 +35,7 @@ public class AdoptionService {
     private final ShelterRepository shelterRepository;
     private final NotificationService notificationService;
     private final EmailService emailService;
+    private final AdoptionMapper adoptionMapper;
 
     @Transactional
     public AdoptionResponse apply(Long userId, AdoptionRequest request) {
@@ -55,14 +57,15 @@ public class AdoptionService {
         String typeLabel = request.getType() != null && request.getType().name().equals("FOSTERING") ? "임시보호" : "입양";
         emailService.sendApplicationReceivedEmail(user.getEmail(), user.getName(), typeLabel);
         notifyAndEmailAdmin(adoption, user.getName(), animal);
-        return toResponse(adoption);
+        return adoptionMapper.toResponse(adoption);
     }
 
     @Transactional(readOnly = true)
     public PageResponse<AdoptionResponse> getPendingByShelter(Long shelterId, int page, int size) {
         var pageable = PageRequest.of(page, size);
-        var adoptions = adoptionRepository.findByAnimal_Shelter_IdAndStatusOrderByCreatedAtDesc(shelterId, AdoptionStatus.PENDING, pageable);
-        List<AdoptionResponse> content = adoptions.stream().map(this::toResponse).toList();
+        var adoptions = adoptionRepository.findByAnimal_Shelter_IdAndStatusOrderByCreatedAtDesc(shelterId,
+                AdoptionStatus.PENDING, pageable);
+        List<AdoptionResponse> content = adoptions.stream().map(adoptionMapper::toResponse).toList();
         return PageResponse.<AdoptionResponse>builder()
                 .content(content)
                 .page(adoptions.getNumber())
@@ -86,7 +89,7 @@ public class AdoptionService {
     public PageResponse<AdoptionResponse> getAllForAdmin(int page, int size) {
         var pageable = PageRequest.of(page, size);
         var adoptions = adoptionRepository.findAllByOrderByCreatedAtDesc(pageable);
-        List<AdoptionResponse> content = adoptions.stream().map(this::toResponse).toList();
+        List<AdoptionResponse> content = adoptions.stream().map(adoptionMapper::toResponse).toList();
         return PageResponse.<AdoptionResponse>builder()
                 .content(content)
                 .page(adoptions.getNumber())
@@ -102,7 +105,7 @@ public class AdoptionService {
     public PageResponse<AdoptionResponse> getMyList(Long userId, int page, int size) {
         var pageable = PageRequest.of(page, size);
         var adoptions = adoptionRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
-        List<AdoptionResponse> content = adoptions.stream().map(this::toResponse).toList();
+        List<AdoptionResponse> content = adoptions.stream().map(adoptionMapper::toResponse).toList();
         return PageResponse.<AdoptionResponse>builder()
                 .content(content)
                 .page(adoptions.getNumber())
@@ -126,7 +129,7 @@ public class AdoptionService {
         }
         adoption.setStatus(AdoptionStatus.CANCELLED);
         adoption = adoptionRepository.save(adoption);
-        return toResponse(adoption);
+        return adoptionMapper.toResponse(adoption);
     }
 
     @Transactional
@@ -141,7 +144,7 @@ public class AdoptionService {
         adoption = adoptionRepository.save(adoption);
         String typeLabel = adoption.getType() != null && adoption.getType().name().equals("FOSTERING") ? "임시보호" : "입양";
         emailService.sendApprovalEmail(adoption.getUser().getEmail(), adoption.getUser().getName(), typeLabel);
-        return toResponse(adoption);
+        return adoptionMapper.toResponse(adoption);
     }
 
     @Transactional
@@ -156,43 +159,31 @@ public class AdoptionService {
         adoption.setProcessedAt(LocalDateTime.now());
         adoption = adoptionRepository.save(adoption);
         String typeLabel = adoption.getType() != null && adoption.getType().name().equals("FOSTERING") ? "임시보호" : "입양";
-        emailService.sendRejectionEmail(adoption.getUser().getEmail(), adoption.getUser().getName(), typeLabel, rejectReason);
-        return toResponse(adoption);
+        emailService.sendRejectionEmail(adoption.getUser().getEmail(), adoption.getUser().getName(), typeLabel,
+                rejectReason);
+        return adoptionMapper.toResponse(adoption);
     }
 
     private void notifyAndEmailAdmin(Adoption adoption, String applicantName, Animal animal) {
         var shelter = animal.getShelter();
-        if (shelter == null) return;
+        if (shelter == null)
+            return;
         var manager = shelter.getManager();
         String typeLabel = "입양/임보";
-        String detail = String.format("동물: %s (ID %d)", animal.getName() != null ? animal.getName() : "이름 없음", animal.getId());
+        String detail = String.format("동물: %s (ID %d)", animal.getName() != null ? animal.getName() : "이름 없음",
+                animal.getId());
         if (manager != null) {
             notificationService.create(manager.getId(), "ADOPTION_APPLICATION",
                     applicantName + "님의 " + typeLabel + " 신청이 접수되었습니다.",
                     "/admin?tab=applications");
         }
-        String adminEmail = (manager != null && manager.getEmail() != null && !manager.getEmail().isBlank()) ? manager.getEmail() : (shelter.getEmail() != null && !shelter.getEmail().isBlank() ? shelter.getEmail() : null);
+        String adminEmail = (manager != null && manager.getEmail() != null && !manager.getEmail().isBlank())
+                ? manager.getEmail()
+                : (shelter.getEmail() != null && !shelter.getEmail().isBlank() ? shelter.getEmail() : null);
         if (adminEmail != null) {
             emailService.sendApplicationReceivedToAdmin(adminEmail, applicantName, typeLabel, detail);
         } else {
             log.warn("관리자(보호소) 이메일 없음 - 입양/임보 신청 알림 미발송: shelterId={}, applicant={}", shelter.getId(), applicantName);
         }
-    }
-
-    private AdoptionResponse toResponse(Adoption a) {
-        String animalName = a.getAnimal() != null && a.getAnimal().getName() != null ? a.getAnimal().getName() : null;
-        return AdoptionResponse.builder()
-                .id(a.getId())
-                .userId(a.getUser() != null ? a.getUser().getId() : null)
-                .animalId(a.getAnimal() != null ? a.getAnimal().getId() : null)
-                .applicantName(a.getUser() != null ? a.getUser().getName() : null)
-                .animalName(animalName)
-                .type(a.getType())
-                .status(a.getStatus())
-                .reason(a.getReason())
-                .experience(a.getExperience())
-                .livingEnv(a.getLivingEnv())
-                .createdAt(a.getCreatedAt())
-                .build();
     }
 }

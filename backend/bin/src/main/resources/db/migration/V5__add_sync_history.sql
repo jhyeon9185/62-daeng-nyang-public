@@ -1,0 +1,16 @@
+-- 공공데이터 유기동물 동기화 이력 (자동/수동, 추가·수정·삭제·보정 건수)
+-- Flyway: 앱 기동 시 자동 실행. datasource URL 의 DB 에 적용됨.
+
+CREATE TABLE IF NOT EXISTS sync_history (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    run_at TIMESTAMP(6) NOT NULL,
+    trigger_type VARCHAR(20) NOT NULL,
+    added_count INT NOT NULL DEFAULT 0,
+    updated_count INT NOT NULL DEFAULT 0,
+    deleted_count INT NOT NULL DEFAULT 0,
+    corrected_count INT NOT NULL DEFAULT 0,
+    error_message VARCHAR(1000),
+    days_param INT,
+    species_filter VARCHAR(20),
+    INDEX idx_sync_history_run_at (run_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

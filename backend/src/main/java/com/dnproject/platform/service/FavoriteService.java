@@ -10,6 +10,7 @@ import com.dnproject.platform.exception.NotFoundException;
 import com.dnproject.platform.repository.AnimalRepository;
 import com.dnproject.platform.repository.FavoriteRepository;
 import com.dnproject.platform.repository.UserRepository;
+import com.dnproject.platform.mapper.AnimalMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,7 +27,7 @@ public class FavoriteService {
     private final FavoriteRepository favoriteRepository;
     private final UserRepository userRepository;
     private final AnimalRepository animalRepository;
-    private final AnimalService animalService;
+    private final AnimalMapper animalMapper;
 
     @Transactional
     public void add(Long userId, Long animalId) {
@@ -54,7 +55,7 @@ public class FavoriteService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Favorite> pageResult = favoriteRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
         List<AnimalResponse> content = pageResult.getContent().stream()
-                .map(f -> animalService.toAnimalResponse(f.getAnimal()))
+                .map(f -> animalMapper.toResponse(f.getAnimal()))
                 .toList();
         return PageResponse.<AnimalResponse>builder()
                 .content(content)

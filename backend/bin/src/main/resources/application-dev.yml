@@ -1,0 +1,31 @@
+spring:
+  # .env 파일 로드 (IDE 실행 시에도 DATA_API_KEY 등 적용)
+  config:
+    # backend/.env 로드 (DATA_API_KEY 등) - IDE 실행 시에도 적용
+    import: optional:file:./.env[.properties]
+
+  # Database Configuration (Development)
+  datasource:
+    url: jdbc:mysql://localhost:3306/dn_platform?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    # DB 계정은 backend/.env 에 두고, scripts/run-backend-dev.sh 로 실행하거나 IDE에서 env 로드
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA - Development mode
+  jpa:
+    hibernate:
+      ddl-auto: update  # Auto-create/update tables in development
+    show-sql: true
+    
+  # Flyway 비활성화 (수동 테이블 관리)
+  flyway:
+    enabled: false
+
+# Logging
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    
+# Public API Sync (Test Mode Disabled)
+# public-api:
+#   sync-enabled: true
+#   sync-cron: "0 * * * * *"

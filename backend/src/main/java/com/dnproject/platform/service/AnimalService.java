@@ -11,6 +11,7 @@ import com.dnproject.platform.dto.response.PageResponse;
 import com.dnproject.platform.exception.NotFoundException;
 import com.dnproject.platform.dto.response.PreferenceResponse;
 import com.dnproject.platform.repository.AnimalRepository;
+import com.dnproject.platform.mapper.AnimalMapper;
 import com.dnproject.platform.repository.ShelterRepository;
 import com.dnproject.platform.service.PreferenceService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class AnimalService {
     private final ShelterRepository shelterRepository;
     private final AnimalSyncService animalSyncService;
     private final PreferenceService preferenceService;
+    private final AnimalMapper animalMapper;
 
     @Transactional(readOnly = true)
     public PageResponse<AnimalResponse> findAll(Species species, AnimalStatus status, Size size, String region,
@@ -55,7 +57,7 @@ public class AnimalService {
 
     private PageResponse<AnimalResponse> toPageResponse(Page<Animal> page) {
         return PageResponse.<AnimalResponse>builder()
-                .content(page.getContent().stream().map(this::toResponse).toList())
+                .content(page.getContent().stream().map(animalMapper::toResponse).toList())
                 .page(page.getNumber())
                 .size(page.getSize())
                 .totalElements(page.getTotalElements())
@@ -69,7 +71,7 @@ public class AnimalService {
     public AnimalResponse findById(Long id) {
         Animal animal = animalRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("동물을 찾을 수 없습니다. id=" + id));
-        return toResponse(animal);
+        return animalMapper.toResponse(animal);
     }
 
     @Transactional
@@ -91,7 +93,7 @@ public class AnimalService {
                 .status(request.getStatus() != null ? request.getStatus() : AnimalStatus.PROTECTED)
                 .build();
         animal = animalRepository.save(animal);
-        return toResponse(animal);
+        return animalMapper.toResponse(animal);
     }
 
     @Transactional
@@ -126,7 +128,7 @@ public class AnimalService {
         if (request.getStatus() != null)
             animal.setStatus(request.getStatus());
         animal = animalRepository.save(animal);
-        return toResponse(animal);
+        return animalMapper.toResponse(animal);
     }
 
     @Transactional
@@ -177,7 +179,7 @@ public class AnimalService {
         Page<Animal> page = animalRepository.findRecommended(statuses, species, minAge, maxAge, size, regions,
                 pageable);
         return PageResponse.<AnimalResponse>builder()
-                .content(page.getContent().stream().map(this::toResponse).toList())
+                .content(page.getContent().stream().map(animalMapper::toResponse).toList())
                 .page(page.getNumber())
                 .size(page.getSize())
                 .totalElements(page.getTotalElements())
@@ -201,45 +203,5 @@ public class AnimalService {
         animalRepository.deleteAll(nullAnimals);
 
         return new int[] { (int) adoptedCount, nullAnimals.size() };
-    }
-
-    /** 다른 서비스에서 Animal -> AnimalResponse 변환 시 사용 */
-    public AnimalResponse toAnimalResponse(Animal a) {
-        return toResponse(a);
-    }
-
-    private AnimalResponse toResponse(Animal a) {
-        Shelter shelter = a.getShelter();
-        String shelterName = shelter != null ? shelter.getName() : null;
-        String shelterAddress = shelter != null ? shelter.getAddress() : null;
-        String shelterPhone = shelter != null ? shelter.getPhone() : null;
-        Double shelterLat = shelter != null && shelter.getLatitude() != null ? shelter.getLatitude().doubleValue()
-                : null;
-        Double shelterLng = shelter != null && shelter.getLongitude() != null ? shelter.getLongitude().doubleValue()
-                : null;
-        return AnimalResponse.builder()
-                .id(a.getId())
-                .publicApiAnimalId(a.getPublicApiAnimalId())
-                .orgName(a.getOrgName())
-                .chargeName(a.getChargeName())
-                .chargePhone(a.getChargePhone())
-                .shelterId(shelter != null ? shelter.getId() : null)
-                .shelterName(shelterName)
-                .shelterAddress(shelterAddress)
-                .shelterPhone(shelterPhone)
-                .shelterLatitude(shelterLat)
-                .shelterLongitude(shelterLng)
-                .species(a.getSpecies())
-                .breed(a.getBreed())
-                .name(a.getName())
-                .age(a.getAge())
-                .gender(a.getGender())
-                .size(a.getSize())
-                .description(a.getDescription())
-                .imageUrl(a.getImageUrl())
-                .neutered(a.getNeutered())
-                .status(a.getStatus())
-                .createdAt(a.getCreatedAt())
-                .build();
     }
 }
