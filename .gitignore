@@ -34,6 +34,26 @@ backend/uploads/
 *.swp
 *.swo
 .DS_Store
+Thumbs.db
+
+# IDE - Java
+bin/
+out/
+.factorypath
+.settings/
+.classpath
+.project
+backend/bin/
+backend/out/
+
+# IDE - Visual Studio Code
+.vscode/
+*.vsix
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
 
 # ===== 로그 =====
 *.log
